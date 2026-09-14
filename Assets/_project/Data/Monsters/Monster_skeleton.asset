@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3293ffc88440014396a89c49aab65b7, type: 3}
+  m_Name: Monster_skeleton
+  m_EditorClassIdentifier: 
+  Id: skeleton
+  DisplayName: "\uC2A4\uCF08\uB808\uD1A4"
+  BodyType: 0
+  Race: 2
+  NonHumanoidLibrary: {fileID: 0}
+  BodyTint: {r: 1, g: 1, b: 1, a: 1}
+  BodyScale: 1
+  BodyStretch: {x: 1, y: 1}
+  Mark: 0
+  PoolKey: Monster
+  LineageIcon: {fileID: 21300000, guid: 2a31412670e06c243aa4a495b561ccae, type: 3}
+  ManaCost: 6
+  SummonCount: 8
+  AttackKind: 0
+  Projectile: 0
+  ProjectileSpeed: 0
+  Traits: 9
+  Tags: 9
+  Description: "\uC2F8\uAC8C \uC5EC\uB7FF \uB098\uC640 \uC55E\uC904\uC744 \uCC44\uC6B4\uB2E4.
+    \uBD80\uC11C\uC838\uB3C4 \uC808\uBC18\uC740 \uB2E4\uC2DC \uC77C\uC5B4\uB09C\uB2E4."
+  MaxHp: 55
+  Attack: 8
+  AttackRange: 1.2
+  AttackSpeed: 1.1
+  MoveSpeed: 2.8
+  Defense: 0.02
+  CritChance: 0.05
+  CritDamage: 1.5
+  SummonPowerToHp: 0.8
+  SummonPowerToAttack: 0.9
+  UpgradeOf: {fileID: 0}
+  SpeciesTrait: 2
+  ActiveSkill: 0
+  Passives: 
+  LevelBonuses:
+  - Label: "\uB9C8\uB978 \uBF08"
+    Stat1: 2
+    Value1: 0.12
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 0
+  - Label: "\uBE60\uB978 \uC190\uB180\uB9BC"
+    Stat1: 4
+    Value1: 0.1
+    HasStat2: 1
+    Stat2: 5
+    Value2: 0.08
+    Passive: 0
+  - Label: "\uBF08 \uCC3D"
+    Stat1: 2
+    Value1: 0.12
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 25
+  - Label: "\uC644\uC804 \uC7AC\uC870\uB9BD"
+    Stat1: 0
+    Value1: 0.15
+    HasStat2: 1
+    Stat2: 2
+    Value2: 0.12
+    Passive: 0
+  SignaturePassive: 25
+  SummonDelay: 0.1
+  SummonCircleEffectKey: FX_Summon_Circle

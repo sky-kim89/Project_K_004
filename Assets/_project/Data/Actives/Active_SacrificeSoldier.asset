@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae32c2214ff1c814fad1a284c5d10e42, type: 3}
+  m_Name: Active_SacrificeSoldier
+  m_EditorClassIdentifier: 
+  SkillId: 11
+  SkillName: "\uBCD1\uC0AC \uD76C\uC0DD"
+  Description: "\uCCB4\uB825 \uCD5C\uC800 \uBCD1\uC0AC\uB97C \uC989\uC0AC\uC2DC\uD0A4\uACE0,
+    \uADF8 \uACF5\uACA9\uB825\uC758 80%\uB97C \uC2DC\uC804\uC790 \uACF5\uACA9\uB825\uC73C\uB85C
+    \uD761\uC218\uD55C\uB2E4.\n\uC2A4\uD14C\uC774\uC9C0\uAC00 \uB05D\uB0A0 \uB54C\uAE4C\uC9C0
+    \uC720\uC9C0\uB418\uBA70 \uC4F8\uC218\uB85D \uACC4\uC18D \uB204\uC801\uB41C\uB2E4."
+  Cooldown: 20
+  EffectValue: 0.8
+  EffectRadius: 0
+  EffectDuration: 999
+  AllowedJobs: 
+  IsRare: 0
+  CasterEffectKey: FX_Absorb
+  TargetEffectKey: FX_Sacrifice
+  BaseEffectKey: 
+  ShowRangeIndicator: 1
+  RangeIndicatorDuration: 0
+  EffectDespawnDelay: 1.5

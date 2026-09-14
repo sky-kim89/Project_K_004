@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1bb69d7ee544ea74eb0198543f0af2a9, type: 3}
+  m_Name: Passive_KillHeal
+  m_EditorClassIdentifier: 
+  Type: 27
+  SkillName: "\uCC98\uCE58 \uD68C\uBCF5"
+  Description: "\uCC98\uCE58 \uC2DC \uCD5C\uB300 \uCCB4\uB825\uC758 5%\uB97C \uC989\uC2DC
+    \uD68C\uBCF5."
+  StatModifiers: []
+  TriggerType: 3
+  Icon: {fileID: 0}
+  GeneralScaleBonusAdd: 0
+  HealRatio: 0.05

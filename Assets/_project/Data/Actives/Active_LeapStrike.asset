@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49f797374f4bbb3428d54be3a341cb45, type: 3}
+  m_Name: Active_LeapStrike
+  m_EditorClassIdentifier: 
+  SkillId: 3
+  SkillName: "\uB3C4\uC57D \uAC15\uD0C0"
+  Description: "\uC804\uBC29\uC73C\uB85C \uB3C4\uC57D\uD558\uC5EC \uCC29\uC9C0 \uBC18\uACBD
+    \uB0B4 \uBAA8\uB4E0 \uC801\uC744 \uACF5\uACA9\uB825 250% \uAC15\uD0C0 + \uB109\uBC31."
+  Cooldown: 10
+  EffectValue: 1
+  EffectRadius: 2.5
+  EffectDuration: 0
+  AllowedJobs: 0000000003000000
+  IsRare: 0
+  CasterEffectKey: FX_Leap_Land
+  TargetEffectKey: FX_Slash_Impact
+  BaseEffectKey: FX_Dust_Dash
+  ShowRangeIndicator: 1
+  RangeIndicatorDuration: 0
+  EffectDespawnDelay: 1.5
+  DamageMultiplier: 2.5
+  LeapSpeed: 18
+  MaxLeapDistance: 12
+  KnockbackMult: 4

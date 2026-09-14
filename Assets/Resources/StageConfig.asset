@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b9d54f11d60afa41b9888d330cfe3dd, type: 3}
+  m_Name: StageConfig
+  m_EditorClassIdentifier: 
+  NormalStageCount: 30
+  EliteStageCount: 15
+  EliteUnlockStage: 5
+  ReincarnateMinStage: 2
+  DifficultyUnlockStage: 20
+  EnergyCostNormal: 5
+  EnergyCostElite: 10
+  WaveCountMin: 2
+  WaveCountMax: 8
+  EnemyCountMin: 6
+  EnemyCountMax: 100
+  EnemyLevelMin: 1
+  EnemyLevelMax: 200
+  BlockStatMultipliers:
+  - 1
+  - 2.2
+  - 5
+  - 11
+  - 25
+  - 55
+  - 85
+  EarlyGameStatStart: 0.55
+  EarlyGameEndStage: 8
+  HurdleStatMultiplier: 1.15
+  HurdleExtraEnemies: 8
+  HurdleExtraWaves: 2
+  ShardRewardBase: 10
+  ShardRewardPerBlock: 4
+  ShardHurdleBonus: 5
+  GeneralStoneRewardBase: 2
+  GeneralStoneRewardPerBlock: 1
+  GeneralStoneHurdleBonus: 3
+  EquipBoxThreshold2: 10
+  EquipBoxThreshold3: 20
+  GoldRewardBase: 500
+  GoldRewardPerStage: 50
+  EquipStoneRewardMin: 1
+  EquipStoneRewardMax: 20
+  ExpRewardMin: 200
+  ExpRewardMax: 3000

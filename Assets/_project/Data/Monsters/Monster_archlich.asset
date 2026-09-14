@@ -1,0 +1,81 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3293ffc88440014396a89c49aab65b7, type: 3}
+  m_Name: Monster_archlich
+  m_EditorClassIdentifier: 
+  Id: archlich
+  DisplayName: "\uB300\uB9AC\uCE58"
+  BodyType: 0
+  Race: 3
+  NonHumanoidLibrary: {fileID: 0}
+  BodyTint: {r: 0.78431374, g: 0.64705884, b: 1, a: 1}
+  BodyScale: 1
+  BodyStretch: {x: 1, y: 1}
+  Mark: 0
+  PoolKey: Monster
+  LineageIcon: {fileID: 21300000, guid: d1b4dcfae2bdeb84dbf19971976c70e5, type: 3}
+  ManaCost: 13
+  SummonCount: 3
+  AttackKind: 1
+  Projectile: 1
+  ProjectileSpeed: 15
+  Traits: 50
+  Tags: 193
+  Description: "\uD761\uD608\uD558\uBA70 \uB54C\uB9AC\uACE0, \uC4F0\uB7EC\uC9C8 \uB54C
+    \uC8FC\uBCC0\uC744 \uC5ED\uBCD1\uC73C\uB85C \uB36E\uB294\uB2E4.\n\uAC00\uC7A5
+    \uBE44\uC2FC \uC6D0\uAC70\uB9AC."
+  MaxHp: 130
+  Attack: 39
+  AttackRange: 9
+  AttackSpeed: 0.6
+  MoveSpeed: 2
+  Defense: 0.05
+  CritChance: 0.05
+  CritDamage: 1.5
+  SummonPowerToHp: 0.7
+  SummonPowerToAttack: 1.7
+  UpgradeOf: {fileID: 11400000, guid: 6681437f350796e46a78d04f257abea7, type: 2}
+  SpeciesTrait: 4
+  ActiveSkill: 0
+  Passives: 
+  LevelBonuses:
+  - Label: "\uB300\uB9C8\uB825 \uC21C\uD658"
+    Stat1: 2
+    Value1: 0.18
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 0
+  - Label: "\uC2EC\uC5F0\uC758 \uC2DC\uC57C"
+    Stat1: 3
+    Value1: 0.14
+    HasStat2: 1
+    Stat2: 4
+    Value2: 0.1
+    Passive: 0
+  - Label: "\uC601\uD63C \uD3EC\uC2DD"
+    Stat1: 2
+    Value1: 0.12
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 19
+  - Label: "\uC5ED\uBCD1\uC758 \uAD70\uC8FC"
+    Stat1: 2
+    Value1: 0.2
+    HasStat2: 1
+    Stat2: 3
+    Value2: 0.12
+    Passive: 0
+  SignaturePassive: 38
+  SummonDelay: 0.1
+  SummonCircleEffectKey: FX_Summon_Circle

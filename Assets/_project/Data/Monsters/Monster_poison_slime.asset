@@ -1,0 +1,81 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3293ffc88440014396a89c49aab65b7, type: 3}
+  m_Name: Monster_poison_slime
+  m_EditorClassIdentifier: 
+  Id: poison_slime
+  DisplayName: "\uB3C5 \uC2AC\uB77C\uC784"
+  BodyType: 1
+  Race: 0
+  NonHumanoidLibrary: {fileID: 11400000, guid: 0423b7512e85aec4f9c5662e3d911d8e, type: 2}
+  BodyTint: {r: 1, g: 1, b: 1, a: 1}
+  BodyScale: 1
+  BodyStretch: {x: 0.84, y: 1.24}
+  Mark: 3
+  PoolKey: Monster
+  LineageIcon: {fileID: 21300000, guid: 6c9ebfea264a477489bf8d21f7081ec3, type: 3}
+  ManaCost: 7
+  SummonCount: 6
+  AttackKind: 0
+  Projectile: 0
+  ProjectileSpeed: 0
+  Traits: 97
+  Tags: 66
+  Description: "\uBD84\uC5F4\uD558\uACE0, \uC790\uAE30\uB97C \uB54C\uB9B0 \uC801\uC744
+    \uC911\uB3C5\uC2DC\uD0A8\uB2E4.\n\uB9DE\uC744\uC218\uB85D \uC774\uB4DD\uC774\uB77C
+    \uC55E\uC904\uC5D0 \uC138\uC6CC \uB454\uB2E4."
+  MaxHp: 140
+  Attack: 16
+  AttackRange: 1
+  AttackSpeed: 0.8
+  MoveSpeed: 1.7
+  Defense: 0.05
+  CritChance: 0.05
+  CritDamage: 1.5
+  SummonPowerToHp: 1.2
+  SummonPowerToAttack: 0.9
+  UpgradeOf: {fileID: 11400000, guid: bafb509cc44832742b7b54e01531076a, type: 2}
+  SpeciesTrait: 21
+  ActiveSkill: 0
+  Passives: 
+  LevelBonuses:
+  - Label: "\uB9F9\uB3C5 \uBD84\uBE44"
+    Stat1: 2
+    Value1: 0.15
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 0
+  - Label: "\uB3C5 \uAECD\uC9C8"
+    Stat1: 0
+    Value1: 0.12
+    HasStat2: 1
+    Stat2: 1
+    Value2: 0.05
+    Passive: 0
+  - Label: "\uC5ED\uB958"
+    Stat1: 2
+    Value1: 0.12
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 19
+  - Label: "\uB9F9\uB3C5 \uD3ED\uC8FC"
+    Stat1: 2
+    Value1: 0.2
+    HasStat2: 1
+    Stat2: 4
+    Value2: 0.1
+    Passive: 0
+  SignaturePassive: 19
+  SummonDelay: 0.1
+  SummonCircleEffectKey: FX_Summon_Circle

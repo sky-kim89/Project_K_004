@@ -1,0 +1,81 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3293ffc88440014396a89c49aab65b7, type: 3}
+  m_Name: Monster_hog
+  m_EditorClassIdentifier: 
+  Id: hog
+  DisplayName: "\uBA67\uB3FC\uC9C0"
+  BodyType: 1
+  Race: 0
+  NonHumanoidLibrary: {fileID: 11400000, guid: f1c986241a578e5449936ba9e94b64c2, type: 2}
+  BodyTint: {r: 1, g: 1, b: 1, a: 1}
+  BodyScale: 1
+  BodyStretch: {x: 1, y: 1}
+  Mark: 0
+  PoolKey: Monster
+  LineageIcon: {fileID: 21300000, guid: 2a8754dcf218768468588a3e4c791a6d, type: 3}
+  ManaCost: 8
+  SummonCount: 4
+  AttackKind: 0
+  Projectile: 0
+  ProjectileSpeed: 0
+  Traits: 76
+  Tags: 134
+  Description: "\uC77C\uC815 \uAC04\uACA9\uC73C\uB85C \uD55C \uB188\uC744 \uACE8\uB77C
+    \uB4E4\uC774\uBC1B\uB294\uB2E4. \uCCAB \uC811\uC804\uC744 \uC5EC\uB294 \uB370
+    \uC4F4\uB2E4."
+  MaxHp: 130
+  Attack: 17
+  AttackRange: 1.1
+  AttackSpeed: 0.9
+  MoveSpeed: 3
+  Defense: 0.12
+  CritChance: 0.05
+  CritDamage: 1.5
+  SummonPowerToHp: 1.2
+  SummonPowerToAttack: 1
+  UpgradeOf: {fileID: 0}
+  SpeciesTrait: 7
+  ActiveSkill: 1
+  Passives: 
+  LevelBonuses:
+  - Label: "\uB450\uD130\uC6B4 \uB4F1\uAC00\uC8FD"
+    Stat1: 0
+    Value1: 0.15
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 0
+  - Label: "\uC5B5\uC13C \uBC1C\uAD7D"
+    Stat1: 5
+    Value1: 0.1
+    HasStat2: 1
+    Stat2: 1
+    Value2: 0.06
+    Passive: 0
+  - Label: "\uBB34\uC1E0 \uB3CC\uC9C4"
+    Stat1: 2
+    Value1: 0.15
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 24
+  - Label: "\uC800\uB3CC\uB9F9\uC9C4"
+    Stat1: 0
+    Value1: 0.18
+    HasStat2: 1
+    Stat2: 2
+    Value2: 0.12
+    Passive: 0
+  SignaturePassive: 24
+  SummonDelay: 0.1
+  SummonCircleEffectKey: FX_Summon_Circle

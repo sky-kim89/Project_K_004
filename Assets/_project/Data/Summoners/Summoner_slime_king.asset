@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d2411652f6855a49b1c32bed3d4bfc8, type: 3}
+  m_Name: Summoner_slime_king
+  m_EditorClassIdentifier: 
+  Id: slime_king
+  DisplayName: "\uC2AC\uB77C\uC784 \uD0B9"
+  Description: "\uBD80\uB978 \uC2AC\uB77C\uC784 \uC14B \uC911 \uD558\uB098\uB294
+    \uC810\uC561\uC744 \uBC49\uB294 \uC6D0\uAC70\uB9AC\uB85C \uC120\uB2E4.\n\uC55E\uC904\uC740
+    \uBAB8\uC73C\uB85C \uB9C9\uACE0 \uB4B7\uC904\uC740 \uC3DC\uB2E4 \u2014 \uC2AC\uB77C\uC784\uB9CC\uC73C\uB85C
+    \uC9C4\uD615\uC774 \uB41C\uB2E4."
+  PoolKey: Summoner
+  Portrait: {fileID: 0}
+  AppearanceSeed: summoner_slimeking
+  AppearanceJob: 2
+  AppearanceGrade: 2
+  AppearanceSpecies: {fileID: 11400000, guid: bafb509cc44832742b7b54e01531076a, type: 2}
+  AppearanceMark: 1
+  AppearanceScale: 1.6
+  Vigor: 3
+  Vitality: 6
+  Intelligence: 10
+  AttackRange: 22
+  ProjectileSpeed: 20
+  AttackSpeed: 0.75
+  Defense: 0.14
+  BaseMana: 20
+  ManaPerIntelligence: 4
+  ManaRegenPerIntelligence: 1
+  ManaRegenHoldRatio: 0.1
+  DeckSlots: 4
+  SignatureSkill: 34
+  SignatureName: "\uAC15\uCCA0 \uCE5C\uC704\uB300"
+  SkillUsesPerStage: 1
+  SignatureSummonSpecies: {fileID: 11400000, guid: 1281ecdcdbd2c25498e530fba32844c0, type: 2}
+  SignatureSummonCount: 2
+  ListOrder: 1
+  Unlocks:
+  - Kind: 0
+    Value: 5
+    SpeciesIds: []
+    Traits: 0
+  StarterMonsters:
+  - {fileID: 11400000, guid: bafb509cc44832742b7b54e01531076a, type: 2}
+  - {fileID: 11400000, guid: 455d099fbe9c35b43889835afb65035b, type: 2}
+  - {fileID: 11400000, guid: 72845b9061b2cb74d90d7ab33bef9cb9, type: 2}
+  StarterSkills: []
+  Affinities:
+  - SpeciesId: slime
+    Traits: 0
+  Perk: 13
+  PerkValue: 3
+  AttackPerVigor: 2
+  HpPerVitality: 50
+  SummonPowerPerIntelligence: 1
+  BaseCoreHp: 12
+  CoreHpPerVitality: 9

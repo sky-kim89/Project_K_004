@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d0e8e28716c75f498d15020267720bd, type: 3}
+  m_Name: Active_GravityCollapse
+  m_EditorClassIdentifier: 
+  SkillId: 23
+  SkillName: "\uC911\uB825 \uBD95\uAD34"
+  Description: "\uBD95\uAD34\uC810\uC744 \uB9CC\uB4E4\uC5B4 2.5\uCD08\uAC04 \uC801\uC744
+    \uD55C\uACF3\uC73C\uB85C \uBE68\uC544\uB4E4\uC774\uBA70 \uBC1C\uC744 \uBB36\uB294\uB2E4.
+    \uC885\uB8CC \uC2DC \uACF5\uACA9\uB825 800% \uD3ED\uBC1C."
+  Cooldown: 42
+  EffectValue: 1
+  EffectRadius: 7
+  EffectDuration: 2.5
+  AllowedJobs: 02000000
+  IsRare: 1
+  CasterEffectKey: 
+  TargetEffectKey: FX_Gravity_Collapse
+  BaseEffectKey: FX_Gravity_Vortex
+  ShowRangeIndicator: 1
+  RangeIndicatorDuration: 0
+  EffectDespawnDelay: 3.5
+  DotMultiplier: 0.8
+  ExplodeMultiplier: 8
+  TickInterval: 0.15
+  PullForce: 3.5
+  RootRatio: 0.9
+  ExplodeKnockback: 8

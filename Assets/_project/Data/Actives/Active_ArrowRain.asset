@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6dddb0fd63d78d4188b70623399bf64, type: 3}
+  m_Name: Active_ArrowRain
+  m_EditorClassIdentifier: 
+  SkillId: 16
+  SkillName: "\uD654\uC0B4 \uBE44"
+  Description: "\uD0C0\uAC9F \uC704\uCE58\uC5D0 5\uCD08 \uB3D9\uC548 \uD654\uC0B4
+    \uBE44\uB97C \uB0B4\uB824 0.4\uCD08\uB9C8\uB2E4 \uACF5\uACA9\uB825 50% \uBC94\uC704
+    \uC9C0\uC18D \uD53C\uD574."
+  Cooldown: 9
+  EffectValue: 0.5
+  EffectRadius: 2
+  EffectDuration: 5
+  AllowedJobs: 01000000
+  IsRare: 0
+  CasterEffectKey: 
+  TargetEffectKey: 
+  BaseEffectKey: FX_Arrow_Rain_Zone
+  ShowRangeIndicator: 1
+  RangeIndicatorDuration: 0
+  EffectDespawnDelay: 7
+  TickInterval: 0.4

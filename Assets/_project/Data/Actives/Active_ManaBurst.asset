@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6db64152304776047ad5a55bb3e74597, type: 3}
+  m_Name: Active_ManaBurst
+  m_EditorClassIdentifier: 
+  SkillId: 36
+  SkillName: "\uB9C8\uB098 \uD3ED\uBC1C"
+  Description: "\uB0A8\uC740 \uB9C8\uB098\uC758 \uC808\uBC18\uC744 \uD0DC\uC6CC,
+    \uD0ED\uD55C \uC790\uB9AC \uC8FC\uBCC0\uC758 \uC801 \uC804\uBD80\uC5D0\uAC8C
+    \uD0DC\uC6B4 \uB9C8\uB098 1\uB2F9 \uCD5C\uB300 \uCCB4\uB825\uC758 2% \uD53C\uD574\uB97C
+    \uC900\uB2E4 (\uBC29\uC5B4\uC728 \uBB34\uC2DC \xB7 \uBCF4\uC2A4\uB294 \uC808\uBC18)."
+  Cooldown: 8
+  EffectValue: 1
+  EffectRadius: 4
+  EffectDuration: 0
+  AllowedJobs: 
+  IsRare: 0
+  CasterEffectKey: 
+  TargetEffectKey: FX_Meteor_Explosion
+  BaseEffectKey: 
+  ShowRangeIndicator: 1
+  RangeIndicatorDuration: 0
+  EffectDespawnDelay: 2
+  BurnRatio: 0.5
+  MaxHpRatioPerMana: 0.02
+  BossMult: 0.5
+  KnockbackMult: 4

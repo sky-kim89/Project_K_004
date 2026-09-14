@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 807853da1c6c64f45b2c3aefe4c99183, type: 3}
+  m_Name: gear_shield_crusader
+  m_EditorClassIdentifier: 
+  Id: gear_shield_crusader
+  DisplayName: "\uC131\uC804\uC0AC\uC758 \uBC29\uD328"
+  Description: "\uC131\uC2A4\uB7EC\uC6B4 \uBB38\uC591\uC774 \uC0C8\uACA8\uC838 \uC788\uB2E4.
+    \uB4E0 \uAC83\uC740 \uBAAC\uC2A4\uD130\uC9C0\uB9CC."
+  Concept: "\uC220\uBC95"
+  Icon: {fileID: 21300000, guid: cf58de5233a860c4faaed858707733ef, type: 3}
+  Grade: 3
+  Body: 0
+  Part: 2
+  BaseOptions:
+  - Stat: 0
+    Value: 33
+    Quirk: 0
+  - Stat: 2
+    Value: 0.025
+    Quirk: 0
+  Levels:
+  - Options:
+    - Stat: 9
+      Value: 0.08
+      Quirk: 0
+  - Options:
+    - Stat: 1
+      Value: 3
+      Quirk: 0
+  - Options:
+    - Stat: 9
+      Value: 0.08
+      Quirk: 0
+  - Options:
+    - Stat: 12
+      Value: 1
+      Quirk: 0
+    - Stat: 1
+      Value: 3
+      Quirk: 0
+  Lv4Passive: 0
+  Lv5Passive: 0
+  AppearanceName: CrusaderShield
+  Tint: {r: 1, g: 1, b: 1, a: 1}
+  ScaleBonus: 0

@@ -1,0 +1,81 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3293ffc88440014396a89c49aab65b7, type: 3}
+  m_Name: Monster_arcane_lich
+  m_EditorClassIdentifier: 
+  Id: arcane_lich
+  DisplayName: "\uBE44\uC804 \uB9AC\uCE58"
+  BodyType: 0
+  Race: 3
+  NonHumanoidLibrary: {fileID: 0}
+  BodyTint: {r: 0.5882353, g: 0.74509805, b: 1, a: 1}
+  BodyScale: 1
+  BodyStretch: {x: 1, y: 1}
+  Mark: 0
+  PoolKey: Monster
+  LineageIcon: {fileID: 21300000, guid: d1b4dcfae2bdeb84dbf19971976c70e5, type: 3}
+  ManaCost: 11
+  SummonCount: 3
+  AttackKind: 1
+  Projectile: 1
+  ProjectileSpeed: 14
+  Traits: 18
+  Tags: 129
+  Description: "\uD761\uD608\uD558\uBA70 \uB54C\uB9AC\uACE0, \uCD5C\uB300 \uB9C8\uB098\uAC00
+    \uD074\uC218\uB85D \uAC15\uD574\uC9C4\uB2E4.\n\uADF8\uB987\uC744 \uD0A4\uC6B0\uB294
+    \uC18C\uD658\uC0AC\uC640 \uC5B4\uC6B8\uB9B0\uB2E4."
+  MaxHp: 105
+  Attack: 33
+  AttackRange: 8.5
+  AttackSpeed: 0.6
+  MoveSpeed: 2
+  Defense: 0.03
+  CritChance: 0.05
+  CritDamage: 1.5
+  SummonPowerToHp: 0.6
+  SummonPowerToAttack: 1.7
+  UpgradeOf: {fileID: 11400000, guid: 6681437f350796e46a78d04f257abea7, type: 2}
+  SpeciesTrait: 130
+  ActiveSkill: 0
+  Passives: 
+  LevelBonuses:
+  - Label: "\uBE44\uC804 \uC21C\uD658"
+    Stat1: 2
+    Value1: 0.15
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 0
+  - Label: "\uB9C8\uB825\uC758 \uB208"
+    Stat1: 3
+    Value1: 0.12
+    HasStat2: 1
+    Stat2: 4
+    Value2: 0.08
+    Passive: 0
+  - Label: "\uACF5\uBA85 \uC99D\uD3ED"
+    Stat1: 0
+    Value1: 0.12
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 37
+  - Label: "\uBE44\uC804\uC758 \uAD70\uC8FC"
+    Stat1: 2
+    Value1: 0.18
+    HasStat2: 1
+    Stat2: 0
+    Value2: 0.12
+    Passive: 0
+  SignaturePassive: 19
+  SummonDelay: 0.1
+  SummonCircleEffectKey: FX_Summon_Circle

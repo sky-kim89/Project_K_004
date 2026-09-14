@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f6c103ddddac8b478d4bfbe1cd67c0d, type: 3}
+  m_Name: WeakGeneralStrongSoldier
+  m_EditorClassIdentifier: 
+  Type: 5
+  SkillName: "\uC57D\uD55C \uC7A5\uAD70, \uAC15\uD55C \uBCD1\uC0AC"
+  Description: "\uC7A5\uAD70 \uACF5\uACA9\uB825\xB7\uCCB4\uB825 -20%. \uBCD1\uC0AC
+    \uACF5\uACA9\uB825\xB7\uCCB4\uB825 +30%."
+  StatModifiers:
+  - Stat: 0
+    Delta: -0.2
+    IsPercent: 1
+    Target: 0
+  - Stat: 2
+    Delta: -0.2
+    IsPercent: 1
+    Target: 0
+  - Stat: 0
+    Delta: 0.3
+    IsPercent: 1
+    Target: 1
+  - Stat: 2
+    Delta: 0.3
+    IsPercent: 1
+    Target: 1
+  TriggerType: 0
+  Icon: {fileID: 21300000, guid: 4e89971746c79f341aea251922442752, type: 3}
+  GeneralScaleBonusAdd: 0

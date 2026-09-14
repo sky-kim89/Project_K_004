@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 161e529bcf4bd574f856933aad63ec4d, type: 3}
+  m_Name: Active_BossEnrage
+  m_EditorClassIdentifier: 
+  SkillId: 33
+  SkillName: "\uAD11\uD3ED\uD654"
+  Description: "1\uBD84\uB9C8\uB2E4 \uAD11\uD3ED\uD654\uAC00 \uD55C \uACB9\uC529
+    \uC601\uAD6C\uD788 \uC313\uC778\uB2E4. \uACB9\uB2F9 \uACF5\uACA9\uB825 +50%,
+    \uBC29\uC5B4\uC728 \uAD00\uD1B5 +10%, \uBAB8\uC9D1 +10%. \uC624\uB798 \uB04C\uC218\uB85D
+    \uC190\uC4F8 \uC218 \uC5C6\uC5B4\uC9C4\uB2E4."
+  Cooldown: 60
+  EffectValue: 1
+  EffectRadius: 0
+  EffectDuration: 0
+  AllowedJobs: 
+  IsRare: 0
+  CasterEffectKey: FX_Berserk
+  TargetEffectKey: 
+  BaseEffectKey: 
+  ShowRangeIndicator: 1
+  RangeIndicatorDuration: 0
+  EffectDespawnDelay: 2
+  AttackPerStack: 0.5
+  PiercePerStack: 0.1
+  SizePerStack: 0.1
+  MaxSizeStacks: 10

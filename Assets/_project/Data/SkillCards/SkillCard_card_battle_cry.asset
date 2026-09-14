@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95e998ded971c734ab5b1d8085d997c4, type: 3}
+  m_Name: SkillCard_card_battle_cry
+  m_EditorClassIdentifier: 
+  Id: card_battle_cry
+  DisplayName: "\uC804\uD22C \uD568\uC131"
+  Description: "\uC8FC\uBCC0 \uBAAC\uC2A4\uD130\uC758 \uACF5\uACA9\uB825\uC744 \uD55C\uB3D9\uC548
+    \uB04C\uC5B4\uC62C\uB9B0\uB2E4. \uBB3C\uB7C9\uACFC \uC798 \uB9DE\uB294\uB2E4."
+  Icon: {fileID: 21300000, guid: a912d70825f5f5a4cb2ccb2d8a578062, type: 3}
+  ManaCost: 11
+  Skill: 17
+  PowerPerLevel: 0.2

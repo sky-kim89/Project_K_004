@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3293ffc88440014396a89c49aab65b7, type: 3}
+  m_Name: Monster_forest_troll
+  m_EditorClassIdentifier: 
+  Id: forest_troll
+  DisplayName: "\uC232\uC758 \uD2B8\uB864"
+  BodyType: 1
+  Race: 0
+  NonHumanoidLibrary: {fileID: 11400000, guid: 4b84459ba2dc047418c4a11dc3bc689d, type: 2}
+  BodyTint: {r: 1, g: 1, b: 1, a: 1}
+  BodyScale: 1.45
+  BodyStretch: {x: 1, y: 1}
+  Mark: 0
+  PoolKey: Monster
+  LineageIcon: {fileID: 21300000, guid: 8e3d31bc968797c42b3e489c29606346, type: 3}
+  ManaCost: 9
+  SummonCount: 9
+  AttackKind: 0
+  Projectile: 0
+  ProjectileSpeed: 0
+  Traits: 73
+  Tags: 14
+  Description: "\uC791\uACE0 \uC57D\uD574\uC9C4 \uB300\uC2E0 \uC2F8\uACE0 \uC544\uD649\uC529
+    \uB098\uC628\uB2E4. \uC7AC\uC0DD\uD558\uBA74\uC11C \uBE60\uB974\uAC8C \uB54C\uB9B0\uB2E4.\n\u26A0
+    \uC774 '\uC2E0\uC18D' \uC744 \uC735\uD569\uC73C\uB85C \uB2E4\uB978 \uCE74\uB4DC\uC5D0
+    \uB118\uAE38 \uC218 \uC788\uB2E4 \u2014 \uC885\uC871\uC744 \uAC00\uB9AC\uC9C0
+    \uC54A\uB294\uB2E4."
+  MaxHp: 95
+  Attack: 12
+  AttackRange: 1.7
+  AttackSpeed: 0.9
+  MoveSpeed: 2.6
+  Defense: 0.08
+  CritChance: 0.05
+  CritDamage: 1.5
+  SummonPowerToHp: 1
+  SummonPowerToAttack: 1
+  UpgradeOf: {fileID: 11400000, guid: d1e650dc06e1f5c4b953d488f9763b4b, type: 2}
+  SpeciesTrait: 29
+  ActiveSkill: 0
+  Passives: 
+  LevelBonuses:
+  - Label: "\uC232\uC758 \uD65C\uB825"
+    Stat1: 4
+    Value1: 0.12
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 0
+  - Label: "\uC7B0\uAC78\uC74C"
+    Stat1: 5
+    Value1: 0.15
+    HasStat2: 1
+    Stat2: 0
+    Value2: 0.12
+    Passive: 0
+  - Label: "\uBB34\uC131\uD55C \uC7AC\uC0DD"
+    Stat1: 0
+    Value1: 0.15
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 23
+  - Label: "\uC232\uC758 \uBD84\uB178"
+    Stat1: 2
+    Value1: 0.18
+    HasStat2: 1
+    Stat2: 4
+    Value2: 0.12
+    Passive: 0
+  SignaturePassive: 34
+  SummonDelay: 0.1
+  SummonCircleEffectKey: FX_Summon_Circle

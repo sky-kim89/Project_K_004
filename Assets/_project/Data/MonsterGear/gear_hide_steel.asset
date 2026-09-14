@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 807853da1c6c64f45b2c3aefe4c99183, type: 3}
+  m_Name: gear_hide_steel
+  m_EditorClassIdentifier: 
+  Id: gear_hide_steel
+  DisplayName: "\uAC15\uCCA0 \uBE44\uB298"
+  Description: "\uC1F3\uAC00\uB8E8\uB97C \uBA39\uC5EC \uAE30\uB978 \uAC00\uC8FD.
+    \uBAB8\uC774 \uCC28\uAC11\uAC8C \uBE5B\uB09C\uB2E4."
+  Concept: "\uBC29\uBCBD"
+  Icon: {fileID: 21300000, guid: 87f0159e94e69f94c9864a443f9df6af, type: 3}
+  Grade: 2
+  Body: 1
+  Part: 5
+  BaseOptions:
+  - Stat: 0
+    Value: 23
+    Quirk: 0
+  - Stat: 2
+    Value: 0.02
+    Quirk: 0
+  Levels:
+  - Options:
+    - Stat: 0
+      Value: 23
+      Quirk: 0
+  - Options:
+    - Stat: 2
+      Value: 0.02
+      Quirk: 0
+  - Options:
+    - Stat: 0
+      Value: 23
+      Quirk: 0
+  - Options:
+    - Stat: 2
+      Value: 0.02
+      Quirk: 0
+    - Stat: 3
+      Value: 0.05
+      Quirk: 0
+  Lv4Passive: 0
+  Lv5Passive: 22
+  AppearanceName: 
+  Tint: {r: 0.47058824, g: 0.5803922, b: 0.69803923, a: 1}
+  ScaleBonus: 0

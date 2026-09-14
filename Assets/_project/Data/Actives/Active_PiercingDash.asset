@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 450c509a767ec9b44b1d037a95a2e960, type: 3}
+  m_Name: Active_PiercingDash
+  m_EditorClassIdentifier: 
+  SkillId: 28
+  SkillName: "\uAD00\uD1B5 \uB3CC\uC9C4"
+  Description: "\uC804\uBC29\uC73C\uB85C \uC9E7\uAC8C \uB3CC\uC9C4\uD558\uBA70 \uC9C1\uC120
+    \uC704\uC758 \uC801\uC744 \uBAA8\uB450 \uAD00\uD1B5 \uD0C0\uACA9\uD55C\uB2E4.
+    \uACF5\uACA9\uB825 100% \uD53C\uD574. \uCFE8\uD0C0\uC784 1\uCD08."
+  Cooldown: 1
+  EffectValue: 1
+  EffectRadius: 4
+  EffectDuration: 0
+  AllowedJobs: 0000000003000000
+  IsRare: 1
+  CasterEffectKey: FX_Dash_Slash
+  TargetEffectKey: FX_Slash_Impact
+  BaseEffectKey: FX_Dust_Dash
+  ShowRangeIndicator: 1
+  RangeIndicatorDuration: 0
+  EffectDespawnDelay: 0.8
+  DamageMultiplier: 1
+  LineWidth: 1.6
+  DashSpeed: 26
+  KnockbackMult: 1.2

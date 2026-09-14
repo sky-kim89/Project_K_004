@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 807853da1c6c64f45b2c3aefe4c99183, type: 3}
+  m_Name: gear_shield_steel
+  m_EditorClassIdentifier: 
+  Id: gear_shield_steel
+  DisplayName: "\uAC15\uCCA0 \uBC29\uD328"
+  Description: "\uBB34\uAC81\uB2E4. \uB4E0 \uC790\uB9AC\uC5D0\uC11C \uD55C \uAC78\uC74C\uB3C4
+    \uBB3C\uB7EC\uB098\uC9C0 \uC54A\uB294\uB2E4."
+  Concept: "\uBC00\uCCD0\uB0B4\uAE30"
+  Icon: {fileID: 21300000, guid: cf58de5233a860c4faaed858707733ef, type: 3}
+  Grade: 2
+  Body: 0
+  Part: 2
+  BaseOptions:
+  - Stat: 0
+    Value: 23
+    Quirk: 0
+  - Stat: 2
+    Value: 0.02
+    Quirk: 0
+  Levels:
+  - Options:
+    - Stat: 13
+      Value: 0.25
+      Quirk: 0
+  - Options:
+    - Stat: 0
+      Value: 23
+      Quirk: 0
+  - Options:
+    - Stat: 13
+      Value: 0.25
+      Quirk: 0
+  - Options:
+    - Stat: 2
+      Value: 0.02
+      Quirk: 0
+    - Stat: 0
+      Value: 23
+      Quirk: 0
+  Lv4Passive: 0
+  Lv5Passive: 46
+  AppearanceName: SteelShield
+  Tint: {r: 1, g: 1, b: 1, a: 1}
+  ScaleBonus: 0

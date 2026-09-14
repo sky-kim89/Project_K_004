@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d2411652f6855a49b1c32bed3d4bfc8, type: 3}
+  m_Name: Summoner_druid
+  m_EditorClassIdentifier: 
+  Id: druid
+  DisplayName: "\uB4DC\uB8E8\uC774\uB4DC"
+  Description: "\uC57C\uC218\uB97C \uBAAC\uB2E4. \uD310\uC744 \uB118\uAE38 \uB54C\uB9C8\uB2E4
+    \uC790\uC5F0\uC774 \uB9C8\uB098\uB97C \uB354 \uB3CC\uB824\uC900\uB2E4."
+  PoolKey: Summoner
+  Portrait: {fileID: 0}
+  AppearanceSeed: summoner_druid
+  AppearanceJob: 1
+  AppearanceGrade: 2
+  AppearanceSpecies: {fileID: 0}
+  AppearanceMark: 0
+  AppearanceScale: 1
+  Vigor: 4
+  Vitality: 6
+  Intelligence: 9
+  AttackRange: 24
+  ProjectileSpeed: 24
+  AttackSpeed: 0.9
+  Defense: 0.12
+  BaseMana: 20
+  ManaPerIntelligence: 4
+  ManaRegenPerIntelligence: 1
+  ManaRegenHoldRatio: 0.1
+  DeckSlots: 6
+  SignatureSkill: 34
+  SignatureName: "\uBA67\uB3FC\uC9C0 \uB3CC\uACA9"
+  SkillUsesPerStage: 1
+  SignatureSummonSpecies: {fileID: 11400000, guid: f65663af889c3b841871c86e865c03eb, type: 2}
+  SignatureSummonCount: 2
+  ListOrder: 8
+  Unlocks:
+  - Kind: 4
+    Value: 5
+    SpeciesIds: []
+    Traits: 64
+  StarterMonsters:
+  - {fileID: 11400000, guid: f65663af889c3b841871c86e865c03eb, type: 2}
+  - {fileID: 11400000, guid: bafb509cc44832742b7b54e01531076a, type: 2}
+  - {fileID: 11400000, guid: 23a07e7c40c8f7347b213eceac0a8f4a, type: 2}
+  StarterSkills: []
+  Affinities:
+  - SpeciesId: 
+    Traits: 72
+  Perk: 18
+  PerkValue: 0.1
+  AttackPerVigor: 2
+  HpPerVitality: 50
+  SummonPowerPerIntelligence: 1
+  BaseCoreHp: 12
+  CoreHpPerVitality: 9

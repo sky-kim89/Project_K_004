@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86df5c42862d64242a2620ae79e52d42, type: 3}
+  m_Name: Active_IronShield
+  m_EditorClassIdentifier: 
+  SkillId: 15
+  SkillName: "\uCCA0\uBCBD \uBC29\uC5B4"
+  Description: "\uC2DC\uC804\uC790\uC758 \uBC29\uC5B4\uC728\uC744 8\uCD08 \uB3D9\uC548
+    +30% \uC99D\uAC00. \uC9C0\uC18D \uC2DC\uAC04 \uB3D9\uC548 \uB3C4\uBC1C \uC0C1\uD0DC\uAC00
+    \uB418\uC5B4 \uC801\uC758 \uC6B0\uC120 \uD0C0\uAC9F\uC774 \uB428."
+  Cooldown: 8
+  EffectValue: 0.3
+  EffectRadius: 0
+  EffectDuration: 8
+  AllowedJobs: 03000000
+  IsRare: 0
+  CasterEffectKey: FX_Shield_Up
+  TargetEffectKey: 
+  BaseEffectKey: 
+  ShowRangeIndicator: 1
+  RangeIndicatorDuration: 0
+  EffectDespawnDelay: 6

@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 807853da1c6c64f45b2c3aefe4c99183, type: 3}
+  m_Name: gear_back_sword
+  m_EditorClassIdentifier: 
+  Id: gear_back_sword
+  DisplayName: "\uB4F1\uC5D0 \uBA58 \uB300\uAC80"
+  Description: "\uBF51\uC744 \uC77C\uC774 \uC5C6\uB2E4. \uBA58 \uAC83\uB9CC\uC73C\uB85C\uB3C4
+    \uD53C\uAC00 \uB053\uB294\uB2E4."
+  Concept: "\uC644\uB825"
+  Icon: {fileID: 21300000, guid: 503861124f924f149801fbe1422bf914, type: 3}
+  Grade: 3
+  Body: 0
+  Part: 4
+  BaseOptions:
+  - Stat: 1
+    Value: 6
+    Quirk: 0
+  Levels:
+  - Options:
+    - Stat: 1
+      Value: 3
+      Quirk: 0
+  - Options:
+    - Stat: 4
+      Value: 0.06
+      Quirk: 0
+  - Options:
+    - Stat: 1
+      Value: 3
+      Quirk: 0
+  - Options:
+    - Stat: 4
+      Value: 0.06
+      Quirk: 0
+    - Stat: 1
+      Value: 3
+      Quirk: 0
+  Lv4Passive: 0
+  Lv5Passive: 5
+  AppearanceName: BackSword
+  Tint: {r: 1, g: 1, b: 1, a: 1}
+  ScaleBonus: 0

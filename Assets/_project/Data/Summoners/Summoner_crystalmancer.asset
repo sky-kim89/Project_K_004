@@ -1,0 +1,73 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d2411652f6855a49b1c32bed3d4bfc8, type: 3}
+  m_Name: Summoner_crystalmancer
+  m_EditorClassIdentifier: 
+  Id: crystalmancer
+  DisplayName: "\uACB0\uC815\uC220\uC0AC"
+  Description: "\uB0A8\uAE34 \uB9C8\uB098\uAC00 \uACB0\uC815\uC73C\uB85C \uAD73\uC5B4
+    \uADF8\uB987\uC744 \uD0A4\uC6B4\uB2E4. \uB300\uC2E0 \uC18C\uD658\uB825\uC774
+    \uC57D\uD558\uB2E4.\n\uC544\uAEF4 \uAC00\uBA70 \uD310\uC744 \uB118\uAE38\uC218\uB85D
+    \uAC15\uD574\uC9C0\uB294 \uC7A5\uAE30\uC804 \uC18C\uD658\uC0AC."
+  PoolKey: Summoner
+  Portrait: {fileID: 0}
+  AppearanceSeed: summoner_crystal
+  AppearanceJob: 2
+  AppearanceGrade: 2
+  AppearanceSpecies: {fileID: 0}
+  AppearanceMark: 0
+  AppearanceScale: 1
+  Vigor: 4
+  Vitality: 6
+  Intelligence: 9
+  AttackRange: 26
+  ProjectileSpeed: 24
+  AttackSpeed: 0.8
+  Defense: 0.1
+  BaseMana: 20
+  ManaPerIntelligence: 4
+  ManaRegenPerIntelligence: 1
+  ManaRegenHoldRatio: 0.1
+  DeckSlots: 5
+  SignatureSkill: 34
+  SignatureName: "\uB9C8\uB825 \uD574\uACE8 \uC18C\uD658"
+  SkillUsesPerStage: 2
+  SignatureSummonSpecies: {fileID: 11400000, guid: daec436cfffe8fc4c94ae9010847830f, type: 2}
+  SignatureSummonCount: 4
+  ListOrder: 13
+  Unlocks:
+  - Kind: 0
+    Value: 12
+    SpeciesIds: []
+    Traits: 0
+  StarterMonsters:
+  - {fileID: 11400000, guid: c6f38b1551096184884361b93853cc23, type: 2}
+  - {fileID: 11400000, guid: daec436cfffe8fc4c94ae9010847830f, type: 2}
+  StarterSkills: []
+  Affinities:
+  - SpeciesId: skeleton
+    Traits: 0
+  - SpeciesId: skeleton_guard
+    Traits: 0
+  - SpeciesId: mana_skeleton
+    Traits: 0
+  - SpeciesId: goblin
+    Traits: 0
+  - SpeciesId: goblin_archer
+    Traits: 0
+  Perk: 16
+  PerkValue: 0.2
+  AttackPerVigor: 2
+  HpPerVitality: 50
+  SummonPowerPerIntelligence: 0.6
+  BaseCoreHp: 12
+  CoreHpPerVitality: 9

@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 807853da1c6c64f45b2c3aefe4c99183, type: 3}
+  m_Name: gear_helm_viking
+  m_EditorClassIdentifier: 
+  Id: gear_helm_viking
+  DisplayName: "\uBFD4\uD22C\uAD6C"
+  Description: "\uBFD4\uC740 \uC7A5\uC2DD\uC774 \uC544\uB2C8\uB2E4. \uBA3C\uC800
+    \uB2FF\uB294 \uCABD\uC774 \uBFD4\uC774\uB2E4."
+  Concept: "\uD30C\uC1C4"
+  Icon: {fileID: 21300000, guid: 30dc95c93b0f4fe42bc9e4bbb14c9c80, type: 3}
+  Grade: 2
+  Body: 0
+  Part: 1
+  BaseOptions:
+  - Stat: 1
+    Value: 4.2
+    Quirk: 0
+  Levels:
+  - Options:
+    - Stat: 10
+      Value: 0.04
+      Quirk: 0
+  - Options:
+    - Stat: 1
+      Value: 2.1
+      Quirk: 0
+  - Options:
+    - Stat: 10
+      Value: 0.04
+      Quirk: 0
+  - Options:
+    - Stat: 4
+      Value: 0.05
+      Quirk: 0
+    - Stat: 1
+      Value: 2.1
+      Quirk: 0
+  Lv4Passive: 0
+  Lv5Passive: 43
+  AppearanceName: VikingHelmet
+  Tint: {r: 1, g: 1, b: 1, a: 1}
+  ScaleBonus: 0

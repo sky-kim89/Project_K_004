@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0718040c8a35ede438934da59511fbbf, type: 3}
+  m_Name: LootHunter
+  m_EditorClassIdentifier: 
+  Type: 39
+  SkillName: "\uC804\uB9AC\uD488 \uC0AC\uB0E5"
+  Description: "\uC801 \uCC98\uCE58 \uC2DC \uACE8\uB4DC +15 \uD68D\uB4DD."
+  StatModifiers: []
+  TriggerType: 3
+  Icon: {fileID: 21300000, guid: 85fa72d4e17c4f54d82dba3b16b09540, type: 3}
+  GeneralScaleBonusAdd: 0
+  GoldPerKill: 15

@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7d6d60592383bc4b9afbbd5b1abd688, type: 3}
+  m_Name: SpriteManager
+  m_EditorClassIdentifier: 
+  _itemAtlas: {fileID: 4343727234628468602, guid: 793497c94e05b954d88357c7cfd850ed, type: 2}
+  _generalAtlas: {fileID: 4343727234628468602, guid: 14cba563844c266468e046b7b9e314a7, type: 2}
+  _traitAtlas: {fileID: 4343727234628468602, guid: 52e9fab1e63570a469221eddba8c3aca, type: 2}
+  _relicTreeAtlas: {fileID: 4343727234628468602, guid: a695de991d8bb00408d83ede1f5723f4, type: 2}
+  _stageNodeAtlas: {fileID: 4343727234628468602, guid: 6c7a34b553c83fe4ba5cb1d32466c88c, type: 2}
+  _lobbyBtnAtlas: {fileID: 4343727234628468602, guid: 4ec273a6218929340a0491c51b56f6dd, type: 2}

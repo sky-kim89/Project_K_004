@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ffa75f5db184fc44781b25c9a365b4e8, type: 3}
+  m_Name: Active_BossSlam
+  m_EditorClassIdentifier: 
+  SkillId: 32
+  SkillName: "\uBD84\uC1C4 \uAC15\uD0C0"
+  Description: "\uB3C4\uC57D\uD574 \uB0B4\uB824\uCC0D\uC73C\uBA70 \uBC1C\uBC11\uC744
+    \uBD84\uC1C4\uD55C\uB2E4. \uBC18\uACBD 7 \uC548\uC758 \uC801\uC5D0\uAC8C \uACF5\uACA9\uB825
+    350% \uD53C\uD574\uC640 \uAC15\uD55C \uB109\uBC31. \uAC00\uC7A5\uC790\uB9AC\uB294
+    \uD53C\uD574\uAC00 \uC904\uC5B4\uB4E0\uB2E4."
+  Cooldown: 13
+  EffectValue: 1
+  EffectRadius: 7
+  EffectDuration: 0
+  AllowedJobs: 
+  IsRare: 0
+  CasterEffectKey: FX_BossSlam_Impact
+  TargetEffectKey: FX_BossSlam_Hit
+  BaseEffectKey: FX_BossSlam_Warning
+  ShowRangeIndicator: 1
+  RangeIndicatorDuration: 0
+  EffectDespawnDelay: 1.6
+  WindupTime: 0.8
+  JumpHeight: 2.2
+  SlamTime: 0.22
+  RecoverTime: 0.5
+  DamageMultiplier: 3.5
+  SlamRadius: 7
+  KnockbackMult: 9

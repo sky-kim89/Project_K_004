@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 807853da1c6c64f45b2c3aefe4c99183, type: 3}
+  m_Name: gear_charm_crown
+  m_EditorClassIdentifier: 
+  Id: gear_charm_crown
+  DisplayName: "\uC9D0\uC2B9\uC758 \uAD00"
+  Description: "\uBB34\uB9AC\uC5D0\uC11C \uD558\uB098\uC5D0\uAC8C\uB9CC \uC8FC\uC5B4\uC9C4\uB2E4."
+  Concept: "\uC655\uAD8C"
+  Icon: {fileID: 21300000, guid: 2828591721f7fb5438072f01a969810f, type: 3}
+  Grade: 4
+  Body: 1
+  Part: 7
+  BaseOptions:
+  - Stat: 1
+    Value: 8.4
+    Quirk: 0
+  Levels:
+  - Options:
+    - Stat: 3
+      Value: 0.08
+      Quirk: 0
+  - Options:
+    - Stat: 12
+      Value: 1
+      Quirk: 0
+  - Options:
+    - Stat: 4
+      Value: 0.08
+      Quirk: 0
+  - Options:
+    - Stat: 3
+      Value: 0.08
+      Quirk: 0
+    - Stat: 4
+      Value: 0.08
+      Quirk: 0
+  Lv4Passive: 0
+  Lv5Passive: 0
+  AppearanceName: 
+  Tint: {r: 1, g: 1, b: 1, a: 1}
+  ScaleBonus: 0

@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 807853da1c6c64f45b2c3aefe4c99183, type: 3}
+  m_Name: gear_cape_tattered
+  m_EditorClassIdentifier: 
+  Id: gear_cape_tattered
+  DisplayName: "\uD574\uC9C4 \uB9DD\uD1A0"
+  Description: "\uBC14\uB78C\uC5D0 \uB108\uB35C\uB108\uB35C\uD574\uC84C\uB2E4. \uAC00\uBCBC\uC6CC\uC11C
+    \uBC1C\uC774 \uBE68\uB77C\uC9C4\uB2E4."
+  Concept: "\uC2E0\uC18D"
+  Icon: {fileID: 21300000, guid: 27642f6f313264044bc5af109d8d3f8d, type: 3}
+  Grade: 0
+  Body: 0
+  Part: 3
+  BaseOptions:
+  - Stat: 0
+    Value: 9
+    Quirk: 0
+  - Stat: 1
+    Value: 0.8
+    Quirk: 0
+  Levels:
+  - Options:
+    - Stat: 7
+      Value: 0.04
+      Quirk: 0
+  - Options:
+    - Stat: 1
+      Value: 0.8
+      Quirk: 0
+  - Options:
+    - Stat: 7
+      Value: 0.04
+      Quirk: 0
+  - Options:
+    - Stat: 8
+      Value: 0.05
+      Quirk: 0
+    - Stat: 1
+      Value: 0.8
+      Quirk: 0
+  Lv4Passive: 69
+  Lv5Passive: 0
+  AppearanceName: Cape
+  Tint: {r: 1, g: 1, b: 1, a: 1}
+  ScaleBonus: 0

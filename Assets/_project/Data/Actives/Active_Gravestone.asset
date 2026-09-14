@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ca77546c0481a342946464d66941ad9, type: 3}
+  m_Name: Active_Gravestone
+  m_EditorClassIdentifier: 
+  SkillId: 30
+  SkillName: "\uBE44\uC11D \uAC15\uB9BC"
+  Description: "\uBE44\uC11D 12\uAE30\uAC00 \uC21C\uC11C\uB300\uB85C \uC6B0\uC218\uC218
+    \uB5A8\uC5B4\uC838 \uAF42\uD78C\uB2E4. \uCC29\uD0C4 \uC9C0\uC810\uB9C8\uB2E4
+    \uACF5\uACA9\uB825 150% \uD53C\uD574 + \uB109\uBC31, \uADF8 \uC790\uB9AC\uC5D0\uC11C
+    \uC2A4\uCF08\uB808\uD1A4\uC774 \uD558\uB098\uC529 \uC77C\uC5B4\uB09C\uB2E4."
+  Cooldown: 50
+  EffectValue: 12
+  EffectRadius: 2
+  EffectDuration: 0.5
+  AllowedJobs: 02000000
+  IsRare: 1
+  CasterEffectKey: FX_Grave_Rise
+  TargetEffectKey: FX_Grave_Impact
+  BaseEffectKey: FX_Grave_Warning
+  ShowRangeIndicator: 1
+  RangeIndicatorDuration: 0
+  EffectDespawnDelay: 2.5
+  DamageMultiplier: 1.5
+  ScatterRadius: 5
+  SkeletonPoolKey: Soldier
+  StatRatio: 0.45
+  KnockbackMult: 5
+  DropInterval: 0.12

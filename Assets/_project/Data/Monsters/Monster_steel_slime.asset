@@ -1,0 +1,81 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3293ffc88440014396a89c49aab65b7, type: 3}
+  m_Name: Monster_steel_slime
+  m_EditorClassIdentifier: 
+  Id: steel_slime
+  DisplayName: "\uAC15\uCCA0 \uC2AC\uB77C\uC784"
+  BodyType: 1
+  Race: 0
+  NonHumanoidLibrary: {fileID: 11400000, guid: 1ff901ea0198ef34d91505f260e03595, type: 2}
+  BodyTint: {r: 1, g: 1, b: 1, a: 1}
+  BodyScale: 1.12
+  BodyStretch: {x: 1.12, y: 1.02}
+  Mark: 0
+  PoolKey: Monster
+  LineageIcon: {fileID: 21300000, guid: 6c9ebfea264a477489bf8d21f7081ec3, type: 3}
+  ManaCost: 8
+  SummonCount: 5
+  AttackKind: 0
+  Projectile: 0
+  ProjectileSpeed: 0
+  Traits: 69
+  Tags: 40
+  Description: "\uBD84\uC5F4\uD558\uACE0, \uBC1B\uC740 \uD53C\uD574\uC758 \uC77C\uBD80\uB97C
+    \uADF8\uB300\uB85C \uB418\uB3CC\uB824\uC900\uB2E4.\n\uADFC\uC811 \uC6A9\uC0AC
+    \uC55E\uC5D0 \uC138\uC6B8\uC218\uB85D \uAC12\uC5B4\uCE58\uAC00 \uCEE4\uC9C4\uB2E4."
+  MaxHp: 335
+  Attack: 15
+  AttackRange: 1
+  AttackSpeed: 0.7
+  MoveSpeed: 1.4
+  Defense: 0.18
+  CritChance: 0.05
+  CritDamage: 1.5
+  SummonPowerToHp: 1.6
+  SummonPowerToAttack: 0.4
+  UpgradeOf: {fileID: 11400000, guid: bafb509cc44832742b7b54e01531076a, type: 2}
+  SpeciesTrait: 22
+  ActiveSkill: 0
+  Passives: 
+  LevelBonuses:
+  - Label: "\uAC15\uCCA0 \uAECD\uC9C8"
+    Stat1: 1
+    Value1: 0.08
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 0
+  - Label: "\uBB34\uAC70\uC6B4 \uBAB8"
+    Stat1: 0
+    Value1: 0.2
+    HasStat2: 1
+    Stat2: 1
+    Value2: 0.05
+    Passive: 0
+  - Label: "\uAC00\uC2DC \uAC15\uD654"
+    Stat1: 0
+    Value1: 0.15
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 36
+  - Label: "\uCCA0\uBCBD"
+    Stat1: 1
+    Value1: 0.08
+    HasStat2: 1
+    Stat2: 2
+    Value2: 0.12
+    Passive: 0
+  SignaturePassive: 36
+  SummonDelay: 0.1
+  SummonCircleEffectKey: FX_Summon_Circle

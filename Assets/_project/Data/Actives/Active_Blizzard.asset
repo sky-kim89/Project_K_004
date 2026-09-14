@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe1fa578cbf37fb4e93df1d23050e4a8, type: 3}
+  m_Name: Active_Blizzard
+  m_EditorClassIdentifier: 
+  SkillId: 10
+  SkillName: "\uBE14\uB9AC\uC790\uB4DC"
+  Description: "\uD0C0\uAC9F \uC704\uCE58\uC5D0 \uBE14\uB9AC\uC790\uB4DC \uC9C0\uB300.
+    \uC774\uB3D9\uC18D\uB3C4\xB7\uACF5\uACA9\uC18D\uB3C4 \uAC10\uC18C + 0.5\uCD08\uB9C8\uB2E4
+    \uACF5\uACA9\uB825 40% \uC9C0\uC18D \uD53C\uD574."
+  Cooldown: 24
+  EffectValue: 0.4
+  EffectRadius: 3
+  EffectDuration: 8
+  AllowedJobs: 02000000
+  IsRare: 0
+  CasterEffectKey: 
+  TargetEffectKey: 
+  BaseEffectKey: FX_Blizzard
+  ShowRangeIndicator: 1
+  RangeIndicatorDuration: 0
+  EffectDespawnDelay: 10
+  TickInterval: 0.5
+  MoveSlowMultiplier: 0.25
+  AttackSlowMultiplier: 0.35

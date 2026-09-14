@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f6c103ddddac8b478d4bfbe1cd67c0d, type: 3}
+  m_Name: SacrificeRitual
+  m_EditorClassIdentifier: 
+  Type: 15
+  SkillName: "\uD76C\uC0DD \uC758\uC2DD"
+  Description: "\uBCD1\uC0AC 5\uBA85 \uD76C\uC0DD \u2192 \uC7A5\uAD70 \uACF5\uACA9\uB825\xB7\uCCB4\uB825
+    +20%."
+  StatModifiers:
+  - Stat: 8
+    Delta: -5
+    IsPercent: 0
+    Target: 0
+  - Stat: 2
+    Delta: 0.2
+    IsPercent: 1
+    Target: 0
+  - Stat: 0
+    Delta: 0.2
+    IsPercent: 1
+    Target: 0
+  TriggerType: 0
+  Icon: {fileID: 21300000, guid: 90a5e7cd2085367408beccb060d91309, type: 3}
+  GeneralScaleBonusAdd: 0

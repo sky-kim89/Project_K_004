@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11b49814951154046906787809f49415, type: 3}
+  m_Name: CounterStrike
+  m_EditorClassIdentifier: 
+  Type: 24
+  SkillName: "\uD53C\uACA9 \uBC18\uACA9"
+  Description: "\uD53C\uACA9 \uC2DC 40% \uD655\uB960\uB85C \uACF5\uACA9\uB825 +20%\uB97C
+    5\uCD08 \uB3D9\uC548 \uBC84\uD504."
+  StatModifiers: []
+  TriggerType: 1
+  Icon: {fileID: 21300000, guid: 3bff021d759310340a92e1d52adb7de5, type: 3}
+  GeneralScaleBonusAdd: 0
+  TriggerChance: 0.4
+  AttackBonusRatio: 0.2
+  BuffDuration: 5

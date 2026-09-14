@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 807853da1c6c64f45b2c3aefe4c99183, type: 3}
+  m_Name: gear_helm_executioner
+  m_EditorClassIdentifier: 
+  Id: gear_helm_executioner
+  DisplayName: "\uCC98\uD615\uC778\uC758 \uBCF5\uBA74"
+  Description: "\uC4F4 \uC790\uC758 \uD45C\uC815\uC774 \uBCF4\uC774\uC9C0 \uC54A\uC544,
+    \uB9DE\uB294 \uCABD\uC774 \uBA3C\uC800 \uBB34\uB108\uC9C4\uB2E4."
+  Concept: "\uAE09\uC18C"
+  Icon: {fileID: 21300000, guid: 30dc95c93b0f4fe42bc9e4bbb14c9c80, type: 3}
+  Grade: 3
+  Body: 0
+  Part: 1
+  BaseOptions:
+  - Stat: 1
+    Value: 6
+    Quirk: 0
+  Levels:
+  - Options:
+    - Stat: 5
+      Value: 0.06
+      Quirk: 0
+  - Options:
+    - Stat: 1
+      Value: 3
+      Quirk: 0
+  - Options:
+    - Stat: 5
+      Value: 0.06
+      Quirk: 0
+  - Options:
+    - Stat: 6
+      Value: 0.3
+      Quirk: 0
+    - Stat: 1
+      Value: 3
+      Quirk: 0
+  Lv4Passive: 0
+  Lv5Passive: 45
+  AppearanceName: ExecutionerHood
+  Tint: {r: 1, g: 1, b: 1, a: 1}
+  ScaleBonus: 0

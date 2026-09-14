@@ -1,0 +1,74 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d2411652f6855a49b1c32bed3d4bfc8, type: 3}
+  m_Name: Summoner_butcher
+  m_EditorClassIdentifier: 
+  Id: butcher
+  DisplayName: "\uB3C4\uC0B4\uC790"
+  Description: "\uC9C1\uC811 \uB54C\uB9AC\uACE0, \uC4F0\uB7EC\uC9C4 \uBAAC\uC2A4\uD130\uB97C
+    \uC7AC\uB8CC\uB85C \uC0BC\uB294\uB2E4.\n\uBB3C\uB7C9\uC744 \uAC08\uC544 \uB123\uB294
+    \uC6B4\uC6A9\uC5D0 \uC5B4\uC6B8\uB9B0\uB2E4."
+  PoolKey: Summoner
+  Portrait: {fileID: 0}
+  AppearanceSeed: summoner_butcher
+  AppearanceJob: 0
+  AppearanceGrade: 3
+  AppearanceSpecies: {fileID: 0}
+  AppearanceMark: 0
+  AppearanceScale: 1
+  Vigor: 9
+  Vitality: 6
+  Intelligence: 4
+  AttackRange: 20
+  ProjectileSpeed: 20
+  AttackSpeed: 1
+  Defense: 0.15
+  BaseMana: 20
+  ManaPerIntelligence: 4
+  ManaRegenPerIntelligence: 1
+  ManaRegenHoldRatio: 0.1
+  DeckSlots: 5
+  SignatureSkill: 27
+  SignatureName: 
+  SkillUsesPerStage: 1
+  SignatureSummonSpecies: {fileID: 0}
+  SignatureSummonCount: 1
+  ListOrder: 11
+  Unlocks:
+  - Kind: 1
+    Value: 0
+    SpeciesIds:
+    - hog
+    - flame_hog
+    - zombie
+    - plague_zombie
+    - troll
+    - forest_troll
+    Traits: 0
+  StarterMonsters:
+  - {fileID: 11400000, guid: b828576fbc378234499d743bf81bfa6b, type: 2}
+  - {fileID: 11400000, guid: de6c569d776d80b4698088d90a9dc27c, type: 2}
+  StarterSkills: []
+  Affinities:
+  - SpeciesId: hog
+    Traits: 0
+  - SpeciesId: zombie
+    Traits: 0
+  - SpeciesId: troll
+    Traits: 0
+  Perk: 12
+  PerkValue: 1
+  AttackPerVigor: 2
+  HpPerVitality: 50
+  SummonPowerPerIntelligence: 1
+  BaseCoreHp: 12
+  CoreHpPerVitality: 9

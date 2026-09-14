@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 807853da1c6c64f45b2c3aefe4c99183, type: 3}
+  m_Name: gear_hood_bandit
+  m_EditorClassIdentifier: 
+  Id: gear_hood_bandit
+  DisplayName: "\uC0B0\uC801 \uB450\uAC74"
+  Description: "\uC5BC\uAD74\uC744 \uAC00\uB9AC\uBA74 \uC870\uAE08 \uB354 \uB300\uB2F4\uD574\uC9C4\uB2E4."
+  Concept: "\uC644\uB825"
+  Icon: {fileID: 21300000, guid: 30dc95c93b0f4fe42bc9e4bbb14c9c80, type: 3}
+  Grade: 0
+  Body: 0
+  Part: 1
+  BaseOptions:
+  - Stat: 1
+    Value: 1.6
+    Quirk: 0
+  - Stat: 6
+    Value: 0.25
+    Quirk: 1
+  Levels:
+  - Options:
+    - Stat: 1
+      Value: 0.8
+      Quirk: 0
+  - Options:
+    - Stat: 4
+      Value: 0.03
+      Quirk: 0
+  - Options:
+    - Stat: 1
+      Value: 0.8
+      Quirk: 0
+  - Options:
+    - Stat: 4
+      Value: 0.03
+      Quirk: 0
+    - Stat: 1
+      Value: 0.8
+      Quirk: 0
+  Lv4Passive: 63
+  Lv5Passive: 0
+  AppearanceName: BanditBandana
+  Tint: {r: 1, g: 1, b: 1, a: 1}
+  ScaleBonus: 0

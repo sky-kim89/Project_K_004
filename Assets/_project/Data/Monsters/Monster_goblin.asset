@@ -1,0 +1,81 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3293ffc88440014396a89c49aab65b7, type: 3}
+  m_Name: Monster_goblin
+  m_EditorClassIdentifier: 
+  Id: goblin
+  DisplayName: "\uACE0\uBE14\uB9B0"
+  BodyType: 0
+  Race: 1
+  NonHumanoidLibrary: {fileID: 0}
+  BodyTint: {r: 1, g: 1, b: 1, a: 1}
+  BodyScale: 0.85
+  BodyStretch: {x: 1, y: 1}
+  Mark: 0
+  PoolKey: Monster
+  LineageIcon: {fileID: 21300000, guid: f4e3841b35848044fb5db0063b3b0d33, type: 3}
+  ManaCost: 6
+  SummonCount: 7
+  AttackKind: 0
+  Projectile: 0
+  ProjectileSpeed: 0
+  Traits: 9
+  Tags: 18
+  Description: "\uBE60\uB974\uACE0 \uBB34\uB974\uB2E4. \uC8FD\uC744 \uB54C \uD6D4\uCCD0
+    \uB454 \uACE8\uB4DC\uB97C \uB5A8\uAD70\uB2E4 \u2014 \uC8FD\uC5B4\uB3C4 \uBC8C\uC774\uB294
+    \uB41C\uB2E4."
+  MaxHp: 48
+  Attack: 10
+  AttackRange: 1
+  AttackSpeed: 1.3
+  MoveSpeed: 3.4
+  Defense: 0
+  CritChance: 0.05
+  CritDamage: 1.5
+  SummonPowerToHp: 0.7
+  SummonPowerToAttack: 1.1
+  UpgradeOf: {fileID: 0}
+  SpeciesTrait: 3
+  ActiveSkill: 0
+  Passives: 
+  LevelBonuses:
+  - Label: "\uB3C4\uB451 \uADFC\uC131"
+    Stat1: 5
+    Value1: 0.12
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 0
+  - Label: "\uAE09\uC18C \uCC0C\uB974\uAE30"
+    Stat1: 6
+    Value1: 0.08
+    HasStat2: 1
+    Stat2: 2
+    Value2: 0.08
+    Passive: 0
+  - Label: "\uB0A0\uB79C \uC190"
+    Stat1: 4
+    Value1: 0.12
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 34
+  - Label: "\uB300\uC57D\uD0C8"
+    Stat1: 2
+    Value1: 0.15
+    HasStat2: 1
+    Stat2: 7
+    Value2: 0.3
+    Passive: 0
+  SignaturePassive: 34
+  SummonDelay: 0.1
+  SummonCircleEffectKey: FX_Summon_Circle

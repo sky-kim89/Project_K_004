@@ -1,0 +1,157 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Atlas_General
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings: []
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 0
+      enableTightPacking: 0
+      enableAlphaDilation: 0
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
+    packables:
+    - {fileID: 102900000, guid: 1306ce5ac2d08b84ca2f0d4345bdd41a, type: 3}
+    - {fileID: 102900000, guid: f7faf627d20cf7a4f82cbb29ab60a8aa, type: 3}
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+    packedSpriteRenderDataKeys:
+    - d4ecc40012cbfe945b9fb4cb8c01114c: 21300000
+    - 833a72e0e63571b4db4983552049d7a7: 21300000
+    - 9a7560f00590fb343a50d2d8709ed5e6: 21300000
+    - bcad95d1c55be1c46974794bc25dbd5c: 21300000
+    - ced29ea28e9b86b41bb257f24e9a5863: 21300000
+    - 4ac5f7b244d47434f8008e8da957a2d7: 21300000
+    - 0985cac2add4b9e4089d516dc72177e3: 21300000
+    - 190412d2dab7eb84886dfb741848fe9a: 21300000
+    - a06f2813af93d16409bb400d14c708b7: 21300000
+    - 6e93f17342a353541914799f5e9ada18: 21300000
+    - 5150f8a3ec0223a47a24f1d7a6dacb21: 21300000
+    - 8052470496e060d49b19e896df8aa019: 21300000
+    - 68ecc514ac6921f468ce0357672c38bb: 21300000
+    - a2da5b647d61fbd4aac6e61ff0f79a50: 21300000
+    - 6e5560a4e2efef545b9e509f0a3725d8: 21300000
+    - d95552369337d204d91b364eb0057999: 21300000
+    - 653b6b36f60c137448ca74027ac8673a: 21300000
+    - a912d70825f5f5a4cb2ccb2d8a578062: 21300000
+    - 434fdb68dba3a6f40851f1661dd90e13: 21300000
+    - 190154884f9b02447bb8bce4eaa11988: 21300000
+    - 575e0689335cdd146943b550917f8467: 21300000
+    - 5de0a36af5024c543afaf1988905ba52: 21300000
+    - 2af6b87a09f1dfb4fb1817e6c15aab33: 21300000
+    - 47ba5f9a0356d004684a822d464d4938: 21300000
+    - 27f70caba55d8434a8e3de2bae5df6cb: 21300000
+    - ae7e95dbd4613f9469bdd531af2b93bd: 21300000
+    - cf7abc3c89d03fa4786a7cab4aea42b2: 21300000
+    - ba76f6cc4aa4f234fbaf1d8d22c822cb: 21300000
+    - ae1bdcece8153914cb97d23ca4b53260: 21300000
+    - 7c6d2f4de87be624798905c0a9719005: 21300000
+    - 5062619d87f62874ca2d89687a22eaef: 21300000
+    - dbe7ed0ea23f4e641a2759948eec3c63: 21300000
+    - 21adbe2e2d2b68b4ab5d588268a4a915: 21300000
+    - ffc1b98e929c8bf41a0cd10c138b1bc6: 21300000
+    - ed2006cedfd294a409baeb90035adc01: 21300000
+    - 63b136cebe4484143ae5f7ddb02537d7: 21300000
+    - 8186b0ffbaac6cc439b1ccde05fd5c40: 21300000
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: 21300000, guid: d4ecc40012cbfe945b9fb4cb8c01114c, type: 3}
+  - {fileID: 21300000, guid: 833a72e0e63571b4db4983552049d7a7, type: 3}
+  - {fileID: 21300000, guid: 9a7560f00590fb343a50d2d8709ed5e6, type: 3}
+  - {fileID: 21300000, guid: bcad95d1c55be1c46974794bc25dbd5c, type: 3}
+  - {fileID: 21300000, guid: ced29ea28e9b86b41bb257f24e9a5863, type: 3}
+  - {fileID: 21300000, guid: 4ac5f7b244d47434f8008e8da957a2d7, type: 3}
+  - {fileID: 21300000, guid: 0985cac2add4b9e4089d516dc72177e3, type: 3}
+  - {fileID: 21300000, guid: 190412d2dab7eb84886dfb741848fe9a, type: 3}
+  - {fileID: 21300000, guid: a06f2813af93d16409bb400d14c708b7, type: 3}
+  - {fileID: 21300000, guid: 6e93f17342a353541914799f5e9ada18, type: 3}
+  - {fileID: 21300000, guid: 5150f8a3ec0223a47a24f1d7a6dacb21, type: 3}
+  - {fileID: 21300000, guid: 8052470496e060d49b19e896df8aa019, type: 3}
+  - {fileID: 21300000, guid: 68ecc514ac6921f468ce0357672c38bb, type: 3}
+  - {fileID: 21300000, guid: a2da5b647d61fbd4aac6e61ff0f79a50, type: 3}
+  - {fileID: 21300000, guid: 6e5560a4e2efef545b9e509f0a3725d8, type: 3}
+  - {fileID: 21300000, guid: d95552369337d204d91b364eb0057999, type: 3}
+  - {fileID: 21300000, guid: 653b6b36f60c137448ca74027ac8673a, type: 3}
+  - {fileID: 21300000, guid: a912d70825f5f5a4cb2ccb2d8a578062, type: 3}
+  - {fileID: 21300000, guid: 434fdb68dba3a6f40851f1661dd90e13, type: 3}
+  - {fileID: 21300000, guid: 190154884f9b02447bb8bce4eaa11988, type: 3}
+  - {fileID: 21300000, guid: 575e0689335cdd146943b550917f8467, type: 3}
+  - {fileID: 21300000, guid: 5de0a36af5024c543afaf1988905ba52, type: 3}
+  - {fileID: 21300000, guid: 2af6b87a09f1dfb4fb1817e6c15aab33, type: 3}
+  - {fileID: 21300000, guid: 47ba5f9a0356d004684a822d464d4938, type: 3}
+  - {fileID: 21300000, guid: 27f70caba55d8434a8e3de2bae5df6cb, type: 3}
+  - {fileID: 21300000, guid: ae7e95dbd4613f9469bdd531af2b93bd, type: 3}
+  - {fileID: 21300000, guid: cf7abc3c89d03fa4786a7cab4aea42b2, type: 3}
+  - {fileID: 21300000, guid: ba76f6cc4aa4f234fbaf1d8d22c822cb, type: 3}
+  - {fileID: 21300000, guid: ae1bdcece8153914cb97d23ca4b53260, type: 3}
+  - {fileID: 21300000, guid: 7c6d2f4de87be624798905c0a9719005, type: 3}
+  - {fileID: 21300000, guid: 5062619d87f62874ca2d89687a22eaef, type: 3}
+  - {fileID: 21300000, guid: dbe7ed0ea23f4e641a2759948eec3c63, type: 3}
+  - {fileID: 21300000, guid: 21adbe2e2d2b68b4ab5d588268a4a915, type: 3}
+  - {fileID: 21300000, guid: ffc1b98e929c8bf41a0cd10c138b1bc6, type: 3}
+  - {fileID: 21300000, guid: ed2006cedfd294a409baeb90035adc01, type: 3}
+  - {fileID: 21300000, guid: 63b136cebe4484143ae5f7ddb02537d7, type: 3}
+  - {fileID: 21300000, guid: 8186b0ffbaac6cc439b1ccde05fd5c40, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - knight_icon
+  - skill_volley_fire
+  - skill_charge_soldier
+  - skill_summon_signature
+  - skill_gravity_collapse
+  - skill_meteor
+  - skill_suicide_soldier
+  - skill_blizzard
+  - skill_boss_slam
+  - skill_shockwave
+  - skill_summon_skeleton
+  - skill_bisect
+  - archer_icon
+  - skill_blood_price
+  - skill_arrow_rain
+  - skill_target_heal
+  - skill_boss_charge
+  - skill_battle_cry
+  - skill_berserker
+  - skill_death_sentence
+  - skill_heal_aura
+  - skill_piercing_dash
+  - mage_icon
+  - skill_swift_strike
+  - skill_sacrifice_soldier
+  - skill_chain_lightning
+  - skill_poison_zone
+  - skill_gravestone
+  - skill_heavy_strike
+  - skill_bind
+  - shieldbearer_icon
+  - skill_war_banner
+  - skill_arrow_storm
+  - skill_bulwark
+  - skill_iron_shield
+  - skill_summon_elite
+  - skill_leap_strike
+  m_RenderDataMap: {}
+  m_Tag: Atlas_General
+  m_IsVariant: 0

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c559b511a5981d540906801c480ea0ca, type: 3}
+  m_Name: Passive_StrengthStack
+  m_EditorClassIdentifier: 
+  Type: 20
+  SkillName: "\uC5F0\uACA9 \uC2A4\uD0DD"
+  Description: "\uC5F0\uC18D \uACF5\uACA9\uB9C8\uB2E4 \uACF5\uACA9\uB825 +8 \uB204\uC801
+    (\uCD5C\uB300 5\uC2A4\uD0DD)."
+  StatModifiers: []
+  TriggerType: 2
+  Icon: {fileID: 0}
+  GeneralScaleBonusAdd: 0
+  AttackBonusPerStack: 8
+  MaxStacks: 5

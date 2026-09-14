@@ -1,0 +1,239 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 781a1aa43228e6b4b88f15e9a27a44ea, type: 3}
+  m_Name: GameplayConfig
+  m_EditorClassIdentifier: 
+  HireMercenaryCost: 700
+  HeroLevelUpCostBase: 100
+  HeroLevelUpCostPerLevel: 10
+  GradeUpCostToUncommon: 8
+  GradeUpCostToRare: 16
+  GradeUpCostToUnique: 28
+  GradeUpCostToEpic: 45
+  RelicAcquireCostCommon: 1
+  RelicAcquireCostUncommon: 2
+  RelicAcquireCostRare: 3
+  RelicAcquireCostEpic: 4
+  RelicAcquireCostLegendary: 5
+  RelicLevelUpCostExponent: 2
+  RelicRarityCostMultipliers:
+  - 1
+  - 1.6
+  - 2.5
+  - 4
+  - 6
+  EnablePassiveLog: 1
+  EnableActiveLog: 1
+  EpicSlots: 3
+  UniqueSlots: 2
+  RareSlots: 2
+  UncommonSlots: 1
+  NormalSlots: 1
+  DefenseMax: 0.9
+  DefenseOverflowRate: 0.1
+  DefenseGrowthMax: 0.6
+  CooldownReduceMax: 0.9
+  DefenseEffectiveCap: 0.999
+  ExpPerLevel: 100
+  LevelMultPerLevel: 0.01
+  GradeMultPerTier: 0.15
+  LevelFlatHpPerLevel: 20
+  LevelFlatAttackPerLevel: 1.8
+  LevelFlatSoldierCountPerLevel: 1
+  LevelGrowthAccel: 0.02
+  SoldierBaseStatRatio: 0.2
+  SoldierRatioPerCommandPower: 0.01
+  SoldierStatRatioMax: 0
+  GradeChanceEpic: 0.05
+  GradeChanceUnique: 0.1
+  GradeChanceRare: 0.2
+  GradeChanceUncommon: 0.3
+  MainPanelCandidates:
+  - Name: 
+    Grade: 4
+  - Name: 
+    Grade: 4
+  - Name: 
+    Grade: 4
+  - Name: 
+    Grade: 4
+  EnemyRange:
+    Hp:
+      Min: 120
+      Max: 480
+    Attack:
+      Min: 5.5
+      Max: 27.5
+    Defense:
+      Min: 0.05
+      Max: 0.15
+    AttackRange:
+      Min: 1.2
+      Max: 2.5
+    AttackSpeed:
+      Min: 0.5
+      Max: 1.5
+    MoveSpeed:
+      Min: 2
+      Max: 4
+    CritChance: 0.05
+    CritDamage: 1.5
+  EliteRange:
+    Hp:
+      Min: 720
+      Max: 2160
+    Attack:
+      Min: 41.25
+      Max: 123.75
+    Defense:
+      Min: 0.1
+      Max: 0.55
+    AttackRange:
+      Min: 1.5
+      Max: 3
+    AttackSpeed:
+      Min: 0.8
+      Max: 2
+    MoveSpeed:
+      Min: 2.5
+      Max: 4.5
+    CritChance: 0.05
+    CritDamage: 1.5
+  BossRange:
+    Hp:
+      Min: 1500
+      Max: 6000
+    Attack:
+      Min: 75
+      Max: 200
+    Defense:
+      Min: 0.25
+      Max: 0.85
+    AttackRange:
+      Min: 2
+      Max: 4
+    AttackSpeed:
+      Min: 0.1333
+      Max: 0.4
+    MoveSpeed:
+      Min: 1.5
+      Max: 3
+    CritChance: 0.05
+    CritDamage: 1.5
+  KnightRange:
+    Hp:
+      Min: 525
+      Max: 1125
+    Attack:
+      Min: 21
+      Max: 54
+    Defense:
+      Min: 0.06
+      Max: 0.15
+    AttackRange:
+      Min: 0.8
+      Max: 1.2
+    AttackSpeed:
+      Min: 1.1
+      Max: 1.5
+    MoveSpeed:
+      Min: 2.5
+      Max: 3
+    SoldierCount:
+      Min: 4
+      Max: 7
+    CommandPower:
+      Min: 10
+      Max: 45
+    CritChance: 0.1
+    CritDamage: 1.5
+  ArcherRange:
+    Hp:
+      Min: 310
+      Max: 720
+    Attack:
+      Min: 18
+      Max: 46
+    Defense:
+      Min: 0.03
+      Max: 0.1
+    AttackRange:
+      Min: 5.5
+      Max: 9.9
+    AttackSpeed:
+      Min: 1.1
+      Max: 1.5
+    MoveSpeed:
+      Min: 2
+      Max: 2.5
+    SoldierCount:
+      Min: 2
+      Max: 4
+    CommandPower:
+      Min: 1
+      Max: 30
+    CritChance: 0.15
+    CritDamage: 1.8
+  MageRange:
+    Hp:
+      Min: 258
+      Max: 620
+    Attack:
+      Min: 57
+      Max: 125
+    Defense:
+      Min: 0.02
+      Max: 0.08
+    AttackRange:
+      Min: 4
+      Max: 7
+    AttackSpeed:
+      Min: 0.378
+      Max: 0.522
+    MoveSpeed:
+      Min: 1.5
+      Max: 2
+    SoldierCount:
+      Min: 2
+      Max: 4
+    CommandPower:
+      Min: 1
+      Max: 30
+    CritChance: 0.1
+    CritDamage: 2
+  ShieldBearerRange:
+    Hp:
+      Min: 940
+      Max: 2500
+    Attack:
+      Min: 11
+      Max: 29
+    Defense:
+      Min: 0.22
+      Max: 0.32
+    AttackRange:
+      Min: 0.7
+      Max: 1
+    AttackSpeed:
+      Min: 0.75
+      Max: 0.95
+    MoveSpeed:
+      Min: 2
+      Max: 2.5
+    SoldierCount:
+      Min: 2
+      Max: 4
+    CommandPower:
+      Min: 1
+      Max: 30
+    CritChance: 0.05
+    CritDamage: 1.5

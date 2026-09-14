@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 807853da1c6c64f45b2c3aefe4c99183, type: 3}
+  m_Name: gear_tunic_thief
+  m_EditorClassIdentifier: 
+  Id: gear_tunic_thief
+  DisplayName: "\uB3C4\uB451\uC758 \uC637"
+  Description: "\uAC00\uBCCD\uB2E4. \uBB34\uAC81\uAC8C \uC785\uC740 \uCABD\uC744
+    \uBA3C\uC800 \uCC0C\uB978\uB2E4."
+  Concept: "\uAE09\uC18C"
+  Icon: {fileID: 21300000, guid: 06cf4d44a00fd8741b5995482e088b53, type: 3}
+  Grade: 1
+  Body: 0
+  Part: 0
+  BaseOptions:
+  - Stat: 1
+    Value: 2.8
+    Quirk: 0
+  - Stat: 10
+    Value: 0.03
+    Quirk: 1
+  Levels:
+  - Options:
+    - Stat: 5
+      Value: 0.04
+      Quirk: 0
+  - Options:
+    - Stat: 1
+      Value: 1.4
+      Quirk: 0
+  - Options:
+    - Stat: 5
+      Value: 0.04
+      Quirk: 0
+  - Options:
+    - Stat: 6
+      Value: 0.2
+      Quirk: 0
+    - Stat: 1
+      Value: 1.4
+      Quirk: 0
+  Lv4Passive: 0
+  Lv5Passive: 42
+  AppearanceName: ThiefTunic
+  Tint: {r: 1, g: 1, b: 1, a: 1}
+  ScaleBonus: 0

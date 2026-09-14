@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d2411652f6855a49b1c32bed3d4bfc8, type: 3}
+  m_Name: Summoner_orc_king
+  m_EditorClassIdentifier: 
+  Id: orc_king
+  DisplayName: "\uC624\uD06C \uD0B9"
+  Description: "\uC9C1\uC811 \uC2F8\uC6B0\uB294 \uC18C\uD658\uC0AC. \uD328\uAE30\uB97C
+    \uB05D\uAE4C\uC9C0 \uC62C\uB824 \uD3C9\uD0C0\uAC00 \uAC00\uC7A5 \uBB34\uAC81\uB2E4.\n\uC624\uD06C\xB7\uACE0\uBE14\uB9B0
+    \uCE74\uB4DC\uAC00 \uD55C \uB9C8\uB9AC\uC529 \uB354 \uBD88\uB7EC\uB0B8\uB2E4."
+  PoolKey: Summoner
+  Portrait: {fileID: 0}
+  AppearanceSeed: summoner_orcking
+  AppearanceJob: 0
+  AppearanceGrade: 4
+  AppearanceSpecies: {fileID: 0}
+  AppearanceMark: 0
+  AppearanceScale: 1
+  Vigor: 10
+  Vitality: 5
+  Intelligence: 4
+  AttackRange: 26
+  ProjectileSpeed: 26
+  AttackSpeed: 1
+  Defense: 0.12
+  BaseMana: 20
+  ManaPerIntelligence: 4
+  ManaRegenPerIntelligence: 1
+  ManaRegenHoldRatio: 0.1
+  DeckSlots: 4
+  SignatureSkill: 34
+  SignatureName: "\uC624\uD06C \uC804\uC0AC \uC18C\uC9D1"
+  SkillUsesPerStage: 1
+  SignatureSummonSpecies: {fileID: 11400000, guid: b7ed4536c2c31bd4cba91a06df7843b0, type: 2}
+  SignatureSummonCount: 2
+  ListOrder: 7
+  Unlocks:
+  - Kind: 0
+    Value: 10
+    SpeciesIds: []
+    Traits: 0
+  StarterMonsters:
+  - {fileID: 11400000, guid: b7ed4536c2c31bd4cba91a06df7843b0, type: 2}
+  - {fileID: 11400000, guid: d1e650dc06e1f5c4b953d488f9763b4b, type: 2}
+  StarterSkills: []
+  Affinities:
+  - SpeciesId: orc
+    Traits: 0
+  - SpeciesId: goblin
+    Traits: 0
+  - SpeciesId: goblin_archer
+    Traits: 0
+  Perk: 17
+  PerkValue: 1
+  AttackPerVigor: 2
+  HpPerVitality: 50
+  SummonPowerPerIntelligence: 1
+  BaseCoreHp: 12
+  CoreHpPerVitality: 9

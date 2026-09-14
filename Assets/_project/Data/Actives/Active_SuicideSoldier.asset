@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2717f9410c12d304bb1740b89a7896ca, type: 3}
+  m_Name: Active_SuicideSoldier
+  m_EditorClassIdentifier: 
+  SkillId: 13
+  SkillName: "\uC790\uD3ED \uBCD1\uC0AC"
+  Description: "\uBCD1\uC0AC\uB97C \uD3EC\uBB3C\uC120 \uADA4\uB3C4\uB85C \uB358\uC838
+    \uCC29\uD0C4 \uC2DC \uACF5\uACA9\uB825 300% \uBC94\uC704 \uD3ED\uBC1C \uD53C\uD574
+    + \uB109\uBC31."
+  Cooldown: 15
+  EffectValue: 3
+  EffectRadius: 2.5
+  EffectDuration: 0
+  AllowedJobs: 02000000
+  IsRare: 0
+  CasterEffectKey: 
+  TargetEffectKey: FX_Explosion
+  BaseEffectKey: FX_Dust_Dash
+  ShowRangeIndicator: 1
+  RangeIndicatorDuration: 0
+  EffectDespawnDelay: 2
+  FlightDuration: 0.5
+  ArcHeight: 2
+  KnockbackMult: 7

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff9205fc44a347f49a06bf321eaa0d83, type: 3}
+  m_Name: VampiricStrike
+  m_EditorClassIdentifier: 
+  Type: 19
+  SkillName: "\uD761\uD608 \uACF5\uACA9"
+  Description: "\uACF5\uACA9 \uC2DC \uAC00\uD55C \uD53C\uD574\uC758 10%\uB97C \uC989\uC2DC
+    \uCCB4\uB825 \uD68C\uBCF5."
+  StatModifiers: []
+  TriggerType: 2
+  Icon: {fileID: 21300000, guid: 0641f14bf076f484b9e7d568dafd7f38, type: 3}
+  GeneralScaleBonusAdd: 0
+  VampireRatio: 0.1
