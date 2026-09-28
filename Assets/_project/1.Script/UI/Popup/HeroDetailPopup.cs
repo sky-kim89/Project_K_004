@@ -114,7 +114,9 @@ public class HeroDetailPopup : PopupBase
     {
         base.Awake();
         _closeBtn.onClick.AddListener(() => Close());
-        _gradeInfoBtn.onClick.AddListener(ShowGradeTooltip);
+        // PC 는 올려서, 모바일은 눌러서 연다 (TooltipInput)
+        _gradeInfoBtn.onClick.AddListener(() => { if (!TooltipInput.HoverMode) ShowGradeTooltip(); });
+        TooltipInput.HookHover(_gradeInfoBtn.gameObject, ShowGradeTooltip, () => _gradeTooltip.Close());
 
         _generalTabBtn.onClick.AddListener(() => SetStatTarget(soldier: false));
         _soldierTabBtn.onClick.AddListener(() => SetStatTarget(soldier: true));
@@ -208,7 +210,7 @@ public class HeroDetailPopup : PopupBase
         _gradeTooltip.ShowAnchored(
             _gradeInfoBtn.transform as RectTransform,
             "등급과 품질",
-            $"{sb}\n오른쪽으로 갈수록 기본 스탯이 높다.",
+            LocalizationManager.Instance.Format("{0}\n오른쪽으로 갈수록 기본 스탯이 높다.", sb),
             "옆의 숫자는 품질(1~9)이다.\n같은 등급이라도 숫자가 클수록 스탯이 높다.");
     }
 
@@ -218,8 +220,9 @@ public class HeroDetailPopup : PopupBase
     /// </summary>
     void RefreshCommandHint()
     {
-        float perCmd = GameplayConfig.Current.SoldierRatioPerCommandPower;
-        _commandHintText.text = $"지휘력 +1 › 용병 스탯 +{perCmd * 100f:0.#}%";
+        // ⚠ 감춘다 (사용자 지시, 2026-09-15) — 적 상세에서는 쓸모가 적고, 이름 줄 위에 겹쳐 그려졌다.
+        //   프리팹을 다시 굽지 않아도 되게 런타임에서 끈다.
+        _commandHintText.gameObject.SetActive(false);
     }
 
     // ── 스탯 행 (클릭 → 출처별 분해) ──────────────────────────

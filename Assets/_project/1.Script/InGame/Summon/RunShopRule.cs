@@ -69,10 +69,13 @@ public static class RunShopRule
     /// ⚠ 스테이지와 <b>산 횟수</b> 둘 다에 걸린다 (2026-09-10)
     ///   예전에는 +30 골드씩만 올랐다. 후반 한 판 수입이 1,700 이라 그 정도는
     ///   브레이크가 아니었다 — 상점을 만날 때마다 정수를 쓸어 담았다.
-    ///   지금은 30스테이지 기준 660 → 1,155 → 1,650 … 으로 올라, 다섯 개를
-    ///   사려면 다섯 판치 수입이 든다. 살 수는 있지만 그것만 할 수는 없다.
+    ///   30스테이지 기준 660 → 907 → 1,155 … 으로 오른다.
+    ///
+    /// ⚠ 1.5 → 0.75 로 반을 깎았다 (사용자 지적, 2026-09-15)
+    ///   1.5 일 때는 세 번째부터 카드·특성 두 장 값이라, 최대 마나 +1 이
+    ///   다른 선택지에 비해 늘 손해였다. 산 횟수 브레이크는 남긴다.
     /// </summary>
-    public const float EssenceStepMult = 1.5f;
+    public const float EssenceStepMult = 0.75f;
 
     /// <summary>정수 하나가 올려 주는 최대 마나.</summary>
     public const int EssenceManaAmount = 1;
@@ -131,6 +134,65 @@ public static class RunShopRule
         {
             var boon = UserDataManager.Instance?.Get<RunBoonData>();
             return boon == null ? 1f : 1f + WarFundStatBonus * boon.WarFundStacks;
+        }
+    }
+
+    // ── 상시 판매 '소집의 북' — 배출 간격 (사용자 지시, 2026-09-15) ──
+    //
+    //  ■ 전쟁 자금과 같은 틀이다 — 끝이 없고, 값은 **산 횟수만** 본다.
+    //    전쟁 자금이 "얼마나 세게" 라면 이건 "얼마나 빨리" 줄을 세우는가다.
+    //
+    //  ⚠ 비율을 **곱한다** (0.95^n). 빼면(1 − 0.05n) 스무 번째에 간격이 0 이 되어
+    //    대기열이 한 프레임에 쏟아진다. 곱이면 끝없이 사도 0 에 닿지 않는다.
+    //  ⚠ 곱하는 곳은 RunPerkRule.DrainMultiplierFor 하나다 (특성·유물과 같은 관문).
+
+    /// <summary>소집의 북 첫 값(골드).</summary>
+    public const int DrumBasePrice = 300;
+
+    /// <summary>하나 살 때마다 오르는 값(골드) — 300 → 550 → 800 …</summary>
+    public const int DrumStepPrice = 250;
+
+    /// <summary>하나당 배출 간격에 곱하는 값 — 0.95 = 간격 −5%.</summary>
+    public const float DrumIntervalStep = 0.95f;
+
+    /// <summary>소집의 북 아이콘 키. 굽는 곳은 ItemIconGenerator (Icons/Items).</summary>
+    public const string DrumIconKey = "item_war_drum";
+
+    public static int DrumPrice(int alreadyBought)
+        => RunGoldRule.Flat(DrumBasePrice + DrumStepPrice * Mathf.Max(0, alreadyBought));
+
+    // ── 마나 회복 포션 (사용자 지시, 2026-09-16) ──────────────
+    //
+    //  ■ 지금 마나를 최대 마나의 PotionRestoreRatio 만큼 채운다 — 그릇은 안 키운다 (그건 정수의 몫)
+    //  ■ **방문당 한 병** (사용자 지시, 2026-09-16) — 사면 칸이 "품절" 로 덮인다 (ShopPopup)
+    //    마나가 이 게임의 핵심 제약이다. 후반에 남는 골드로 한 번에 몇 병씩 들이켜
+    //    다음 판을 가득 채우는 것이 막히지 않으면, 마나 그릇·회복 설계가 통째로 무의미해진다.
+    //    ⚠ 한때 산 횟수로 값을 올렸다 — 한 병만 팔므로 그 몫은 걷었다. 방문 수는 저장하지 않는다.
+    //  ⚠ 가득 차 있으면 못 산다 (ShopPopup) — 돈만 사라지는 구매를 만들지 않는다.
+    //  ⚠ 채우는 곳은 RunPerkRule.RestoreMana 하나다 (정수 내림 · 그릇 상한이 거기 있다).
+
+    /// <summary>한 병이 채우는 몫 — 최대 마나 대비.</summary>
+    public const float PotionRestoreRatio = 0.3f;
+
+    /// <summary>한 병 값 배수 (스테이지 값 단위 × 이 값).</summary>
+    public const float PotionPriceMult = 1.5f;
+
+    public const string PotionIconKey = "item_mana_potion";
+
+    /// <summary>한 병이 채우는 마나 — 정수, 최소 1.</summary>
+    public static int PotionAmount(float maxMana)
+        => Mathf.Max(1, Mathf.FloorToInt(maxMana * PotionRestoreRatio));
+
+    public static int PotionPrice(int stageNumber)
+        => RunGoldRule.Price(PotionPriceMult, stageNumber);
+
+    /// <summary>소집의 북이 얹은 배출 간격 배율. 산 적이 없으면 1 이다.</summary>
+    public static float DrumIntervalMult
+    {
+        get
+        {
+            var boon = UserDataManager.Instance?.Get<RunBoonData>();
+            return boon == null ? 1f : Mathf.Pow(DrumIntervalStep, boon.DrumStacks);
         }
     }
 

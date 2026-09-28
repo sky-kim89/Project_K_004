@@ -32,10 +32,11 @@ public enum MonsterMark
 public class MonsterMarkView : MonoBehaviour
 {
     /// <summary>루트(발밑) 기준 표식의 높이. 슬라임 머리 위.</summary>
-    const float MarkHeight = 0.62f;
+    /// ⚠ 초상화(MonsterPortraitProvider.ComposeMark)가 이 값으로 같은 자리를 잡는다.
+    public const float MarkHeight = 0.62f;
 
-    /// <summary>표식의 월드 폭.</summary>
-    const float MarkSize = 0.26f;
+    /// <summary>표식의 월드 폭. ⚠ 초상화도 이 값으로 몸 대비 크기를 맞춘다.</summary>
+    public const float MarkSize = 0.26f;
 
     /// <summary>위아래로 살짝 떠 흔들리는 폭과 주기 — 붙박이 스티커처럼 보이지 않게.</summary>
     const float BobAmp   = 0.025f;
@@ -88,7 +89,19 @@ public class MonsterMarkView : MonoBehaviour
 
         // 높이는 부모 공간에서 잡는다 — 몸이 길쭉하면(독 슬라임) 표식도 그만큼 위에 앉는다.
         t.localPosition = new Vector3(0f, MarkHeight + bob / sy, 0f);
-        t.localScale    = new Vector3(MarkSize / sx, MarkSize / sy, 1f);
+
+        // ── 몸 비율은 상쇄하고 **덩치는 따라간다** (2026-09-15) ──
+        //
+        //  나누기만 하면(MarkSize / sx) 표식의 월드 크기가 언제나 같다. 그건 Shape
+        //  (힐 슬라임 1.20×0.84 처럼 납작·길쭉)로 표식이 찌그러지는 것을 막으려던 것이다.
+        //  그런데 슬라임 킹(Size 2.0)처럼 **덩치가 다른** 종족이 생기면서, 몸이 두 배인데
+        //  왕관만 그대로여서 머리 위에 점처럼 얹혔다.
+        //
+        //  기하평균으로 나누면 둘이 갈린다 — Shape 는 곱이 대략 1 이라 상쇄되고
+        //  (1.20 × 0.84 = 1.008), Size 는 양쪽에 똑같이 곱해져 그대로 남는다.
+        float mean = Mathf.Sqrt(Mathf.Max(0.0001f, sx * sy));
+
+        t.localScale = new Vector3(MarkSize * mean / sx, MarkSize * mean / sy, 1f);
     }
 
     // ── 도트 그림 ────────────────────────────────────────────
@@ -146,20 +159,48 @@ public class MonsterMarkView : MonoBehaviour
 
     static readonly Sprite[] _cache = new Sprite[4];
 
+    /// <summary>
+    /// 표식의 도트 픽셀 — <b>아래가 0행</b>인 텍스처 순서로 돌려준다.
+    ///
+    /// ■ 왜 공개하나 — 초상화도 같은 표식을 그려야 한다 (사용자 지적, 2026-09-15)
+    ///   표식은 전장에만 있었다. 카드·도감·전황 초상화에는 왕관도 십자도 안 나와서,
+    ///   덱을 짤 때 보는 그림과 전장에서 보는 그림이 서로 다른 말을 했다.
+    ///   MonsterPortraitProvider 가 이 픽셀을 초상화 위에 합성한다.
+    ///
+    /// ⚠ 그림의 정본은 여기 하나다 — 초상화 쪽에 도트를 다시 적지 말 것.
+    ///   두 벌이 되면 왕관을 고칠 때 한쪽만 고쳐진다.
+    /// </summary>
+    public static bool TryGetPixels(MonsterMark mark, out Color32[] px, out int w, out int h)
+    {
+        px = null; w = 0; h = 0;
+        if (mark == MonsterMark.None) return false;
+
+        string[] art = ArtOf(mark);
+
+        h = art.Length;
+        w = art[0].Length;
+
+        px = new Color32[w * h];
+        for (int row = 0; row < h; row++)
+        for (int x = 0; x < w; x++)
+            px[(h - 1 - row) * w + x] = Palette(art[row][x]);   // 위에서 아래로 적었으니 뒤집는다
+
+        return true;
+    }
+
+    static string[] ArtOf(MonsterMark mark) => mark switch
+    {
+        MonsterMark.Crown => CrownArt,
+        MonsterMark.Cross => CrossArt,
+        _                 => DropArt,
+    };
+
     static Sprite SpriteOf(MonsterMark mark)
     {
         int i = (int)mark;
         if (_cache[i] != null) return _cache[i];
 
-        string[] art = mark switch
-        {
-            MonsterMark.Crown => CrownArt,
-            MonsterMark.Cross => CrossArt,
-            _                 => DropArt,
-        };
-
-        int h = art.Length;
-        int w = art[0].Length;
+        if (!TryGetPixels(mark, out Color32[] px, out int w, out int h)) return null;
 
         var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
         {
@@ -167,11 +208,6 @@ public class MonsterMarkView : MonoBehaviour
             wrapMode   = TextureWrapMode.Clamp,
             name       = $"MonsterMark_{mark}",
         };
-
-        var px = new Color32[w * h];
-        for (int row = 0; row < h; row++)
-        for (int x = 0; x < w; x++)
-            px[(h - 1 - row) * w + x] = Palette(art[row][x]);   // 위에서 아래로 적었으니 뒤집는다
 
         tex.SetPixels32(px);
         tex.Apply(false, true);

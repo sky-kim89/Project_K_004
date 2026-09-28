@@ -42,21 +42,16 @@ MonoBehaviour:
   SkillUsesPerStage: 1
   SignatureSummonSpecies: {fileID: 0}
   SignatureSummonCount: 1
-  ListOrder: 11
+  ListOrder: 6
   Unlocks:
   - Kind: 1
     Value: 0
     SpeciesIds:
-    - hog
-    - flame_hog
-    - zombie
-    - plague_zombie
-    - troll
-    - forest_troll
+    - orc_butcher
     Traits: 0
   StarterMonsters:
-  - {fileID: 11400000, guid: b828576fbc378234499d743bf81bfa6b, type: 2}
-  - {fileID: 11400000, guid: de6c569d776d80b4698088d90a9dc27c, type: 2}
+  - {fileID: 11400000, guid: e62a10d37a02196498de3ebc8ffceb2d, type: 2}
+  - {fileID: 11400000, guid: 02e69958661d2fb43a93e248cb71c7c9, type: 2}
   StarterSkills: []
   Affinities:
   - SpeciesId: hog

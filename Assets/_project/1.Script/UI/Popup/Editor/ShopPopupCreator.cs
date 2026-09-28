@@ -28,6 +28,7 @@ using UnityEngine.UI;
 //
 //  ■ 자리 배치 (아래에서 위로) — 숫자는 상수에서 계산돼 나온 값이다
 //      y  44 ~ 366   몬스터 카드 4칸 (250×322)   x 430 ~ 1490
+//                    재고 교체 버튼 (300×170)    x 1530 ~ 1830 — 카드 줄 오른쪽, 세로 가운데
 //      y 374 ~ 427   "몬스터" 라벨
 //      y 447 ~ 729   특성 2 + 마력의 정수 1 (580×282)   x 70 ~ 1850
 //      y 737 ~ 790   "특성 · 정수" 라벨
@@ -114,17 +115,25 @@ public static class ShopPopupCreator
     const float BoonIcon = 56f;
     const float BoonBuyW = 190f;
 
-    static readonly float BoonRowH = Mathf.Floor((StallH - BoonGap * 2f) / ShopPopup.BoonStalls);
+    static readonly float BoonRowH = Mathf.Floor((StallH - BoonGap * (ShopPopup.BoonStalls - 1))
+                                                 / ShopPopup.BoonStalls);
 
     // ── 재고 교체 버튼 ───────────────────────────────────────
     //
-    //  ⚠ 자리는 "몬스터" 줄의 **오른쪽 끝**이다 (2026-09-10)
-    //    바꾸는 대상(카드 줄) 바로 위라 무엇이 갈리는지가 눈에 보인다.
-    //    특성 줄도 함께 갈리지만 바로 아래에 있어 같은 덩어리로 읽힌다.
+    //  ⚠ 자리는 **카드 줄 오른쪽 옆, 카드와 같은 세로 가운데**다 (사용자 지적, 2026-09-15)
+    //    한때 "몬스터" 라벨 줄 오른쪽 끝에 구매 버튼과 같은 갈색·같은 높이로 서 있었다.
+    //    라벨 줄 높이에 눌린 납작한 띠라 **안 보였다.** 지금은 카드 옆 빈 자리에
+    //    크게 세우고, 면 색도 구매 버튼(갈색)과 다른 청록이다 — 사는 것이 아니라
+    //    진열을 바꾸는 버튼이라는 것이 색으로 갈린다.
+    //  ⚠ 카드 줄이 감춰지면(살 카드가 없음) 비어 버린 카드 줄 **한가운데**로 옮긴다.
     //  ⚠ 지갑(오른쪽 위) 옆에 두지 말 것 — 지갑은 읽는 것이고 이건 누르는 것이다.
     //    같은 자리에 두면 값을 확인하려다 재고를 갈아 치우게 된다.
 
-    const float RerollW = 340f;
+    const float RerollW   = 300f;
+    const float RerollH   = 170f;
+    const float RerollGap = 40f;
+
+    static readonly Color RerollFace = new(0.10f, 0.34f, 0.40f);
 
     // ── 줄 자리 ──────────────────────────────────────────────
 
@@ -171,6 +180,8 @@ public static class ShopPopupCreator
     {
         EssenceFace,
         new(0.185f, 0.115f, 0.105f, 0.97f),
+        new(0.095f, 0.175f, 0.120f, 0.97f),
+        new(0.150f, 0.105f, 0.215f, 0.97f),   // 마나 회복 포션 — 보랏빛 (ShopPopup.BoonPotion)
     };
 
     [MenuItem(ProjectKMenu.Popup + "상점", priority = ProjectKMenu.PrefabPrio + 53)]
@@ -203,9 +214,9 @@ public static class ShopPopupCreator
         TextMeshProUGUI cardLabel =
             FacilityStage.SectionLabel(content, "CardLabel", "몬스터", cardX, CardLabelY);
 
-        // ⚠ 카드 줄의 오른쪽 끝에 맞춘다 — 줄 폭이 바뀌면 함께 따라간다.
-        var rerollWithCards = new Vector2(cardX + totalCardW - RerollW,
-                                          CardLabelY + (UIScale.RowMd - BuyH) * 0.5f);
+        // ⚠ 카드 줄 오른쪽 옆 · 카드와 같은 세로 가운데 — 줄 폭이 바뀌면 함께 따라간다.
+        float rerollY = CardY + (CardH - RerollH) * 0.5f;
+        var rerollWithCards = new Vector2(cardX + totalCardW + RerollGap, rerollY);
 
         Button rerollBtn = BuildRerollButton(
             content, rerollWithCards.x, rerollWithCards.y,
@@ -255,10 +266,9 @@ public static class ShopPopupCreator
         EditorUIBuilder.SetObj(so, "_cardLabel",   cardLabel,   Tag);
 
         // ⚠ 카드 줄이 감춰졌을 때 재고 교체 버튼이 갈 자리 — **여기가 정본이다**
-        //   특성 줄의 오른쪽 끝에 맞춘다. 런타임(ShopPopup.Refresh)은 둘 중 하나를
+        //   비어 버린 카드 줄의 한가운데. 런타임(ShopPopup.Refresh)은 둘 중 하나를
         //   고르기만 한다 — 좌표를 저쪽에 적으면 칸 크기를 바꾼 날 한쪽만 옛 자리에 남는다.
-        var rerollNoCards = new Vector2(stallX + totalStallW - RerollW,
-                                        StallLabelY + (UIScale.RowMd - BuyH) * 0.5f);
+        var rerollNoCards = new Vector2((1920f - RerollW) * 0.5f, rerollY);
 
         so.FindProperty("_rerollPosWithCards").vector2Value = rerollWithCards;
         so.FindProperty("_rerollPosNoCards")  .vector2Value = rerollNoCards;
@@ -548,9 +558,9 @@ public static class ShopPopupCreator
     }
 
     /// <summary>
-    /// 재고 교체 버튼 — [재고 교체] ······ [금화][값].
+    /// 재고 교체 버튼 — 위 [재고 교체] / 아래 [금화][값] 두 줄.
     ///
-    /// ⚠ 라벨과 값을 <b>양 끝</b>에 둔다. 구매 버튼처럼 값만 가운데 두면
+    /// ⚠ 라벨을 반드시 적는다. 구매 버튼처럼 값만 두면
     ///   무엇을 사는 버튼인지 알 수 없다 — 이 버튼은 물건 칸 밖에 홀로 선다.
     /// ⚠ 라벨·배지는 반드시 body 아래에 넣는다 (UI 규칙 1) — 루트에 넣으면
     ///   눌러도 같이 안 내려간다.
@@ -558,36 +568,36 @@ public static class ShopPopupCreator
     static Button BuildRerollButton(GameObject parent, float x, float y, Sprite goldIcon,
                                     out TextMeshProUGUI price)
     {
-        Button btn = EditorUIBuilder.RaisedBtn(parent, "RerollBtn", BuyFace,
+        Button btn = EditorUIBuilder.RaisedBtn(parent, "RerollBtn", RerollFace,
                                                out GameObject body);
 
         var rt = btn.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = new Vector2(0f, 0f);
         rt.pivot     = new Vector2(0f, 0f);
         rt.anchoredPosition = new Vector2(x, y);
-        rt.sizeDelta        = new Vector2(RerollW, BuyH);
+        rt.sizeDelta        = new Vector2(RerollW, RerollH);
 
         var label = EditorUIBuilder.TMP(body, "Label", "재고 교체",
-                                        UIScale.FontSm, FontStyles.Bold);
+                                        UIScale.FontMd, FontStyles.Bold);
         {
             var r = label.rectTransform;
-            r.anchorMin = new Vector2(0f, 0f); r.anchorMax = new Vector2(1f, 1f);
+            r.anchorMin = new Vector2(0f, 0.5f); r.anchorMax = new Vector2(1f, 1f);
             r.offsetMin = new Vector2(Pad, 0f);
-            r.offsetMax = new Vector2(-(Pad + 132f), 0f);
+            r.offsetMax = new Vector2(-Pad, -Pad);
         }
-        label.alignment        = TextAlignmentOptions.MidlineLeft;
+        label.alignment        = TextAlignmentOptions.Midline;
         label.color            = Color.white;
         label.raycastTarget    = false;
         label.textWrappingMode = TextWrappingModes.NoWrap;
 
-        GameObject badge = FacilityStage.Badge(body, "PriceBadge", goldIcon, 40f,
-                                               UIScale.FontSm, 92f, FacilityColors.Gold,
+        GameObject badge = FacilityStage.Badge(body, "PriceBadge", goldIcon, 48f,
+                                               UIScale.FontMd, 120f, FacilityColors.Gold,
                                                out price);
         {
             var brt = badge.GetComponent<RectTransform>();
-            brt.anchorMin = brt.anchorMax = new Vector2(1f, 0.5f);
-            brt.pivot     = new Vector2(1f, 0.5f);
-            brt.anchoredPosition = new Vector2(-Pad, 0f);
+            brt.anchorMin = brt.anchorMax = new Vector2(0.5f, 0.25f);
+            brt.pivot     = new Vector2(0.5f, 0.5f);
+            brt.anchoredPosition = new Vector2(0f, 4f);
         }
 
         return btn;
@@ -677,13 +687,17 @@ public static class ShopPopupCreator
 
         VerifyDescriptionsFit();
 
-        // 재고 교체 버튼이 카드 줄을 넘어 나가지 않는가 — 라벨과 겹치면 둘 다 못 읽는다.
+        // 재고 교체 버튼이 화면 여백 안에 드는가 — 카드 줄 오른쪽 옆에 선다.
         float totalCardW = ShopPopup.MaxCardStalls * CardW
                          + (ShopPopup.MaxCardStalls - 1) * CardGap;
+        float rerollRight = (1920f + totalCardW) * 0.5f + RerollGap + RerollW;
 
-        if (RerollW > totalCardW * 0.5f)
-            Debug.LogError($"[{Tag}] 재고 교체 버튼이 카드 줄의 절반을 넘습니다 " +
-                           $"({RerollW} > {totalCardW * 0.5f:0}) — \"몬스터\" 라벨과 겹칩니다.");
+        if (rerollRight > 1920f - FacilityStage.Margin)
+            Debug.LogError($"[{Tag}] 재고 교체 버튼이 화면 여백을 넘습니다 " +
+                           $"({rerollRight:0} > {1920f - FacilityStage.Margin:0}) — RerollW 를 줄이세요.");
+
+        if (RerollH > CardH)
+            Debug.LogError($"[{Tag}] 재고 교체 버튼이 카드보다 높습니다 ({RerollH} > {CardH:0}).");
 
         int wired = cards.Count + perks.Count + boons.Count;
         foreach (var v in cards) CheckStall(v);

@@ -41,15 +41,18 @@ MonoBehaviour:
   SkillUsesPerStage: 1
   SignatureSummonSpecies: {fileID: 11400000, guid: 02e69958661d2fb43a93e248cb71c7c9, type: 2}
   SignatureSummonCount: 3
-  ListOrder: 9
+  ListOrder: 12
   Unlocks:
-  - Kind: 3
-    Value: 15
-    SpeciesIds: []
+  - Kind: 1
+    Value: 0
+    SpeciesIds:
+    - frost_wolf
+    - iron_hog
     Traits: 0
   StarterMonsters:
-  - {fileID: 11400000, guid: 02e69958661d2fb43a93e248cb71c7c9, type: 2}
   - {fileID: 11400000, guid: f65663af889c3b841871c86e865c03eb, type: 2}
+  - {fileID: 11400000, guid: 1dde7e5042b93a543823c79d8b60514d, type: 2}
+  - {fileID: 11400000, guid: 0900371d162389e4980f35b52614f0b0, type: 2}
   StarterSkills: []
   Affinities:
   - SpeciesId: 

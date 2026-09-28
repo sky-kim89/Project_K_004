@@ -61,7 +61,9 @@ public class ActiveSlimeMend : ActiveSkillData
         for (int i = 0; i < n; i++)
         {
             var w = _wounded[i];
-            SkillCrowdControl.Heal(em, w.entity, w.maxHp * EffectValue, ctx.CasterEntity);
+            // 유물 '치유의 기억' — 재생·회복량 배율 (SpeciesPassiveRuntime.PassivePower 가 정본)
+            SkillCrowdControl.Heal(em, w.entity, w.maxHp * EffectValue * SpeciesPassiveRuntime.PassivePower,
+                                   ctx.CasterEntity);
 
             if (!string.IsNullOrEmpty(TargetEffectKey))
                 SkillEffectHelper.Spawn(TargetEffectKey, SkillCrowdControl.BodyCenterOf(em, w.entity),

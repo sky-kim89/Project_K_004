@@ -54,6 +54,9 @@ public static class CodexPopupCreator
     const float TabH    = 96f;
     const float Pad     = 26f;
 
+    // 닫기 · 도움말(i) 공통 크기 — 둘은 나란히 서므로 **한 상수를 함께 쓴다**
+    const float CloseSize = 88f;
+
     // ── 격자 ──
     //  폭은 7열이 정확히 들어가게 잡았다:
     //    1920 − 좌우 여백 52 − 격자 안쪽 여백 36 = 1832
@@ -205,7 +208,7 @@ public static class CodexPopupCreator
             rt.anchorMin = rt.anchorMax = new Vector2(1f, 0.5f);
             rt.pivot     = new Vector2(1f, 0.5f);
             // 닫기(88) + 도움말 묶음 왼쪽
-            rt.anchoredPosition = new Vector2(-(EditorUIBuilder.HeaderRightBlock(88f, Pad) + 20f), 0f);
+            rt.anchoredPosition = new Vector2(-(EditorUIBuilder.HeaderRightBlock(CloseSize, Pad) + 20f), 0f);
             rt.sizeDelta        = new Vector2(280f, 56f);
         }
 
@@ -237,11 +240,13 @@ public static class CodexPopupCreator
             var rt = close.GetComponent<RectTransform>();
             rt.anchorMin = rt.anchorMax = new Vector2(1f, 0.5f);
             rt.pivot     = new Vector2(1f, 0.5f);
-            rt.anchoredPosition = new Vector2(-Pad, 4f);
-            rt.sizeDelta        = new Vector2(88f, 78f);
+            rt.anchoredPosition = new Vector2(-Pad, 0f);
+            rt.sizeDelta        = new Vector2(CloseSize, CloseSize);
         }
-        // 도움말 — 닫기 버튼 왼쪽 (닫기가 88×78 이라 그 폭을 넘긴다)
-        EditorUIBuilder.InfoBtn(header, TutorialId.HelpCodex, 88f, -Pad);
+        // 도움말 — 닫기 버튼 왼쪽. **같은 크기·같은 세로 자리**여야 한다 (InfoBtn 주석)
+        //  ⚠ 닫기를 88×78 · y+4 로 두었을 때 i 버튼(88×88 · y0)과 크기·높이가 어긋나
+        //    머리 줄이 삐뚤어 보였다 (사용자 지적, 2026-09-18). 정사각형 상수 하나로 묶는다.
+        EditorUIBuilder.InfoBtn(header, TutorialId.HelpCodex, CloseSize, -Pad);
 
         var x = EditorUIBuilder.XMark(closeBody, "X", 34f, Color.white);
         {
@@ -504,6 +509,8 @@ public static class CodexPopupCreator
     //
     //  ⚠ 여기서는 팝업 루트에 하나만 만든다
     //    칸마다 붙일 수 없다. 실제 위치는 런타임에 ShowAnchored 가 다시 잡는다.
+    //  ⚠ 폭 420 → 600 (사용자 지적, 2026-09-17) — 번역문은 한국어보다 길어 420 이면
+    //    짧은 설명도 서너 줄이 됐다. 높이는 ContentSizeFitter 가 글만큼 늘린다(줄 수 제한 없음).
     static InfoTooltipUI BuildTooltip(GameObject root)
-        => InfoTooltipBuilder.Build(root, 420f);
+        => InfoTooltipBuilder.Build(root, 600f);
 }

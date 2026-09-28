@@ -21,8 +21,7 @@ using UnityEngine;
 //  ■ 외형은 부위(Part)가 정한다
 //    인간형 : CharacterBuilder 슬롯을 갈아 끼운다 → 정말로 다른 모습이 된다
 //    비인간형 : 레이어가 없다. 색조(Hide) · 덩치(Bulk) · 불빛(Charm)으로 표현한다
-//    ⚠ 부위가 한 몬스터에 하나뿐이라 셋이 서로 싸우지 않는다
-//      (같은 부위를 또 끼우면 먼저 낀 것이 벗겨진다 — MonsterGearInventory)
+//    ⚠ 같은 부위는 겹쳐 낄 수 있다 — 겉모습은 그 부위의 앞 칸 장비가 정한다 (BuildVisual)
 //
 //  ■ 불빛은 등급이 정한다
 //    AuraMinGrade 이상인 장비 하나당 빛 하나가 몸 주위를 돈다
@@ -334,18 +333,26 @@ public static class MonsterGearRule
             if (gear.Grade >= AuraMinGrade) AddAura(ref visual, gear);
 
             // ── 인간형 — CharacterBuilder 슬롯을 갈아 끼운다 ──
+            //   ⚠ 같은 부위를 겹쳐 끼면 **앞 칸의 장비**가 겉모습을 정한다 (사용자 확정, 2026-09-15)
+            //     이미 채운 슬롯은 덮지 않는다 — 뒤 칸은 능력치만 준다.
             switch (gear.Part)
             {
-                case MonsterGearPart.Armor:  visual.Armor  = gear.AppearanceName; break;
-                case MonsterGearPart.Helmet: visual.Helmet = gear.AppearanceName; break;
-                case MonsterGearPart.Shield: visual.Shield = gear.AppearanceName; break;
-                case MonsterGearPart.Cape:   visual.Cape   = gear.AppearanceName; break;
-                case MonsterGearPart.Back:   visual.Back   = gear.AppearanceName; break;
+                case MonsterGearPart.Armor:  First(ref visual.Armor,  gear); break;
+                case MonsterGearPart.Helmet: First(ref visual.Helmet, gear); break;
+                case MonsterGearPart.Shield: First(ref visual.Shield, gear); break;
+                case MonsterGearPart.Cape:   First(ref visual.Cape,   gear); break;
+                case MonsterGearPart.Back:   First(ref visual.Back,   gear); break;
             }
         }
 
         visual.Key = key.ToString();
         return visual;
+    }
+
+    /// <summary>슬롯이 비어 있을 때만 채운다 — 같은 부위는 먼저 낀 것이 보인다.</summary>
+    static void First(ref string slot, MonsterGearData gear)
+    {
+        if (string.IsNullOrEmpty(slot)) slot = gear.AppearanceName;
     }
 
     static void AddAura(ref MonsterGearVisual visual, MonsterGearData gear)

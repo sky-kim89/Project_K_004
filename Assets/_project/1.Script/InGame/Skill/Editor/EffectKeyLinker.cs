@@ -102,6 +102,17 @@ public static class EffectKeyLinker
             targetKey: "",
             delay:     10.0f);
 
+        // ⑧-b FlameAura — 화염 오라 (따라다니는 루프 존, EffectDuration 4f)
+        //    ⚠ ActiveSkillCreator 가 굽는 순간 이미 BaseEffectKey 를 박아 둔다.
+        //      여기 한 줄은 그것과 **같은 값**이어야 한다 — 이 도구를 나중에 돌렸을 때
+        //      조용히 덮어써서 불이 사라지는 일이 없게. (둘이 갈리면 어느 쪽이 정본인지
+        //      알 길이 없어진다)
+        Link("Active_FlameAura",
+            baseKey:   "FX_Flame_Zone",
+            casterKey: "",
+            targetKey: "",
+            delay:     6.0f);
+
         // ⑨ Meteor — 메테오
         //    Base  = 낙하 예고 마커 (Runner: delay + DespawnDelay 로 자동 연장)
         //    Target = 착탄 폭발

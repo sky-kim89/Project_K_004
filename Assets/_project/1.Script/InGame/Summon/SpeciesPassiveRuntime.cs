@@ -51,9 +51,25 @@ public static class SpeciesPassiveRuntime
             baseScale + RelicTreeApplier.GetSystemValue(RelicSystemEffect.DerivedScaleBonus),
             0.1f, 1f);
 
-    /// <summary>지속형 종족 패시브 수치 배율. 유물 '야성의 기억'.</summary>
-    static float PassivePower
+    /// <summary>
+    /// 재생·회복량 배율 — 유물 '치유의 기억' (옛 이름 '야성의 기억', 2026-09-16 에 범위를 넓히며 바꿨다).
+    /// 거는 곳: 재생 · 트롤의 피(초당 회복) · 치유의 잔재 · 생명의 씨앗 · 광합성 · 힐 슬라임 치유 스킬(ActiveSlimeMend)
+    ///         · 원작 회복 패시브 셋 — 흡혈 타격 · 긴급 회복 · 처치 회복 (HealPowerFor, 몬스터만).
+    ///         생명 흡수·흡혈귀는 흡혈 타격·처치 회복 슬롯을 붙이는 것이라 저절로 따라온다.
+    /// ⚠ 회복이 아닌 종족 패시브(반격·약탈 등)에는 걸지 않는다 — 이름이 '회복' 이다.
+    /// </summary>
+    public static float PassivePower
         => 1f + RelicTreeApplier.GetSystemValue(RelicSystemEffect.SpeciesPassivePower);
+
+    /// <summary>
+    /// 원작 회복 패시브(흡혈 타격·긴급 회복·처치 회복)가 쓰는 배율 — <b>회복하는 쪽이 몬스터일 때만</b> 유물 값.
+    /// ⚠ 용사도 같은 패시브를 쓴다. 진영을 안 보면 유물이 적을 강화한다 (RelicTarget.Unit_Monster 와 같은 이유).
+    /// </summary>
+    public static float HealPowerFor(EntityManager em, Entity healer)
+        => em.HasComponent<UnitIdentityComponent>(healer)
+           && em.GetComponentData<UnitIdentityComponent>(healer).Team == Faction.Monster
+            ? PassivePower
+            : 1f;
 
     /// <summary>사망 발동 효과 배율. 유물 '죽음의 대가'.</summary>
     static float DeathPower
@@ -268,13 +284,27 @@ public static class SpeciesPassiveRuntime
                 Set(em, e, new ExecuteComponent { Threshold = SpeciesPassiveRule.ExecuteHpThreshold });
                 break;
 
+            // 휩쓸기 — 느려지는 값으로 범위를 산다 (성벽·무게추와 같은 문법)
+            //  ⚠ 공속 페널티를 빼지 말 것. 순수 강화가 되면 앞줄이라면 누구나
+            //    갖고 싶은 능력이 되어 '느린 대신 넓다' 는 축이 통째로 사라진다.
+            case SpeciesPassive.Cleave:
+                Set(em, e, new SplashAttackComponent
+                {
+                    Radius = SpeciesPassiveRule.CleaveRadius,
+                    Ratio  = SpeciesPassiveRule.CleaveSplashRatio,
+                });
+                AddMult(em, e, StatType.AttackSpeed,
+                        SpeciesPassiveRule.CleaveAttackSpeedMult - 1f);   // 음수 = 느려진다
+                break;
+
             case SpeciesPassive.Anchor:
                 AddTag<KnockbackImmuneTag>(em, e);
                 AddMult(em, e, StatType.MoveSpeed, -SpeciesPassiveRule.AnchorMovePenalty);
                 break;
 
             case SpeciesPassive.Photosynthesis:
-                Set(em, e, new PhotosynthesisComponent { Ratio = SpeciesPassiveRule.PhotosynthesisHeal });
+                // 유물 '치유의 기억' — 소환 때 굽는다 (회복은 ActiveSkillExecuteSystem 이 이 비율로 건다)
+                Set(em, e, new PhotosynthesisComponent { Ratio = SpeciesPassiveRule.PhotosynthesisHeal * PassivePower });
                 break;
 
             case SpeciesPassive.Hunger:
@@ -339,6 +369,21 @@ public static class SpeciesPassiveRuntime
                           SpeciesPassiveRule.GreatSplitCount, SpeciesPassiveRule.GreatSplitScale);
                     break;
 
+                // ── 왕의 분열 — 자기가 아니라 **권속**이 쏟아진다 (2026-09-15) ──
+                //
+                //  ⚠ 위 둘과 스폰 경로가 다르다
+                //    분열·대분열은 SpawnDerived(자기 종족 · 왕의 카드 정보를 물려받음)지만,
+                //    이쪽은 SpawnFree(권속 종족 · 그 종족의 덱 카드를 찾아 쓴다)다.
+                //    권속에게 왕의 카드 레벨을 물려주면 **다른 종족의 레벨 표**가 얹혀
+                //    슬라임이 슬라임 킹의 성장분으로 굴러 나온다.
+                //
+                //  ⚠ 크기 배율(KingSplitScale)은 SpawnFree 가 받지 않는다 — 권속은
+                //    제 크기 그대로 선다. 쪼개진 조각이 아니라 "안에 있던 것들" 이라 그게 맞다.
+                //    합계는 마릿수(12)가 정한다.
+                case SpeciesPassive.KingSplit when canReproduce:
+                    SpawnBrood(species, summoner, at, SpeciesPassiveRule.KingSplitCount);
+                    break;
+
                 case SpeciesPassive.Reassemble when canReproduce:
                     if (Random.value > SpeciesPassiveRule.ReassembleChance) break;
                     MonsterSpawner.SpawnDerived(species, summoner, at,
@@ -381,11 +426,11 @@ public static class SpeciesPassiveRuntime
                     break;
 
                 case SpeciesPassive.HealOnDeath:
-                    HealNearbyAllies(em, species, at, maxHp, SpeciesPassiveRule.HealOnDeathRatio, 1f);
+                    HealNearbyAllies(em, species, at, maxHp, SpeciesPassiveRule.HealOnDeathRatio * PassivePower, 1f);
                     break;
 
                 case SpeciesPassive.LifeSeed:
-                    HealNearbyAllies(em, species, at, maxHp, SpeciesPassiveRule.LifeSeedRatio,
+                    HealNearbyAllies(em, species, at, maxHp, SpeciesPassiveRule.LifeSeedRatio * PassivePower,
                                      SpeciesPassiveRule.LifeSeedReach);
                     break;
 
@@ -426,6 +471,27 @@ public static class SpeciesPassiveRuntime
         for (int n = 0; n < count; n++)
             MonsterSpawner.SpawnDerived(species, summoner, ScatterAround(at, n),
                                         DerivedScale(scale), generation + 1, origin);
+    }
+
+    /// <summary>
+    /// 왕이 터지며 권속을 남긴다.
+    ///
+    /// ⚠ 1세대로 낸다 — 권속이 또 무언가를 낳지 않게
+    ///   MaxReproduceGeneration 이 0 이라 여기서 나온 개체의 사망 증식은 전부 막힌다.
+    ///   0세대로 내면 슬라임 12마리가 각자 둘로 분열해 24마리가 된다.
+    ///
+    /// ⚠ 권속이 비어 있으면 아무 일도 하지 않는다 — 에러를 내지 않는다
+    ///   도감을 다시 굽기 전의 옛 에셋이 그 상태다. 전투를 멈출 이유가 없다.
+    ///   비어 있는지는 MonsterCodexCreator 의 검산이 굽는 순간 잡는다.
+    /// </summary>
+    static void SpawnBrood(MonsterSpeciesData species, SummonerData summoner,
+                           Vector3 at, int count)
+    {
+        if (species.BroodSpecies == null) return;
+
+        for (int n = 0; n < count; n++)
+            MonsterSpawner.SpawnFree(species.BroodSpecies, summoner,
+                                     ScatterAround(at, n), generation: 1);
     }
 
     // ── 복수 ─────────────────────────────────────────────────

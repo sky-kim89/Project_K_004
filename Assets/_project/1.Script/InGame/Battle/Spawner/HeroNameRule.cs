@@ -16,28 +16,54 @@
 //    ⚠ 세 조각을 각각 다른 자리의 해시로 뽑는다. 같은 해시를 나눠 쓰면
 //      수식어와 이름이 함께 움직여 조합 수가 확 준다.
 //
+//  ■ ⚠ 조각은 **기호 키**로 번역한다 (사용자 확정, 2026-09-16)
+//    한국어를 코드에 박아 두면 그 조각이 번역표의 부분 치환 목록에 올라간다.
+//    LocalizationManager.LocalizeText 는 완전 일치가 없으면 표의 항목을
+//    **긴 것부터 부분 치환**하므로, "강철"·"성벽"·"기사" 같은 짧은 조각이
+//    표에 오르는 순간 다른 문구 속 같은 글자까지 함께 바뀐다 —
+//    "강철 슬라임", "마왕성 성벽", 직업 이름 "기사" 가 전부 사정권이다.
+//    그래서 여기서는 Get(키) 로 **완전 일치 조회**만 한다. 부분 치환을 타지 않는다.
+//
+//    ⚠ 키를 바꾸면 LocalizationTable.txt 의 Hero.* 줄도 함께 고칠 것.
+//      표에 없는 키는 Get 이 키 문자열을 그대로 돌려주므로,
+//      화면에 "Hero.Epithet.01" 이 그대로 뜨는 것으로 바로 드러난다.
+//
 //  ⚠ 보스·엘리트는 접두어가 붙는다 — 화면에서 바로 갈려야 한다.
 // ============================================================
 
 public static class HeroNameRule
 {
+    // ⚠ 배열 순서가 곧 시드 해시의 자리다. 중간에 끼우면 그 판의 적 이름이 통째로 바뀐다.
+    //   늘리는 것은 **뒤에만** 할 것.
     static readonly string[] Epithets =
     {
-        "무쇠의", "잿빛", "새벽의", "폭풍의", "강철", "서릿발", "황혼의", "붉은",
-        "성난", "고요한", "불굴의", "창백한", "여명의", "굶주린", "천둥의", "은빛",
+        "Hero.Epithet.01", "Hero.Epithet.02", "Hero.Epithet.03", "Hero.Epithet.04",
+        "Hero.Epithet.05", "Hero.Epithet.06", "Hero.Epithet.07", "Hero.Epithet.08",
+        "Hero.Epithet.09", "Hero.Epithet.10", "Hero.Epithet.11", "Hero.Epithet.12",
+        "Hero.Epithet.13", "Hero.Epithet.14", "Hero.Epithet.15", "Hero.Epithet.16",
     };
 
     static readonly string[] Names =
     {
-        "라이하르트", "베르나", "가레스", "이졸데", "루드빅", "카시안", "엘윈", "도르만",
-        "미르아", "테오발트", "셀윈", "브란", "아델하이트", "요한", "리케", "오스릭",
-        "발렌", "그웨인", "니콜라", "하르윈", "세라핀", "코르빈", "이드리스", "마르셀",
+        "Hero.Name.01", "Hero.Name.02", "Hero.Name.03", "Hero.Name.04",
+        "Hero.Name.05", "Hero.Name.06", "Hero.Name.07", "Hero.Name.08",
+        "Hero.Name.09", "Hero.Name.10", "Hero.Name.11", "Hero.Name.12",
+        "Hero.Name.13", "Hero.Name.14", "Hero.Name.15", "Hero.Name.16",
+        "Hero.Name.17", "Hero.Name.18", "Hero.Name.19", "Hero.Name.20",
+        "Hero.Name.21", "Hero.Name.22", "Hero.Name.23", "Hero.Name.24",
     };
 
-    static readonly string[] KnightTitles       = { "기사", "근위", "선봉" };
-    static readonly string[] ArcherTitles       = { "궁수", "사수", "추적자" };
-    static readonly string[] MageTitles         = { "마도사", "술사", "현자" };
-    static readonly string[] ShieldBearerTitles = { "방패병", "수호자", "성벽" };
+    static readonly string[] KnightTitles       = { "Hero.Title.Knight.1", "Hero.Title.Knight.2", "Hero.Title.Knight.3" };
+    static readonly string[] ArcherTitles       = { "Hero.Title.Archer.1", "Hero.Title.Archer.2", "Hero.Title.Archer.3" };
+    static readonly string[] MageTitles         = { "Hero.Title.Mage.1",   "Hero.Title.Mage.2",   "Hero.Title.Mage.3" };
+    static readonly string[] ShieldBearerTitles = { "Hero.Title.Shield.1", "Hero.Title.Shield.2", "Hero.Title.Shield.3" };
+
+    const string DefaultTitleKey = "Hero.Title.None";
+    const string BossPrefixKey   = "Hero.Prefix.Boss";
+    const string ElitePrefixKey  = "Hero.Prefix.Elite";
+
+    /// <summary>표의 기호 키를 지금 언어의 글자로 바꾼다.</summary>
+    static string T(string key) => LocalizationManager.Instance.Get(key);
 
     /// <summary>
     /// 이 시드의 표시 이름. 직업 칭호까지 붙는다.
@@ -51,14 +77,21 @@ public static class HeroNameRule
         uint h = UnitJobRoller.StableHash(seedName ?? "");
 
         // ⚠ 세 조각을 서로 다른 자리에서 뽑는다 (파일 머리 주석 참고).
-        string epithet = Epithets[(int)(h % (uint)Epithets.Length)];
-        string given   = Names   [(int)((h / 17u) % (uint)Names.Length)];
+        string epithet = T(Epithets[(int)(h % (uint)Epithets.Length)]);
+        string given   = T(Names   [(int)((h / 17u) % (uint)Names.Length)]);
         string title   = TitleFor(UnitJobRoller.GetJob(seedName), h / 401u);
 
-        string body = $"{epithet} {given}  ·  {title}";
+        // ⚠ 조각을 $"…" 로 이어 붙이지 말 것 (2026-09-17 버그)
+        //   이어 붙인 문장은 표에 없다. TMP 의 LocalizedText 가 그것을 한국어로 되돌렸다가
+        //   다시 번역할 때 조각 단위 치환만 탔고, Hero.* 는 치환 풀에서 빠져 있어
+        //   **화면에 한국어 이름이 그대로 남았다.** Format 으로 조립해야 LocalizeText 가
+        //   원래 조각(표의 줄)으로 다시 Format 한다 — 언어를 바꿔도 이름이 따라온다.
+        //   일본어·중국어는 띄어 쓰지 않는다 — 어순·띄어쓰기는 표의 Hero.Format.* 줄이 정한다.
+        var loc  = LocalizationManager.Instance;
+        string body = loc.Format("Hero.Format.Full", epithet, given, title);
 
-        if (isBoss)  return $"【보스】 {body}";
-        if (isElite) return $"〈정예〉 {body}";
+        if (isBoss)  return loc.Format("Hero.Format.Prefixed", T(BossPrefixKey),  body);
+        if (isElite) return loc.Format("Hero.Format.Prefixed", T(ElitePrefixKey), body);
         return body;
     }
 
@@ -66,16 +99,17 @@ public static class HeroNameRule
     public static string ShortOf(string seedName)
     {
         uint h = UnitJobRoller.StableHash(seedName ?? "");
-        return $"{Epithets[(int)(h % (uint)Epithets.Length)]} " +
-               $"{Names[(int)((h / 17u) % (uint)Names.Length)]}";
+        return LocalizationManager.Instance.Format("Hero.Format.Short",
+            T(Epithets[(int)(h % (uint)Epithets.Length)]),
+            T(Names[(int)((h / 17u) % (uint)Names.Length)]));
     }
 
     static string TitleFor(UnitJob job, uint h) => job switch
     {
-        UnitJob.Knight       => KnightTitles      [(int)(h % (uint)KnightTitles.Length)],
-        UnitJob.Archer       => ArcherTitles      [(int)(h % (uint)ArcherTitles.Length)],
-        UnitJob.Mage         => MageTitles        [(int)(h % (uint)MageTitles.Length)],
-        UnitJob.ShieldBearer => ShieldBearerTitles[(int)(h % (uint)ShieldBearerTitles.Length)],
-        _                    => "용사",
+        UnitJob.Knight       => T(KnightTitles      [(int)(h % (uint)KnightTitles.Length)]),
+        UnitJob.Archer       => T(ArcherTitles      [(int)(h % (uint)ArcherTitles.Length)]),
+        UnitJob.Mage         => T(MageTitles        [(int)(h % (uint)MageTitles.Length)]),
+        UnitJob.ShieldBearer => T(ShieldBearerTitles[(int)(h % (uint)ShieldBearerTitles.Length)]),
+        _                    => T(DefaultTitleKey),
     };
 }

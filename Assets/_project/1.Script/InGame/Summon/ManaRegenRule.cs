@@ -31,18 +31,19 @@ using UnityEngine;
 public static class ManaRegenRule
 {
     /// <summary>
-    /// 이번에 스테이지를 넘기면 실제로 늘어날 마나.
+    /// 이번에 스테이지를 넘기면 회복되는 마나 — <b>회복량 전체</b>다.
     ///
-    /// ⚠ 그릇을 넘는 몫은 빼고 돌려준다 — 화면에 뜨는 숫자가 곧 늘어날 양이다.
+    /// ⚠ 그릇에서 자르지 않는다 (사용자 지시, 2026-09-17)
+    ///   한때 "실제로 늘어날 양" 을 보여 주려고 Max 에서 잘랐다. 그러면 35/40 에서
+    ///   회복량이 12 여도 +5 로 떠서, 소환사·특성이 주는 회복량이 얼마인지 읽을 수가
+    ///   없었다. 그릇에서 잘리는 것은 지급할 때(SummonManaData.RegenForStage)의 일이다.
+    ///   0 이어도 그대로 보여 준다.
     /// </summary>
     public static float PreviewFor(SummonerData summoner, SummonManaData mana)
     {
         if (summoner == null || mana == null) return 0f;
 
-        float raw = RawFor(summoner, mana.Current);
-
-        // 그릇을 넘어서는 받지 못한다.
-        return Mathf.Max(0f, Mathf.Min(mana.Max, mana.Current + raw) - mana.Current);
+        return Mathf.Max(0f, RawFor(summoner, mana.Current));
     }
 
     /// <summary>
@@ -54,7 +55,6 @@ public static class ManaRegenRule
 
         float regen = summoner.ManaRegenFor(currentMana);
 
-        regen = SummonerPerkRuntime.RegenBonusFor(summoner, regen);
         regen = RunPerkRule.RegenFor(regen);
 
         // 유물 '흐르는 마력'·'명상의 결정' — 개성·특성 뒤에 곱한다.
@@ -113,18 +113,21 @@ public static class ManaRegenRule
         //    언제나 마지막 누계의 내림과 정확히 같다.
         float running = 0f;
 
-        sb.Append($"지능 {summoner.Intelligence:0.#}  →  +{Step(ref running, baseIntel)}");
+        // ⚠ 줄마다 Format 으로 표에서 찾는다 — 보간($"…")은 표 키와 영영 안 맞는다 (CLAUDE.md 로컬라이징)
+        //   줄바꿈은 키 밖에서 붙인다. 인자 순서는 원래 보간과 같다(Step 이 running 을 옮기므로 중요).
+        var loc = LocalizationManager.Instance;
 
-        sb.Append($"\n아껴 둔 마나 {mana.Current:0} 의 {summoner.ManaRegenHoldRatio * 100f:0}%" +
-                  $"  →  +{Step(ref running, baseIntel + hold)}");
+        sb.Append(loc.Format("지능 {0:0.#}  →  +{1}",
+                             summoner.Intelligence, Step(ref running, baseIntel)));
 
-        if (summoner.Perk == SummonerPerk.Plunder)
-            sb.Append($"\n개성 약탈  ×{summoner.PerkValue:0.##}" +
-                      $"  →  +{Step(ref running, running * summoner.PerkValue)}");
+        sb.Append('\n').Append(loc.Format("아껴 둔 마나 {0:0} 의 {1:0}%  →  +{2}",
+                             mana.Current, summoner.ManaRegenHoldRatio * 100f,
+                             Step(ref running, baseIntel + hold)));
 
         if (RunPerkRule.Has(RunPerk.Meditation))
-            sb.Append($"\n특성 명상  ×{RunPerkRule.MeditationMult:0.##}" +
-                      $"  →  +{Step(ref running, running * RunPerkRule.MeditationMult)}");
+            sb.Append('\n').Append(loc.Format("특성 명상  ×{0:0.##}  →  +{1}",
+                             RunPerkRule.MeditationMult,
+                             Step(ref running, running * RunPerkRule.MeditationMult)));
 
         // 유물 '흐르는 마력'·'명상의 결정' — RawFor 와 **같은 자리·같은 순서**다.
         // ⚠ 한때 여기만 빠져 있었다 (2026-09-07). 위 주석이 "화면이 따로 계산하면
@@ -132,24 +135,27 @@ public static class ManaRegenRule
         //   유물을 찍으면 내역 합계가 실제 회복량보다 작게 나왔다.
         float relic = RelicTreeApplier.GetSystemValue(RelicSystemEffect.ManaRegenBonus);
         if (relic > 0f)
-            sb.Append($"\n유물  ×{1f + relic:0.##}" +
-                      $"  →  +{Step(ref running, running * (1f + relic))}");
+            sb.Append('\n').Append(loc.Format("유물  ×{0:0.##}  →  +{1}",
+                             1f + relic, Step(ref running, running * (1f + relic))));
 
         // 개성 '자연의 회복' — RawFor 와 같은 자리·같은 순서 (배율 뒤 가산)
         float nature = SummonerPerkRuntime.NatureRestoreFor(summoner);
         if (nature > 0f)
-            sb.Append($"\n개성 자연의 회복  →  +{Step(ref running, running + nature)}");
+            sb.Append('\n').Append(loc.Format("개성 자연의 회복  →  +{0}",
+                             Step(ref running, running + nature)));
 
         int total  = Mathf.FloorToInt(running);
         int capped = Mathf.FloorToInt(PreviewFor(summoner, mana));
 
-        sb.Append($"\n<color=#9EE04A>합계  +{total}</color>");
+        sb.Append("\n<color=#9EE04A>").Append(loc.Format("합계  +{0}", total)).Append("</color>");
 
         // 그릇에 막히면 그 사실을 말해 준다 — 안 그러면 숫자가 어긋나 보인다.
         // ⚠ 내린 값끼리 견준다 — RawFor 가 내리므로 원본과 비교하면
         //   그릇에 막히지 않았는데도 "만 들어온다" 가 뜬다.
         if (capped < total)
-            sb.Append($"\n<color=#FF8A6A>그릇이 {mana.Max:0} 라 {capped} 만 들어온다</color>");
+            sb.Append("\n<color=#FF8A6A>")
+              .Append(loc.Format("그릇이 {0:0} 라 {1} 만 들어온다", mana.Max, capped))
+              .Append("</color>");
 
         return sb.ToString();
     }

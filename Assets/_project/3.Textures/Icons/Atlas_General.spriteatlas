@@ -53,6 +53,7 @@ SpriteAtlas:
     - 68ecc514ac6921f468ce0357672c38bb: 21300000
     - a2da5b647d61fbd4aac6e61ff0f79a50: 21300000
     - 6e5560a4e2efef545b9e509f0a3725d8: 21300000
+    - 41313ca5e08450e47a3292e10129c580: 21300000
     - d95552369337d204d91b364eb0057999: 21300000
     - 653b6b36f60c137448ca74027ac8673a: 21300000
     - a912d70825f5f5a4cb2ccb2d8a578062: 21300000
@@ -67,11 +68,13 @@ SpriteAtlas:
     - cf7abc3c89d03fa4786a7cab4aea42b2: 21300000
     - ba76f6cc4aa4f234fbaf1d8d22c822cb: 21300000
     - ae1bdcece8153914cb97d23ca4b53260: 21300000
+    - 666be80dcc09302408d4beccf1759f86: 21300000
     - 7c6d2f4de87be624798905c0a9719005: 21300000
     - 5062619d87f62874ca2d89687a22eaef: 21300000
     - dbe7ed0ea23f4e641a2759948eec3c63: 21300000
     - 21adbe2e2d2b68b4ab5d588268a4a915: 21300000
     - ffc1b98e929c8bf41a0cd10c138b1bc6: 21300000
+    - 65b9adae1c990d640a6b846fe0296a62: 21300000
     - ed2006cedfd294a409baeb90035adc01: 21300000
     - 63b136cebe4484143ae5f7ddb02537d7: 21300000
     - 8186b0ffbaac6cc439b1ccde05fd5c40: 21300000
@@ -92,6 +95,7 @@ SpriteAtlas:
   - {fileID: 21300000, guid: 68ecc514ac6921f468ce0357672c38bb, type: 3}
   - {fileID: 21300000, guid: a2da5b647d61fbd4aac6e61ff0f79a50, type: 3}
   - {fileID: 21300000, guid: 6e5560a4e2efef545b9e509f0a3725d8, type: 3}
+  - {fileID: 21300000, guid: 41313ca5e08450e47a3292e10129c580, type: 3}
   - {fileID: 21300000, guid: d95552369337d204d91b364eb0057999, type: 3}
   - {fileID: 21300000, guid: 653b6b36f60c137448ca74027ac8673a, type: 3}
   - {fileID: 21300000, guid: a912d70825f5f5a4cb2ccb2d8a578062, type: 3}
@@ -106,11 +110,13 @@ SpriteAtlas:
   - {fileID: 21300000, guid: cf7abc3c89d03fa4786a7cab4aea42b2, type: 3}
   - {fileID: 21300000, guid: ba76f6cc4aa4f234fbaf1d8d22c822cb, type: 3}
   - {fileID: 21300000, guid: ae1bdcece8153914cb97d23ca4b53260, type: 3}
+  - {fileID: 21300000, guid: 666be80dcc09302408d4beccf1759f86, type: 3}
   - {fileID: 21300000, guid: 7c6d2f4de87be624798905c0a9719005, type: 3}
   - {fileID: 21300000, guid: 5062619d87f62874ca2d89687a22eaef, type: 3}
   - {fileID: 21300000, guid: dbe7ed0ea23f4e641a2759948eec3c63, type: 3}
   - {fileID: 21300000, guid: 21adbe2e2d2b68b4ab5d588268a4a915, type: 3}
   - {fileID: 21300000, guid: ffc1b98e929c8bf41a0cd10c138b1bc6, type: 3}
+  - {fileID: 21300000, guid: 65b9adae1c990d640a6b846fe0296a62, type: 3}
   - {fileID: 21300000, guid: ed2006cedfd294a409baeb90035adc01, type: 3}
   - {fileID: 21300000, guid: 63b136cebe4484143ae5f7ddb02537d7, type: 3}
   - {fileID: 21300000, guid: 8186b0ffbaac6cc439b1ccde05fd5c40, type: 3}
@@ -130,6 +136,7 @@ SpriteAtlas:
   - archer_icon
   - skill_blood_price
   - skill_arrow_rain
+  - skill_slime_mend
   - skill_target_heal
   - skill_boss_charge
   - skill_battle_cry
@@ -144,11 +151,13 @@ SpriteAtlas:
   - skill_poison_zone
   - skill_gravestone
   - skill_heavy_strike
+  - skill_mana_burst
   - skill_bind
   - shieldbearer_icon
   - skill_war_banner
   - skill_arrow_storm
   - skill_bulwark
+  - skill_flame_aura
   - skill_iron_shield
   - skill_summon_elite
   - skill_leap_strike

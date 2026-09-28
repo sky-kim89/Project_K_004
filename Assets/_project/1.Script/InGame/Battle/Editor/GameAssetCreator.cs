@@ -179,10 +179,12 @@ public static class GameAssetCreator
 
         var ironWill = Make<PassiveIronWill>(db, PassiveSkillType.IronWill, "IronWill",
             "강철 의지",
-            "장군 HP 50% 이하 시 공격력·체력 +20%·+10% (1회).",
+            "체력 50% 이하가 되면 체력 +20% (늘어난 만큼 회복)·공격력 +10% (1회).",
             PassiveTrigger.OnHit,
-            Mod(StatType.Attack, 0.20f, true, Target.General),
-            Mod(StatType.MaxHp,  0.10f, true, Target.General));
+            // ⚠ 체력 쪽을 더 크게 (사용자 지적, 2026-09-15) — 버티는 패시브라 공격보다 체력이 먼저다.
+            //   늘어난 최대 체력만큼 현재 체력도 채운다 (PassiveIronWill) — 안 채우면 비율만 떨어진다.
+            Mod(StatType.Attack, 0.10f, true, Target.General),
+            Mod(StatType.MaxHp,  0.20f, true, Target.General));
         ironWill.HpThreshold = 0.5f;
         EditorUtility.SetDirty(ironWill);
 

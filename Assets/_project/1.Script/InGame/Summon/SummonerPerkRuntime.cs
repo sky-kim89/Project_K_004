@@ -16,7 +16,7 @@ using Unity.Entities;
 //
 //  ■ 훅이 불리는 자리
 //    ManaCostFor     ← SummonController.TryReserve  (마나를 내기 직전)
-//    RegenBonusFor   ← RunBootstrap.AdvanceStage    (스테이지 마나 회복량)
+//    (약탈은 이제 런 골드 배율 — RunGoldRule.Grant)
 //    GradeFor        ← SummonController.ResolveGrade
 //    OnMonsterSpawned← SummonController.SpawnOne    (스탯이 박힌 직후)
 //    OnMonsterDied   ← MonsterDeathWatcher
@@ -128,26 +128,8 @@ public static class SummonerPerkRuntime
         return Mathf.Max(1f, cost);
     }
 
-    // ── 환수 ─────────────────────────────────────────────────
-
-    /// <summary>
-    /// 스테이지를 넘길 때 돌아오는 마나 — 개성이 얹히는 자리.
-    ///
-    /// ⚠ 옛 RefundFor 를 옮겨 온 것이다 (2026-08-28)
-    ///   '약탈(Plunder)' 은 원래 **환수 마나 배율**이었다. 살아남은 몬스터가
-    ///   마나로 녹던 시절의 개성인데, 지금은 살아남으면 마나가 아니라
-    ///   제 라인으로 돌아간다(MonsterLineReturner). 그대로 두면 아무 일도
-    ///   하지 않는 개성이 되므로, 같은 뜻("전리품을 챙긴다")을 새 경제에
-    ///   맞춰 스테이지 회복량 쪽으로 옮겼다.
-    /// </summary>
-    public static float RegenBonusFor(SummonerData summoner, float baseRegen)
-    {
-        if (summoner == null) return baseRegen;
-
-        return summoner.Perk == SummonerPerk.Plunder
-             ? baseRegen * summoner.PerkValue
-             : baseRegen;
-    }
+    // ⚠ '약탈(Plunder)' 의 마나 회복 배율(RegenBonusFor)은 걷었다 (사용자 지시, 2026-09-15)
+    //   이름(전리품)과 무관한 옛 환수 규칙의 잔재였다. 지금은 런 골드 배율이다 — RunGoldRule.Grant.
 
     // ── 마나 개성 (2026-09-12) ──────────────────────────────
 

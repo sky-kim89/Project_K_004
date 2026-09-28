@@ -22,7 +22,7 @@ public class GravestoneRunner : MonoBehaviour
 {
     public void Run(EntityManager em, Entity casterEntity, TeamType casterTeam,
                     float3 center, int stoneCount, float scatterRadius, float hitRadius,
-                    float warningTime, float dropInterval, float damage, float knockMult,
+                    float warningTime, float dropInterval, float damage, float maxHpRatio, float knockMult,
                     UnitStat generalStat, UnitJob generalJob, float statRatio, string poolKey,
                     SkillEffectConfig fx,
                     MonsterSpeciesData monsterSpecies, SummonerData summoner)
@@ -41,7 +41,7 @@ public class GravestoneRunner : MonoBehaviour
                                    center.y + Mathf.Sin(ang) * r, 0f);
 
             StartCoroutine(DropOne(em, casterEntity, casterTeam, spot, hitRadius,
-                                   warningTime, dropInterval * i, damage, knockMult,
+                                   warningTime, dropInterval * i, damage, maxHpRatio, knockMult,
                                    generalStat, generalJob, statRatio, poolKey, fx,
                                    monsterSpecies, summoner));
         }
@@ -49,7 +49,7 @@ public class GravestoneRunner : MonoBehaviour
 
     IEnumerator DropOne(EntityManager em, Entity casterEntity, TeamType casterTeam,
                         Vector3 spot, float hitRadius, float warningTime, float startDelay,
-                        float damage, float knockMult,
+                        float damage, float maxHpRatio, float knockMult,
                         UnitStat generalStat, UnitJob generalJob, float statRatio, string poolKey,
                         SkillEffectConfig fx,
                         MonsterSpeciesData monsterSpecies, SummonerData summoner)
@@ -80,7 +80,7 @@ public class GravestoneRunner : MonoBehaviour
 
             Vector3 tp      = SkillCrowdControl.PositionOf(em, t);
             float3  outward = new float3(tp.x - spot.x, tp.y - spot.y, 0f);
-            SkillCrowdControl.DealDamage(em, t, damage, outward, knockMult, casterEntity);
+            SignatureDamageRule.Hit(em, t, damage, maxHpRatio, outward, knockMult, casterEntity);
         }
 
         // ── ③ 망자가 일어난다 ────────────────────────────────

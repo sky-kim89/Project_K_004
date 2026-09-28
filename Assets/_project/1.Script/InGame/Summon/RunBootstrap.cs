@@ -366,12 +366,32 @@ public class RunBootstrap : MonoBehaviour
     ///   보상은 이미 들어갔으므로 로그만 남기고 넘어간다 — 연출이 없다고
     ///   선택 화면으로 못 돌아가면 그게 더 나쁘다.
     /// </summary>
+    /// <summary>
+    /// 이 스테이지부터 상자를 준다 (사용자 지시, 2026-09-15).
+    ///
+    /// ⚠ 1스테이지는 빈손으로 끝난다 — 의도된 것이다
+    ///   첫 판은 **한 번도 안 진 채로** 끝날 수가 없다. 그런데 거기서 끝난 런에도
+    ///   상자가 나오면 "시작하자마자 항복 → 상자" 가 성립해, 장비를 모으는 가장 빠른
+    ///   길이 게임을 안 하는 것이 된다. 도달 스테이지가 곧 등급인 보상이라
+    ///   (MonsterGearRewardRule) 바닥 한 칸은 비워 둔다.
+    /// </summary>
+    const int GearBoxFromStage = 2;
+
     void GrantGearBox()
     {
+        if (_stageNumber < GearBoxFromStage)
+        {
+            // ⚠ 난이도 해금 연출은 그래도 열어 준다 — 상자와 별개의 사건이다
+            //   (상자가 안 뜨는 다른 경우들과 같은 처리다. 아래 참고)
+            DifficultyUnlockPopup.ShowPending();
+            return;
+        }
+
         // 상자 수 = 난이도(쉬움 1 ~ 불지옥 5, DifficultyConfig.GearBoxes)
         //        + 유물 '대장간의 기억'.
-        // ⚠ 지급은 전부 먼저 하고, 연출은 **한 창이 차례로** 연다 (GearBoxPopup.SetupMany)
+        // ⚠ 지급은 전부 먼저 하고, 연출은 **한 창이** 맡는다 (GearBoxPopup.SetupMany)
         //   팝업을 상자마다 쌓으면 서로를 덮어 무엇을 받았는지 안 보인다.
+        //   하나면 크게 하나, 둘 이상이면 나란히 놓고 한 번에 연다 — 창이 고른다.
         int boxes = (DifficultyConfig.CurrentTier()?.GearBoxes ?? 1)
                   + RelicTreeApplier.GetSystemInt(RelicSystemEffect.GearBoxBonus);
 

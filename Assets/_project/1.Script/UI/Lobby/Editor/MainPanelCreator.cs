@@ -32,6 +32,8 @@ public static class MainPanelCreator
 {
     const string SavePath     = "Assets/_project/2.Prefabs/UI/Lobby/MainPanel.prefab";
     const string TitleImgPath = "Assets/_project/3.Textures/UI/Lobby/title_pixel_general.png";
+    const string TitleKoPath  = "Assets/Resources/Title/title_logo_ko.png";
+    const string TitleEnPath  = "Assets/Resources/Title/title_logo_en.png";
 
     // ── 레이아웃 상수 ─────────────────────────────────────────
     const float SideW     = 380f;
@@ -97,6 +99,7 @@ public static class MainPanelCreator
     static readonly Color DivC     = new Color(0.22f, 0.24f, 0.34f, 0.70f);
     static readonly Color SideDivC = new Color(0.15f, 0.17f, 0.26f, 1.00f);
     static readonly Color LockedC  = new Color(0.09f, 0.10f, 0.17f, 0.90f);
+    static readonly Color SettingsC = new Color(0.26f, 0.30f, 0.42f, 1f);
 
     // =========================================================
 
@@ -150,7 +153,7 @@ public static class MainPanelCreator
         bgImgComp.raycastTarget  = false;
 
         // 좌측 사이드
-        var (relicBtn, codexBtn) = BuildSide(root);
+        var (relicBtn, codexBtn, settingsBtn) = BuildSide(root);
 
         // 우측 영역 (투명)
         var right = new GameObject("RightArea", typeof(RectTransform));
@@ -246,6 +249,7 @@ public static class MainPanelCreator
         SetRef(so, "_startBtn",        startBtn.GetComponent<Button>());
         SetRef(so, "_relicBtn",        relicBtn.GetComponent<Button>());
         SetRef(so, "_codexBtn",        codexBtn.GetComponent<Button>());
+        SetRef(so, "_settingsBtn",     settingsBtn.GetComponent<Button>());
         SetObjArrayLocal(so, "_listCards", listCards);
         so.ApplyModifiedProperties();
         return root;
@@ -911,7 +915,7 @@ public static class MainPanelCreator
 
     // ── 사이드바 ─────────────────────────────────────────────
 
-    static (GameObject relic, GameObject codex) BuildSide(GameObject parent)
+    static (GameObject relic, GameObject codex, GameObject settings) BuildSide(GameObject parent)
     {
         var side = MakeImg("SideColumn", parent, SideBg);
         {
@@ -935,31 +939,20 @@ public static class MainPanelCreator
             rt.anchorMin = new Vector2(0f, 1f); rt.anchorMax = new Vector2(1f, 1f);
             rt.offsetMin = new Vector2(0f, -TitleH); rt.offsetMax = Vector2.zero;
         }
-        var sp = GetOrCreateTitleSprite();
-        if (sp != null)
-        {
-            var img = ta.GetComponent<Image>();
-            img.sprite = sp; img.type = Image.Type.Simple;
-            img.preserveAspect = false; img.raycastTarget = false;
-        }
+        var ko = AssetDatabase.LoadAssetAtPath<Sprite>(TitleKoPath);
+        var en = AssetDatabase.LoadAssetAtPath<Sprite>(TitleEnPath);
+        if (ko == null || en == null)
+            throw new System.InvalidOperationException("[MainPanelCreator] Localized title sprites are missing.");
 
-        // 타이틀 텍스트
-        //  ⚠ "PIXEL" 은 112pt × 5자 ≈ 347px 로 340px 칸을 넘겨 "PIXE / L" 로 접혔었다.
-        //    NoWrap + AutoSize — 접히는 대신 칸에 맞게 줄어든다.
-        var px = MakeTMP(ta, "Pixel", "PIXEL", 112f, FontStyles.Bold);
-        px.color = Color.white; px.alignment = TextAlignmentOptions.Center; px.raycastTarget = false;
-        AutoFit(px, 78f, 112f);
-        { var rt = px.rectTransform; rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f); rt.pivot = new Vector2(0.5f, 1f); rt.anchoredPosition = new Vector2(0f, -16f); rt.sizeDelta = new Vector2(SideBtnW, 104f); }
+        var img = ta.GetComponent<Image>();
+        img.sprite = en; img.type = Image.Type.Simple;
+        img.color = Color.white; img.preserveAspect = true; img.raycastTarget = false;
 
-        var gn = MakeTMP(ta, "General", "GENERAL", 68f, FontStyles.Bold);
-        gn.color = new Color(0.35f, 0.65f, 1f); gn.alignment = TextAlignmentOptions.Center; gn.raycastTarget = false;
-        AutoFit(gn, 48f, 68f);
-        { var rt = gn.rectTransform; rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f); rt.pivot = new Vector2(0.5f, 1f); rt.anchoredPosition = new Vector2(0f, -124f); rt.sizeDelta = new Vector2(SideBtnW, 84f); }
-
-        var sub = MakeTMP(ta, "SubTitle", "픽셀 제너럴", UIScale.FontSm, FontStyles.Normal);
-        sub.color = new Color(0.40f, 0.52f, 0.80f); sub.alignment = TextAlignmentOptions.Center; sub.raycastTarget = false;
-        NoWrap(sub);
-        { var rt = sub.rectTransform; rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f); rt.pivot = new Vector2(0.5f, 0f); rt.anchoredPosition = new Vector2(0f, 18f); rt.sizeDelta = new Vector2(SideBtnW, UIScale.RowSm); }
+        var localizedTitle = ta.AddComponent<LocalizedTitleSprite>();
+        var titleSo = new SerializedObject(localizedTitle);
+        titleSo.FindProperty("_korean").objectReferenceValue = ko;
+        titleSo.FindProperty("_english").objectReferenceValue = en;
+        titleSo.ApplyModifiedPropertiesWithoutUndo();
 
         // 구분선
         var tDiv = MakeImg("TitleDiv", side, DivC);
@@ -989,11 +982,14 @@ public static class MainPanelCreator
         var dle = codexBtn.AddComponent<LayoutElement>();
         dle.preferredWidth = SideBtnW; dle.preferredHeight = 116f;
 
-        var etcBtn = BuildLockedBtn(btnArea, "EtcBtn", "기타");
-        var ele = etcBtn.AddComponent<LayoutElement>();
-        ele.preferredWidth = SideBtnW; ele.preferredHeight = 100f;
+        // 설정 — 옛 '기타' 잠금 칸 자리 (사용자 지시, 2026-09-17). 여는 창은 PausePopup 이다.
+        //   아이콘 PNG 가 아직 없다 — BuildWideBtn 이 그림 칸을 끄고 글만 둔다.
+        var settingsBtn = BuildWideBtn(btnArea, "SettingsBtn", "설정", SettingsC,
+            "Assets/_project/3.Textures/Icons/LobbyBtns/btn_settings.png");
+        var sle = settingsBtn.AddComponent<LayoutElement>();
+        sle.preferredWidth = SideBtnW; sle.preferredHeight = 100f;
 
-        return (relicBtn, codexBtn);
+        return (relicBtn, codexBtn, settingsBtn);
     }
 
     // ── 화살표 ────────────────────────────────────────────────
@@ -1022,7 +1018,10 @@ public static class MainPanelCreator
             rt.offsetMax = new Vector2(14f + 76f, -12f);
         }
         var ii = iGo.GetComponent<Image>(); ii.preserveAspect = true; ii.raycastTarget = false;
-        var sp = AssetDatabase.LoadAssetAtPath<Sprite>(iconPath); if (sp != null) ii.sprite = sp;
+        // ⚠ 그림이 없으면 칸을 끈다 — sprite 없는 Image 는 흰 사각형으로 그려진다
+        var sp = AssetDatabase.LoadAssetAtPath<Sprite>(iconPath);
+        if (sp != null) ii.sprite = sp;
+        else            ii.enabled = false;
 
         var lt = MakeTMP(body, "Label", label, UIScale.FontMd, FontStyles.Bold);
         lt.alignment = TextAlignmentOptions.MidlineLeft; lt.color = Color.white; lt.raycastTarget = false;

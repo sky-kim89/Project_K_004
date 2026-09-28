@@ -50,6 +50,17 @@ public class PassiveIronWill : PassiveSkillData
 
         em.SetComponentData(ctx.GeneralEntity, stat);
 
+        // ⚠ 늘어난 최대 체력만큼 **현재 체력도 채운다** (사용자 지적, 2026-09-15)
+        //   Base·Final 을 함께 올리므로 UnitStatusEffectSystem 의 "최대 체력이 늘면 현재 체력도" 동기화가
+        //   이전·이후 값이 같아 걸리지 않았다 — 체력 50% 이하에서 발동해 **비율만 더 낮아지는** 패시브였다.
+        float maxHpGain = stat.Final[StatType.MaxHp] - maxHp;
+        if (maxHpGain > 0f && em.HasComponent<HealthComponent>(ctx.GeneralEntity))
+        {
+            var health = em.GetComponentData<HealthComponent>(ctx.GeneralEntity);
+            health.CurrentHp = Mathf.Min(health.CurrentHp + maxHpGain, stat.Final[StatType.MaxHp]);
+            em.SetComponentData(ctx.GeneralEntity, health);
+        }
+
         condition.IronWillTriggered = true;
         em.SetComponentData(ctx.GeneralEntity, condition);
     }

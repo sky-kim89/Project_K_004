@@ -146,7 +146,10 @@ public static class MonsterStatComposer
         //   ⚠ 등급 판정은 SO 원본값으로 한다 — 여기서 곱한 값이 되먹임되지 않는다.
         float paceMult = SpawnPaceRule.StatMultiplierFor(species);
 
-        hp     *= gradeMult * paceMult;
+        // 빠른 종족은 먼저 닿아 점사를 받는다 — 체력만 조금 채운다 (SpeedHpRule)
+        float speedHpMult = SpeedHpRule.HpMultiplierFor(species);
+
+        hp     *= gradeMult * paceMult * speedHpMult;
         attack *= gradeMult * paceMult;
 
         // ── ③ 레이어에 굽는다 ────────────────────────────────
@@ -195,7 +198,8 @@ public static class MonsterStatComposer
         // ── ⑤ 시너지 — 덱 구성이 정한다 ──
         //   ⚠ 레벨 보너스보다 뒤다. 앞에 두면 레벨 보너스의 비율 항목이
         //     이미 부풀려진 값을 기준으로 다시 곱해 이중 계산이 된다.
-        MonsterSynergyRuntime.ApplyStats(stat, species.Tags);
+        MonsterSynergyRuntime.ApplyStats(stat, species.Tags,
+                                         species.AttackKind == MonsterAttackKind.Ranged);
 
         // ── ⑤-b 소환사 개성 '마력 증폭'(대마법사) — 그릇 10당 전군 공/체 (2026-09-12) ──
         //   ⚠ 소환되는 순간의 그릇으로 굳는다 (필드에 선 개체는 안 바뀐다)

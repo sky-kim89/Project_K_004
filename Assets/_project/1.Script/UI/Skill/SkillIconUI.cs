@@ -66,7 +66,7 @@ public class SkillIconUI : MonoBehaviour
 
         Bind(SpriteManager.Instance?.Get(id.IconKey()), ActiveFrame, ActiveSlotBg,
              title, data != null ? data.Description : "",
-             data != null ? $"쿨타임 {data.Cooldown:0.#}초" : "");
+             data != null ? LocalizationManager.Instance.Format("쿨타임 {0:0.#}초", data.Cooldown) : "");
     }
 
     public void SetPassiveSkill(PassiveSkillData data)
@@ -92,6 +92,7 @@ public class SkillIconUI : MonoBehaviour
         {
             _iconBtn.onClick.RemoveAllListeners();
             _iconBtn.interactable = false;
+            TooltipInput.HookHover(_iconBtn.gameObject, null, null);
         }
     }
 
@@ -126,7 +127,9 @@ public class SkillIconUI : MonoBehaviour
         {
             _iconBtn.onClick.RemoveAllListeners();
             _iconBtn.interactable = true;
-            _iconBtn.onClick.AddListener(OpenTooltip);
+            // PC 는 올려서, 모바일은 눌러서 연다 (TooltipInput)
+            _iconBtn.onClick.AddListener(() => { if (!TooltipInput.HoverMode) OpenTooltip(); });
+            TooltipInput.HookHover(_iconBtn.gameObject, OpenTooltip, CloseTooltip);
         }
     }
 

@@ -16,12 +16,13 @@ using TMPro;
 //  PopupMaxH(1000) 였다 — 타이틀은 위로 28px 잘리고 환생 버튼은
 //  아래로 30px 삐져나갔다. 전부 상단 밴드 기준으로 다시 잡았다.
 //
-//  레이아웃 (1240 × 1000 / 위에서 아래로)
+//  레이아웃 (1840 × 1000 / 위에서 아래로) — 머리 띠만 전체 폭, 아래는 두 칸
 //    Header        Y=  0  H=200  배지 + "패  배" + 웨이브·처치(좌)/총피해·DPS(우)
 //    AccentLine    Y=200  H=  3
-//    Section       Y=218  H= 43  "전투 기록"
-//    TabBar        Y=266  H= 92  딜 / 탱 / 힐
-//    GeneralBox    Y=368  → 포인트 패널 위까지 (세로 스크롤)
+//    ── 왼쪽 칸 (1128) ──────────────────   ── 오른쪽 칸 '이번 런' (640) ──
+//    Section       Y=218  "전투 기록"          보유 특성 — 아이콘 8열 × 3줄 (스크롤)
+//    TabBar        Y=266  딜 / 탱 / 힐          덱 — 카드 4열 × 2줄 (누르면 몬스터 상세)
+//    GeneralBox    Y=368  → 포인트 패널 위까지
 //    PointsPanel   하단 132  H= 64
 //    ReincarnateBtn 하단 22  400×BtnSm
 // ============================================================
@@ -197,10 +198,17 @@ public static class ReincarnationPopupCreator
         // ⚠ BattleResultPopup 과 같은 치수를 쓴다
         //   승리/패배는 같은 자리에 번갈아 뜨는 한 쌍이다. 크기가 다르면
         //   전투가 끝날 때마다 창이 커졌다 작아졌다 한다.
-        const float PW       = 1240f;
+        // ⚠ 오른쪽에 '이번 런' 칸(특성·덱)이 붙어 1240 → 1840 으로 넓어졌다 (2026-09-16)
+        //   전투 기록·포인트·환생 버튼은 왼쪽 칸(LeftW)에 산다. 머리 띠만 전체 폭이다.
+        if (!SynergyIconAssets.TryLoad("ReincarnationPopupCreator", out Sprite[] synergyIcons)) return;
+
+        const float PW       = RunColumn.PopupW;
         const float PH       = UIScale.PopupMaxH;
-        const float SidePad  = 40f;
+        const float SidePad  = RunColumn.SidePad;
         const float ContentW = PW - SidePad * 2f;
+        float       leftInsetR = SidePad + RunColumn.ColW + RunColumn.ColGap;   // 왼쪽 칸의 오른쪽 여백
+        float       leftW      = PW - SidePad - leftInsetR;
+        float       leftCenter = (SidePad - leftInsetR) * 0.5f;                  // 패널 중심 기준 x
 
         const float HeaderH     = 200f;
         const float AccentH     = 3f;
@@ -283,12 +291,16 @@ public static class ReincarnationPopupCreator
         AnchorTopBand(accentLine, HeaderH, AccentH);
 
         // ── "전투 기록" 섹션 ─────────────────────────────────
-        EditorUIBuilder.SectionLabel(panel, "전투 기록", StatY, ContentW, SidePad);
+        // ⚠ 폭은 왼쪽 칸이다 — 구분선 길이가 이 값으로 고정된다. 전체 폭(ContentW)을 넘기면
+        //   줄만 왼쪽 칸으로 줄어들고 선은 764px 로 남아 "전투 기록" 글자 위를 가로질렀다.
+        var statSection = EditorUIBuilder.SectionLabel(panel, "전투 기록", StatY, leftW, SidePad);
+        FitHorizontal(statSection, SidePad, leftInsetR);
 
         var tabBar = MakeGo("TabBar", panel);
-        // 패널 폭 전체로 늘리면 탭 한 칸이 500 을 넘는다 — 가운데 900 으로 묶는다
+        // 패널 폭 전체로 늘리면 탭 한 칸이 500 을 넘는다 — 왼쪽 칸 가운데 900 으로 묶는다
         // (BattleResultPopup 과 같은 규칙)
-        AnchorTopBand(tabBar, TabY, TabH, (PW - 900f) * 0.5f);
+        AnchorTopBand(tabBar, TabY, TabH);
+        FitHorizontal(tabBar, SidePad + (leftW - 900f) * 0.5f, leftInsetR + (leftW - 900f) * 0.5f);
 
         var tabHlg = tabBar.AddComponent<HorizontalLayoutGroup>();
         tabHlg.spacing        = 10f;
@@ -337,7 +349,7 @@ public static class ReincarnationPopupCreator
             rt.anchorMin = new Vector2(0f, 0f);
             rt.anchorMax = new Vector2(1f, 1f);
             rt.offsetMin = new Vector2(SidePad, ListBottom);
-            rt.offsetMax = new Vector2(-SidePad, -ListY);
+            rt.offsetMax = new Vector2(-leftInsetR, -ListY);
         }
         var listScroll = listBox.AddComponent<ScrollRect>();
 
@@ -369,7 +381,7 @@ public static class ReincarnationPopupCreator
 
         // ── 포인트 패널 ───────────────────────────────────────
         var (currentPtsTmp, earnPtsTmp, totalPtsTmp) =
-            BuildPointsPanel(panel, ContentW, PtsH, PtsBottom);
+            BuildPointsPanel(panel, leftW, PtsH, PtsBottom, leftCenter);
 
         // ── 환생 버튼 ─────────────────────────────────────────
         var reincBtn = EditorUIBuilder.RaisedTextBtn(panel, "ReincarnateButton", "환  생",
@@ -379,9 +391,12 @@ public static class ReincarnationPopupCreator
             rt.anchorMin        = new Vector2(0.5f, 0f);
             rt.anchorMax        = new Vector2(0.5f, 0f);
             rt.pivot            = new Vector2(0.5f, 0f);
-            rt.anchoredPosition = new Vector2(0f, BtnBottom);
+            rt.anchoredPosition = new Vector2(leftCenter, BtnBottom);
             rt.sizeDelta        = new Vector2(BtnW, BtnH);
         }
+
+        // ── 이번 런 — 특성 · 덱 (오른쪽 칸) ───────────────────
+        RunColumn.Built run = RunColumn.Build(panel, StatY, BtnBottom);
 
         // ── 장수 Row 프리팹 로드 ─────────────────────────────
         var generalRowPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{SavePath}/GeneralStatRow.prefab");
@@ -405,6 +420,12 @@ public static class ReincarnationPopupCreator
         SetObjArray(so, "_tabButtons",   System.Array.ConvertAll(tabButtons,   b => (Object)b));
         SetObjArray(so, "_tabButtonBgs", System.Array.ConvertAll(tabButtonBgs, b => (Object)b));
 
+        SetObj     (so, "_perkArea",     run.PerkArea);
+        SetObj     (so, "_perkTemplate", run.PerkTemplate);
+        SetObj     (so, "_perkEmpty",    run.PerkEmpty);
+        SetObjArray(so, "_synergyIcons", System.Array.ConvertAll(synergyIcons, s => (Object)s));
+        RunColumn.WriteDeckCells(so, run.DeckCells);
+
         so.ApplyModifiedProperties();
 
         Save(root, "ReincarnationPopup");
@@ -415,7 +436,7 @@ public static class ReincarnationPopupCreator
     //  꺾쇠로 "지금 → 환생 후" 흐름을 읽히게 한다 (▶ 는 폰트에 없다 — UI 규칙 2).
 
     static (TextMeshProUGUI current, TextMeshProUGUI earn, TextMeshProUGUI total)
-        BuildPointsPanel(GameObject parent, float width, float height, float yFromBottom)
+        BuildPointsPanel(GameObject parent, float width, float height, float yFromBottom, float centerX)
     {
         var panel = new GameObject("PointsPanel", typeof(RectTransform), typeof(Image));
         panel.transform.SetParent(parent.transform, false);
@@ -425,7 +446,7 @@ public static class ReincarnationPopupCreator
             rt.anchorMin        = new Vector2(0.5f, 0f);
             rt.anchorMax        = new Vector2(0.5f, 0f);
             rt.pivot            = new Vector2(0.5f, 0f);
-            rt.anchoredPosition = new Vector2(0f, yFromBottom);
+            rt.anchoredPosition = new Vector2(centerX, yFromBottom);
             rt.sizeDelta        = new Vector2(width, height);
         }
 
@@ -459,7 +480,249 @@ public static class ReincarnationPopupCreator
         return (currentTmp, earnTmp, totalTmp);
     }
 
+    // ── 이번 런 칸 (특성 · 덱) ────────────────────────────────
+    //
+    //  [보유 특성]  아이콘 격자 8열 — 세 줄이 보이고 넘치면 세로 스크롤
+    //  [덱]         카드 4열 × 2줄 (덱 상한 8 = RunPerkRule.MaxDeckSlots)
+    //
+    //  ⚠ 자리는 전부 상수의 합이다. Verify 가 칸 높이 안에 드는지 잰다.
+
+    static class RunColumn
+    {
+        public const float PopupW  = 1840f;   // 1920 − 좌우 40
+        public const float SidePad = 40f;
+        public const float ColW    = 640f;
+        public const float ColGap  = 32f;
+
+        static readonly float LabelH = UIScale.RowSm;
+        const float LabelGap = 8f;
+        const float BlockGap = 16f;
+
+        const float PerkIcon = 72f;
+        const float PerkGap  = 8f;
+        const int   PerkCols = 8;
+        const int   PerkRows = 3;   // 보이는 줄 — 넘치면 스크롤
+        static float PerkAreaH => PerkRows * PerkIcon + (PerkRows - 1) * PerkGap;   // 232
+
+        const int   DeckCols  = 4;
+        const int   DeckRows  = 2;
+        const float CellGap   = 12f;
+        const float PortraitS = 90f;
+        const float CellPad   = 8f;
+        static float CellW => (ColW - CellGap * (DeckCols - 1)) / DeckCols;   // 151
+        static float CellH => CellPad + PortraitS + 2f + UIScale.RowSm * 2f + CellPad;   // 194
+
+        static readonly Color CellFace  = new(0.115f, 0.145f, 0.220f, 1f);   // 전황 아군 칸과 같은 면
+        static readonly Color LevelGold = new(1f, 0.86f, 0.42f, 1f);
+
+        public struct Built
+        {
+            public Transform                   PerkArea;
+            public TraitIconUI                 PerkTemplate;
+            public GameObject                  PerkEmpty;
+            public ReincarnationPopup.DeckCell[] DeckCells;
+        }
+
+        public static Built Build(GameObject panel, float top, float bottom)
+        {
+            var col = MakeGo("RunBuild", panel);
+            {
+                var rt = col.GetComponent<RectTransform>();
+                rt.anchorMin = new Vector2(1f, 0f);
+                rt.anchorMax = new Vector2(1f, 1f);
+                rt.pivot     = new Vector2(1f, 1f);
+                rt.offsetMin = new Vector2(-(SidePad + ColW), bottom);
+                rt.offsetMax = new Vector2(-SidePad, -top);
+            }
+
+            Verify(UIScale.PopupMaxH - top - bottom);
+
+            var built = new Built();
+
+            // ── 보유 특성 ──
+            float y = 0f;
+            EditorUIBuilder.SectionLabel(col, "보유 특성", y, ColW, 0f);
+            y += LabelH + LabelGap;
+
+            var box = MakeGo("PerkBox", col);
+            AnchorTopBand(box, y, PerkAreaH);
+            var scroll = box.AddComponent<ScrollRect>();
+
+            var vp = MakeGo("Viewport", box);
+            vp.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.01f);
+            vp.AddComponent<Mask>().showMaskGraphic = false;
+            StretchRT(vp);
+
+            var content = MakeGo("PerkContent", vp);
+            {
+                var rt = content.GetComponent<RectTransform>();
+                rt.anchorMin = new Vector2(0f, 1f); rt.anchorMax = new Vector2(1f, 1f);
+                rt.pivot     = new Vector2(0.5f, 1f);
+                rt.anchoredPosition = Vector2.zero; rt.sizeDelta = Vector2.zero;
+            }
+            var grid = content.AddComponent<GridLayoutGroup>();
+            grid.cellSize        = new Vector2(PerkIcon, PerkIcon);
+            grid.spacing         = new Vector2(PerkGap, PerkGap);
+            grid.constraint      = GridLayoutGroup.Constraint.FixedColumnCount;
+            grid.constraintCount = PerkCols;
+            grid.childAlignment  = TextAnchor.UpperLeft;
+            content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            scroll.horizontal   = false;
+            scroll.vertical     = true;
+            scroll.movementType = ScrollRect.MovementType.Elastic;
+            scroll.viewport     = vp.GetComponent<RectTransform>();
+            scroll.content      = content.GetComponent<RectTransform>();
+
+            // 비활성 템플릿 — 격자는 꺼진 자식을 건너뛴다
+            built.PerkTemplate = TraitIconSlotBuilder.Build(content, 0, PerkIcon);
+            built.PerkTemplate.gameObject.name = "PerkTemplate";
+            built.PerkArea     = content.transform;
+
+            var empty = AddTMP(box, "PerkEmpty", "주운 특성이 없다", UIScale.FontSm, FontStyles.Normal);
+            empty.color         = EditorUIBuilder.Pop.SubText;
+            empty.raycastTarget = false;
+            StretchRT(empty.gameObject);
+            empty.gameObject.SetActive(false);
+            built.PerkEmpty = empty.gameObject;
+
+            y += PerkAreaH + BlockGap;
+
+            // ── 덱 ──
+            EditorUIBuilder.SectionLabel(col, "덱", y, ColW, 0f);
+            y += LabelH + LabelGap;
+
+            built.DeckCells = new ReincarnationPopup.DeckCell[DeckCols * DeckRows];
+            for (int i = 0; i < built.DeckCells.Length; i++)
+            {
+                float x  = (i % DeckCols) * (CellW + CellGap);
+                float cy = y + (i / DeckCols) * (CellH + CellGap);
+                built.DeckCells[i] = BuildCell(col, i, x, cy);
+            }
+
+            return built;
+        }
+
+        /// <summary>덱 칸 — [초상화] [이름] [Lv · 품질]. 누르면 몬스터 상세가 열린다 (입체 버튼 — UI 규칙 1).</summary>
+        static ReincarnationPopup.DeckCell BuildCell(GameObject parent, int index, float x, float yFromTop)
+        {
+            Button btn = EditorUIBuilder.RaisedBtn(parent, $"Deck{index}", CellFace, out GameObject body);
+            var rt = btn.GetComponent<RectTransform>();
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+            rt.pivot     = new Vector2(0f, 1f);
+            rt.anchoredPosition = new Vector2(x, -yFromTop);
+            rt.sizeDelta        = new Vector2(CellW, CellH);
+
+            var portrait = EditorUIBuilder.Img(body, "Portrait", Color.white);
+            portrait.preserveAspect = true;
+            portrait.raycastTarget  = false;
+            {
+                var r = portrait.rectTransform;
+                r.anchorMin = r.anchorMax = new Vector2(0.5f, 1f);
+                r.pivot     = new Vector2(0.5f, 1f);
+                r.anchoredPosition = new Vector2(0f, -CellPad);
+                r.sizeDelta        = new Vector2(PortraitS, PortraitS);
+            }
+
+            float nameTop = CellPad + PortraitS + 2f;
+            var nameTmp = AddTMP(body, "NameText", "", UIScale.FontSm, FontStyles.Bold);
+            {
+                var r = nameTmp.rectTransform;
+                r.anchorMin = new Vector2(0f, 1f); r.anchorMax = new Vector2(1f, 1f);
+                r.pivot     = new Vector2(0.5f, 1f);
+                r.offsetMin = new Vector2(6f, -(nameTop + UIScale.RowSm));
+                r.offsetMax = new Vector2(-6f, -nameTop);
+            }
+            nameTmp.alignment        = TextAlignmentOptions.Midline;
+            nameTmp.color            = Color.white;
+            nameTmp.raycastTarget    = false;
+            nameTmp.textWrappingMode = TextWrappingModes.NoWrap;
+            // 긴 이름은 줄인다 — 칸 밖으로 넘치면 옆 칸 위에 겹쳐 그려진다 (전황 칸과 같은 규칙)
+            nameTmp.enableAutoSizing = true;
+            nameTmp.fontSizeMax      = UIScale.FontSm;
+            nameTmp.fontSizeMin      = UIScale.FontSm * 0.75f;
+
+            TextMeshProUGUI level = BottomText(body, "LevelText", left: true);
+            level.color = LevelGold;   // 레벨은 금색 — 하단 카드 바·전황과 같은 색
+            TextMeshProUGUI grade = BottomText(body, "GradeText", left: false);
+
+            return new ReincarnationPopup.DeckCell
+            {
+                Root      = btn.gameObject,
+                Button    = btn,
+                Portrait  = portrait,
+                NameText  = nameTmp,
+                LevelText = level,
+                GradeText = grade,
+            };
+        }
+
+        static TextMeshProUGUI BottomText(GameObject body, string name, bool left)
+        {
+            var tmp = AddTMP(body, name, "", UIScale.FontSm, FontStyles.Bold);
+            var r   = tmp.rectTransform;
+            r.anchorMin = r.anchorMax = new Vector2(left ? 0f : 1f, 0f);
+            r.pivot     = new Vector2(left ? 0f : 1f, 0f);
+            r.anchoredPosition = new Vector2(left ? 8f : -8f, CellPad);
+            r.sizeDelta        = new Vector2(CellW * 0.5f - 8f, UIScale.RowSm);
+            tmp.alignment        = left ? TextAlignmentOptions.MidlineLeft : TextAlignmentOptions.MidlineRight;
+            tmp.color            = EditorUIBuilder.Pop.SubText;
+            tmp.raycastTarget    = false;
+            tmp.textWrappingMode = TextWrappingModes.NoWrap;
+            tmp.enableAutoSizing = true;
+            tmp.fontSizeMax      = UIScale.FontSm;
+            tmp.fontSizeMin      = UIScale.FontSm * 0.75f;
+            return tmp;
+        }
+
+        public static void WriteDeckCells(SerializedObject so, ReincarnationPopup.DeckCell[] cells)
+        {
+            SerializedProperty arr = so.FindProperty("_deckCells");
+            arr.arraySize = cells.Length;
+
+            for (int i = 0; i < cells.Length; i++)
+            {
+                SerializedProperty e = arr.GetArrayElementAtIndex(i);
+                e.FindPropertyRelative("Root")     .objectReferenceValue = cells[i].Root;
+                e.FindPropertyRelative("Button")   .objectReferenceValue = cells[i].Button;
+                e.FindPropertyRelative("Portrait") .objectReferenceValue = cells[i].Portrait;
+                e.FindPropertyRelative("NameText") .objectReferenceValue = cells[i].NameText;
+                e.FindPropertyRelative("LevelText").objectReferenceValue = cells[i].LevelText;
+                e.FindPropertyRelative("GradeText").objectReferenceValue = cells[i].GradeText;
+            }
+        }
+
+        /// <summary>칸이 제 높이·폭 안에 드는지 잰다 — 넘쳐도 유니티는 조용히 겹쳐 그린다.</summary>
+        static void Verify(float columnH)
+        {
+            float perkW = PerkCols * PerkIcon + (PerkCols - 1) * PerkGap;
+            if (perkW > ColW)
+                Debug.LogError($"[ReincarnationPopupCreator] 특성 격자 폭 {perkW} 가 칸 폭 {ColW} 를 넘습니다.");
+
+            float used = (LabelH + LabelGap) * 2f + PerkAreaH + BlockGap
+                       + DeckRows * CellH + (DeckRows - 1) * CellGap;
+            if (used > columnH)
+                Debug.LogError($"[ReincarnationPopupCreator] 이번 런 칸 높이 {used} 가 자리 {columnH} 를 넘습니다.");
+
+            if (DeckCols * DeckRows < RunPerkRule.MaxDeckSlots)
+                Debug.LogError($"[ReincarnationPopupCreator] 덱 칸 {DeckCols * DeckRows} 개가 덱 상한 " +
+                               $"{RunPerkRule.MaxDeckSlots} 보다 적습니다.");
+
+            float leftW = PopupW - SidePad * 2f - ColW - ColGap;
+            if (leftW < 900f)
+                Debug.LogError($"[ReincarnationPopupCreator] 왼쪽 칸 {leftW} 가 탭 띠(900)보다 좁습니다.");
+        }
+    }
+
     // ── 헬퍼 ─────────────────────────────────────────────────
+
+    /// <summary>위 스트레치 밴드의 좌우 여백을 따로 준다 (AnchorTop 은 좌우 대칭만 된다).</summary>
+    static void FitHorizontal(GameObject go, float left, float right)
+    {
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchoredPosition = new Vector2((left - right) * 0.5f, rt.anchoredPosition.y);
+        rt.sizeDelta        = new Vector2(-(left + right), rt.sizeDelta.y);
+    }
 
     static GameObject CreateRoot<T>(string name, float w, float h) where T : PopupBase
     {

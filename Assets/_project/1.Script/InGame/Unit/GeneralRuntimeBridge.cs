@@ -81,7 +81,7 @@ public class GeneralRuntimeBridge : UnitRuntimeBridge
         _level     = level;
         _unitEntry = unitEntry;
         // 등급 업그레이드 횟수 반영 (unitEntry 없으면 태생 등급 사용)
-        _grade     = unitEntry != null ? unitEntry.Grade : UnitJobRoller.GetBirthGrade(unitName);
+        _grade     = unitEntry != null ? unitEntry.Grade : UnitJobRoller.GetBirthGrade(unitName, level);
         _job      = UnitJobRoller.GetJob(unitName);
         // ── 패시브 슬롯 결정 (스탯 적용은 파이프라인이 한다) ──
         (_passive0, _passive1, _passive2) = PassiveSkillRoller.Roll(_unitName);
@@ -193,7 +193,7 @@ public class GeneralRuntimeBridge : UnitRuntimeBridge
     /// </summary>
     public UnitGrade Grade => _unitEntry != null
         ? _unitEntry.Grade
-        : UnitJobRoller.GetBirthGrade(_unitName ?? name);
+        : UnitJobRoller.GetBirthGrade(_unitName ?? name, _level);
 
     // ── UnitRuntimeBridge 구현 ───────────────────────────────
 

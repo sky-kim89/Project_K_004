@@ -93,6 +93,8 @@ public class ActiveGravestone : ActiveSkillData
             warningTime   : EffectDuration > 0f ? EffectDuration : 0.5f,
             dropInterval  : DropInterval,
             damage        : ctx.CasterStat.Final[StatType.Attack] * DamageMultiplier,
+            // 소환사 시그니처면 비석마다 대상 최대 체력 비례 × 패기 (SignatureDamageRule)
+            maxHpRatio    : SignatureDamageRule.RatioFor(em, ctx.CasterEntity, SignatureDamageRule.GravestoneRatio),
             knockMult     : KnockbackMult,
             generalStat   : casterStat,
             generalJob    : job,

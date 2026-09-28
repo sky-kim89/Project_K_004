@@ -29,7 +29,7 @@ MonoBehaviour:
   Projectile: 0
   ProjectileSpeed: 0
   Traits: 76
-  Tags: 134
+  Tags: 2052
   Description: "\uC77C\uC815 \uAC04\uACA9\uC73C\uB85C \uD55C \uB188\uC744 \uACE8\uB77C
     \uB4E4\uC774\uBC1B\uB294\uB2E4. \uCCAB \uC811\uC804\uC744 \uC5EC\uB294 \uB370
     \uC4F4\uB2E4."
@@ -44,9 +44,15 @@ MonoBehaviour:
   SummonPowerToHp: 1.2
   SummonPowerToAttack: 1
   UpgradeOf: {fileID: 0}
+  AlsoUpgradeOf: []
   SpeciesTrait: 7
+  ExtraTraits: 
+  BlockedInherit: 
   ActiveSkill: 1
   Passives: 
+  BroodSpecies: {fileID: 0}
+  BroodCount: 0
+  BroodCooldown: 0
   LevelBonuses:
   - Label: "\uB450\uD130\uC6B4 \uB4F1\uAC00\uC8FD"
     Stat1: 0

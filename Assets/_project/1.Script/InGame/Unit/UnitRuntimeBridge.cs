@@ -298,6 +298,13 @@ public abstract class UnitRuntimeBridge : MonoBehaviour
         if (em.HasComponent<DeadTag>(entity))
             em.RemoveComponent<DeadTag>(entity);
 
+        // BreachedTag 제거 — 성벽을 통과해 거둬진 용사 엔티티가 재사용될 때 (2026-09-16 버그)
+        //   CoreBreachSystem 은 이 태그가 있으면 판정에서 뺀다. 안 떼면 다음 판에 병사로 다시 선
+        //   엔티티가 **처음부터 "이미 통과한 유닛"** 이라, 성벽선에 닿아도 영영 안 거둬지고
+        //   머리만 박고 서 있었다(처치해도 골드도 없었다). 판을 거듭할수록 그런 개체가 늘었다.
+        if (em.HasComponent<BreachedTag>(entity))
+            em.RemoveComponent<BreachedTag>(entity);
+
         // SummonedTag 제거 (소환 유닛으로 쓰였던 엔티티가 재사용될 때 잔류 방지)
         if (em.HasComponent<SummonedTag>(entity))
             em.RemoveComponent<SummonedTag>(entity);

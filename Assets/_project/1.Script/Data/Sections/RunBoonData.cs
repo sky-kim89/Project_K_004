@@ -44,6 +44,9 @@ class RunBoonJson
 
     /// <summary>상점 '전쟁 자금' 을 산 횟수 (2026-09-13). 값이 이 수로 오른다.</summary>
     public int warFund;
+
+    /// <summary>상점 '소집의 북' 을 산 횟수 (2026-09-15). 배출 간격 스택이자 값의 계단.</summary>
+    public int drum;
 }
 
 public class RunBoonData : ISaveSection
@@ -79,6 +82,9 @@ public class RunBoonData : ISaveSection
     /// ⚠ 정수(MaxManaBonus)와 같은 규칙이다 — 세이브에 수를 하나 더 두면 둘이 갈린다.
     /// </summary>
     public int WarFundStacks { get; private set; }
+
+    /// <summary>상점 '소집의 북' 을 산 횟수 — 값의 계단(RunShopRule.DrumPrice)이자 간격 스택(DrumIntervalMult).</summary>
+    public int DrumStacks { get; private set; }
 
     /// <summary>값이 바뀌었다 — 시너지 줄·마나 게이지가 다시 그려져야 한다.</summary>
     public event Action Changed;
@@ -155,6 +161,15 @@ public class RunBoonData : ISaveSection
         Changed?.Invoke();
     }
 
+    /// <summary>소집의 북을 한 번 샀다.</summary>
+    public void AddDrum(int count = 1)
+    {
+        if (count == 0) return;
+
+        DrumStacks = Mathf.Max(0, DrumStacks + count);
+        Changed?.Invoke();
+    }
+
     // ── 시그니처 스킬 ────────────────────────────────────────
 
     /// <summary>스테이지당 사용 횟수를 늘린다 (이벤트 '봉인된 지팡이').</summary>
@@ -176,6 +191,7 @@ public class RunBoonData : ISaveSection
         extraMana   = ExtraMaxMana,
         crystalMana = CrystalMaxMana,
         warFund     = WarFundStacks,
+        drum        = DrumStacks,
     });
 
     public void Deserialize(string json)
@@ -196,6 +212,7 @@ public class RunBoonData : ISaveSection
         ExtraMaxMana   = data?.extraMana   ?? 0;
         CrystalMaxMana = data?.crystalMana ?? 0;
         WarFundStacks  = data?.warFund     ?? 0;
+        DrumStacks     = data?.drum        ?? 0;
 
         Changed?.Invoke();
     }
@@ -208,6 +225,7 @@ public class RunBoonData : ISaveSection
         ExtraMaxMana   = 0;
         CrystalMaxMana = 0;
         WarFundStacks  = 0;
+        DrumStacks     = 0;
         Changed?.Invoke();
     }
 }

@@ -49,6 +49,9 @@ public static class MonsterSynergyRule
     {
         MonsterTag.Undead,   MonsterTag.Forest, MonsterTag.Beast,  MonsterTag.Regrowth,
         MonsterTag.Ferocity, MonsterTag.Steel,  MonsterTag.Plague, MonsterTag.Sorcery,
+        // ⚠ 2026-09-15 — 뒤에만 붙인다 (RunBoonData 제단 몫이 이 자리로 저장된다)
+        MonsterTag.Hunt,     MonsterTag.Marksman, MonsterTag.Swarm, MonsterTag.Vanguard,
+        MonsterTag.Royal,
     };
 
     /// <summary>
@@ -73,9 +76,46 @@ public static class MonsterSynergyRule
     static readonly Steps Wide   = new() { Bronze = 3, Silver = 5, Gold = 7 };
     static readonly Steps Narrow = new() { Bronze = 2, Silver = 4, Gold = 6 };
 
+    /// <summary>왕권 — 2차는 비싼 한 마리라 덱에 두세 장이 한계다 (사용자 확정, 2026-09-15).</summary>
+    static readonly Steps RoyalSteps = new() { Bronze = 1, Silver = 2, Gold = 3 };
+
+    /// <summary>소속이 이 수 이상이면 넓은 문턱(3/5/7). 그 아래는 2/4/6.</summary>
+    const int WideMembers = 7;
+
+    // ⚠ 문턱은 **실제 소속 수**가 정한다 (2026-09-15)
+    //   예전에는 "언데드·숲 = 7종" 을 코드에 박았다. 표식을 재분배하자 숲이 6종이 되고
+    //   다른 넷이 7종이 됐는데 문턱은 그대로라, 금 = 계열 완주 규칙이 조용히 깨졌다.
+    //   도감(CardCatalog)에서 세면 표식을 옮겨도 저절로 맞는다.
+    static readonly Dictionary<MonsterTag, int> _members = new();
+    static CardCatalog _membersFrom;
+
+    static int MemberCount(MonsterTag tag)
+    {
+        CardCatalog catalog = CardCatalog.Current;
+        if (catalog == null) return 0;
+
+        if (_membersFrom != catalog)
+        {
+            _membersFrom = catalog;
+            _members.Clear();
+
+            foreach (MonsterSpeciesData sp in catalog.Monsters)
+            {
+                if (sp == null) continue;
+                foreach (MonsterTag t in AllTags)
+                    if ((sp.Tags & t) != 0)
+                        _members[t] = (_members.TryGetValue(t, out int n) ? n : 0) + 1;
+            }
+        }
+
+        return _members.TryGetValue(tag, out int count) ? count : 0;
+    }
+
     static Steps StepsOf(MonsterTag tag)
     {
-        Steps s = tag is MonsterTag.Undead or MonsterTag.Forest ? Wide : Narrow;
+        Steps s = tag == MonsterTag.Royal              ? RoyalSteps
+                : MemberCount(tag) >= WideMembers      ? Wide
+                :                                        Narrow;
 
         // 유물 '조율' — **동 문턱만** 내린다.
         // ⚠ 은·금까지 내리면 7종 계열의 금(7)이 5로 떨어져, 확장 편성 없이도
@@ -174,8 +214,8 @@ public static class MonsterSynergyRule
         //   의도한 것이다 — 한 시너지에 모든 것을 건 빌드의 보상이다.
         if (tag != MonsterTag.None && tag == WeightedTag) have += RunPerkRule.WeightedCount;
 
-        // 특성 '한 우물' — 덱의 몬스터가 **전부** 가진 표식 하나에 얹는다.
-        if (tag != MonsterTag.None && tag == SingleWellTag) have += RunPerkRule.SingleWellCount;
+        // 특성 '한 우물' — 필드·대기열의 종족이 **하나뿐**이면 그 종족의 표식 **전부**에 얹는다 (2026-09-16).
+        if (tag != MonsterTag.None && (SingleWellTags & tag) != 0) have += RunPerkRule.SingleWellCount;
 
         return have;
     }
@@ -209,45 +249,19 @@ public static class MonsterSynergyRule
     }
 
     /// <summary>
-    /// 특성 '한 우물' 이 얹히는 표식 — 덱의 몬스터 카드가 <b>전부</b> 가진 표식 (AllTags 순서로 첫 것).
+    /// 특성 '한 우물' 이 얹히는 표식들 — **지금 존재하는 종족(필드 + 대기열)이 딱 하나면** 그 종족의 표식 전부.
     ///
-    /// ⚠ 몬스터 카드가 둘 이상일 때만 — 한 장이면 무엇이든 "전부 공유" 라 공짜가 된다.
-    /// ⚠ 덱에서 매번 다시 잰다 — 다른 계열 카드를 넣는 순간 저절로 풀린다.
-    /// ⚠ 동점 규칙은 편중과 같다 (AllTags 순서). 무작위로 고르면 설명할 수 없다.
+    /// ■ 규칙이 바뀌었다 (사용자 지시, 2026-09-16)
+    ///   옛 규칙은 "덱의 몬스터 카드가 전부 공유하는 표식 하나 +2" 였다. 진화하면 표식이 바뀌어
+    ///   유지가 너무 어려웠다. 지금은 "한 종족만 내면 그 종족 시너지 전부 +2" 다.
+    /// ⚠ 판정은 Recount 가 한다 — 시너지 카운트와 같은 '존재' 기준(필드 + 대기열)이라 저절로 맞는다.
+    /// ⚠ 특성이 없으면 None — 기록은 늘 해 두고 특성 보유만 여기서 본다(판 도중에 얻어도 곧바로 켜진다).
     /// </summary>
-    static MonsterTag SingleWellTag
-    {
-        get
-        {
-            if (!RunPerkRule.Has(RunPerk.SingleWell)) return MonsterTag.None;
+    public static MonsterTag SingleWellTags   // 하단 카드가 이 표식들에 금빛 테두리를 두른다 (SummonCardUI)
+        => RunPerkRule.Has(RunPerk.SingleWell) ? _singleSpeciesTags : MonsterTag.None;
 
-            var deck    = UserDataManager.Instance?.Get<SummonDeckData>();
-            var catalog = CardCatalog.Current;
-            if (deck == null || catalog == null) return MonsterTag.None;
-
-            MonsterTag common   = ~MonsterTag.None;
-            int        monsters = 0;
-
-            for (int i = 0; i < deck.SlotCount; i++)
-            {
-                SummonDeckSlot slot = deck.GetSlot(i);
-                if (slot.IsEmpty || slot.Kind != SummonKind.Monster) continue;
-
-                MonsterSpeciesData species = catalog.GetMonster(slot.Id);
-                if (species == null) continue;
-
-                common &= species.Tags;
-                monsters++;
-            }
-
-            if (monsters < 2) return MonsterTag.None;
-
-            foreach (MonsterTag t in AllTags)
-                if ((common & t) != 0) return t;
-
-            return MonsterTag.None;
-        }
-    }
+    /// <summary>지금 존재하는 종족이 하나뿐일 때 그 종족의 표식. 아니면 None (Recount 가 쓴다).</summary>
+    static MonsterTag _singleSpeciesTags;
 
     public static SynergyTier TierOf(MonsterTag tag)
     {
@@ -270,7 +284,7 @@ public static class MonsterSynergyRule
     public static void Bind()
     {
         _summoned.Clear();
-        _alive.Clear();           // 지난 판의 필드 기록이 남아 있으면 안 된다
+        _aliveCard.Clear();       // 지난 판의 필드 기록이 남아 있으면 안 된다
         _carriedStacks.Clear();   // 투지 금이 물려주던 누적도 런 경계에서 끊는다
 
         // ⚠ 런 보너스(제단 몫)는 여기서 건드리지 않는다
@@ -327,34 +341,34 @@ public static class MonsterSynergyRule
     //    ⚠ 이어하기가 저절로 맞는다 — 대기열은 저장되므로 다시 켜고 나면
     //      같은 값이 나온다 (예전에는 static 이 날아가 카운트가 통째로 줄었다).
 
-    /// <summary>필드에 서 있는 종족별 마릿수.</summary>
-    static readonly Dictionary<string, int> _alive = new();
-
     /// <summary>존재 판정용 재사용 버퍼.</summary>
     static readonly HashSet<string> _present = new();
 
+    /// <summary>런 경계에서 필드 기록을 지운다 (씬을 내리면 OnDisable 이 안 도는 경우가 있다).</summary>
+    public static void ClearAlive() => _aliveCard.Clear();
+
     /// <summary>
-    /// 한 마리가 서거나(+1) 사라졌다(−1). 부르는 곳은 MonsterLineReturner 하나다
-    /// (모든 몬스터가 그 컴포넌트를 달고 나온다 — 분열체·스킬 소환도 포함).
+    /// 필드에 선 **카드 몬스터**(대기열로 돌아갈 자격이 있는 개체)의 종류별 마릿수 — 시너지 카운트 · 특성 '한 우물'.
+    /// ⚠ 권속·시그니처·분열체 같은 스킬 소환은 안 센다 (사용자 지시, 2026-09-16) — 시너지를 **받기만 하고 주지 않는다**.
+    ///   한때 모든 몬스터를 세는 집계(_alive)로 셌다. 덱에 없는 몬스터를 스킬로 부르면 마나 없이 카운트가 올라,
+    ///   "스킬 소환은 카운트를 주지 않는다" 는 규칙이 조용히 깨져 있었다.
     /// </summary>
-    public static void NoteAlive(MonsterSpeciesData species, int delta)
+    static readonly Dictionary<string, int> _aliveCard = new();
+
+    /// <summary>카드 몬스터가 서거나(+1) 사라졌다(−1). 부르는 곳은 MonsterLineReturner 하나다.</summary>
+    public static void NoteCardAlive(MonsterSpeciesData species, int delta)
     {
         if (species == null || delta == 0) return;
 
         string id  = species.Id;
-        int    now = (_alive.TryGetValue(id, out int cur) ? cur : 0) + delta;
+        int    now = (_aliveCard.TryGetValue(id, out int cur) ? cur : 0) + delta;
 
-        bool wasPresent = cur > 0;
-
-        if (now <= 0) _alive.Remove(id);
-        else          _alive[id] = now;
+        if (now <= 0) _aliveCard.Remove(id);
+        else          _aliveCard[id] = now;
 
         // 0 ↔ 1 을 넘을 때만 다시 센다.
-        if (wasPresent != now > 0) Recount();
+        if ((cur > 0) != (now > 0)) Recount();
     }
-
-    /// <summary>런 경계에서 필드 기록을 지운다 (씬을 내리면 OnDisable 이 안 도는 경우가 있다).</summary>
-    public static void ClearAlive() => _alive.Clear();
 
     // ── 런 보너스 (제단·이벤트) ──────────────────────────────
     //
@@ -378,7 +392,7 @@ public static class MonsterSynergyRule
     /// <summary>
     /// <b>지금 존재하는</b> 종족에서 단계를 다시 센다 — 필드 + 대기열.
     ///
-    /// ⚠ "낸 적 있는 종족"(_summoned)으로 세지 않는다 (위 NoteAlive 주석)
+    /// ⚠ "낸 적 있는 종족"(_summoned)으로 세지 않는다 (위 _aliveCard 주석)
     ///   그건 강화 카드 후보를 고르는 기록일 뿐이다.
     /// </summary>
     public static void Recount()
@@ -391,7 +405,7 @@ public static class MonsterSynergyRule
         {
             _present.Clear();
 
-            foreach (var pair in _alive) _present.Add(pair.Key);
+            foreach (var pair in _aliveCard) _present.Add(pair.Key);   // ⚠ 카드 몬스터만 — 스킬 소환 제외
 
             SummonReservation reservation = SummonController.Instance?.Reservation;
 
@@ -408,6 +422,13 @@ public static class MonsterSynergyRule
                 AddTags(species.Tags);
             }
         }
+
+        // 특성 '한 우물' — 위 목록(카드 몬스터 + 대기열)이 한 가지 몬스터뿐인가.
+        //   ⚠ 아래 TierOf 보다 먼저 정해야 단계에 들어간다.
+        _singleSpeciesTags = MonsterTag.None;
+        if (catalog != null && _present.Count == 1)
+            foreach (string id in _present)
+                _singleSpeciesTags = catalog.GetMonster(id)?.Tags ?? MonsterTag.None;
 
         int active = 0;
         for (int i = 0; i < AllTags.Length; i++)
@@ -838,6 +859,142 @@ public static class MonsterSynergyRule
         _                  => 0f,
     };
 
+    // ══════════════════════════════════════════════════════════
+    //  2026-09-15 추가 5종 (사용자 확정) — 같은 자(동 1.12 · 은 1.30 · 금 1.60)에 맞췄다
+    //  ⚠ 선봉·무리는 조건부라 교전 8초 가정으로 어림했다. 왕권은 권속 가치가 지수에 안 잡힌다.
+    // ══════════════════════════════════════════════════════════
+
+    // ── 사냥 — 치명타 (기본 5% · 150% 위에 더한다) ───────────
+    public static float HuntCritChance(SynergyTier t) => t switch
+    {
+        SynergyTier.Bronze => 0.15f,
+        SynergyTier.Silver => 0.25f,
+        SynergyTier.Gold   => 0.40f,
+        _                  => 0f,
+    };
+
+    public static float HuntCritDamage(SynergyTier t) => t switch
+    {
+        SynergyTier.Bronze => 0.20f,
+        SynergyTier.Silver => 0.40f,
+        SynergyTier.Gold   => 0.70f,
+        _                  => 0f,
+    };
+
+    public const float HuntLowHpThreshold = 0.5f;
+
+    /// <summary>리더 — 체력이 문턱 이하인 적에게 더하는 치명타 확률.</summary>
+    public static float HuntLowHpCritBonus(SynergyTier t)
+        => t >= SynergyTier.Silver ? 0.15f : 0f;
+
+    /// <summary>금 전용 — 치명타가 방어율을 무시한다 (급소 찌르기와 같은 태그).</summary>
+    public static bool HuntIgnoresDefense(SynergyTier t) => t == SynergyTier.Gold;
+
+    // ── 사격 — 원거리만 ──────────────────────────────────────
+    public static float MarksmanAttack(SynergyTier t) => t switch
+    {
+        SynergyTier.Bronze => 0.12f,
+        SynergyTier.Silver => 0.22f,
+        SynergyTier.Gold   => 0.30f,
+        _                  => 0f,
+    };
+
+    public static float MarksmanRange(SynergyTier t) => t >= SynergyTier.Silver ? 0.15f : 0f;
+
+    /// <summary>
+    /// 금 전용 — 투사체가 하나 더 나간다. 두 번째는 이 비율의 피해.
+    /// ⚠ 같은 대상을 노린다 — 공격 잡(Burst)에는 주변 적을 찾을 수단이 없다.
+    /// ⚠ 100% 로 올리지 말 것 — 금이 2.6배가 되어 다른 시너지를 전부 앞지른다.
+    /// </summary>
+    public static float MarksmanExtraShotRatio(SynergyTier t) => t == SynergyTier.Gold ? 0.25f : 0f;
+
+    // ── 무리 — 같은 종족끼리 뭉치기 ──────────────────────────
+    public const float SwarmRadius        = 3f;
+    public const int   SwarmNeedAllies    = 3;      // 자신 제외 같은 종족
+    public const float SwarmCheckInterval = 0.5f;
+    public const float SwarmBuffGrace     = 0.3f;   // 판정 사이에 버프가 끊기지 않게
+
+    /// <summary>받는 피해 감소 — 방어율 가산으로 건다 (언데드 부활 보호와 같은 방식).</summary>
+    public static float SwarmGuard(SynergyTier t) => t switch
+    {
+        SynergyTier.Bronze => 0.10f,
+        SynergyTier.Silver => 0.18f,
+        SynergyTier.Gold   => 0.20f,
+        _                  => 0f,
+    };
+
+    public static float SwarmAttackBonus(SynergyTier t) => t switch
+    {
+        SynergyTier.Silver => 0.05f,
+        SynergyTier.Gold   => 0.10f,
+        _                  => 0f,
+    };
+
+    /// <summary>리더 — 무리가 쓰러질 때마다 주변 무리의 공격력이 이만큼 쌓인다.</summary>
+    public static float SwarmRallyPerDeath(SynergyTier t) => t >= SynergyTier.Silver ? 0.03f : 0f;
+
+    public const int   SwarmRallyMaxStacks = 5;
+    public const float SwarmRallyRadius    = 3.2f;
+
+    /// <summary>금 전용 — 무리 카드 마릿수 (RunPerkRule.SummonCountFor 가 읽는다).</summary>
+    public static int SwarmExtraCount(SynergyTier t) => t == SynergyTier.Gold ? 1 : 0;
+
+    // ── 선봉 — 첫 공격 · 첫 교전 ─────────────────────────────
+    public static float VanguardFirstHitBonus(SynergyTier t) => t switch
+    {
+        SynergyTier.Bronze => 0.50f,
+        SynergyTier.Silver => 1.00f,
+        SynergyTier.Gold   => 2.00f,
+        _                  => 0f,
+    };
+
+    /// <summary>첫 공격부터 받는 피해 감소 — 방어율 가산으로 건다.</summary>
+    public static float VanguardGuard(SynergyTier t) => t switch
+    {
+        SynergyTier.Bronze => 0.20f,
+        SynergyTier.Silver => 0.30f,
+        SynergyTier.Gold   => 0.45f,
+        _                  => 0f,
+    };
+
+    public static float VanguardGuardSeconds(SynergyTier t) => t switch
+    {
+        SynergyTier.Bronze => 3f,
+        SynergyTier.Silver => 4f,
+        SynergyTier.Gold   => 5f,
+        _                  => 0f,
+    };
+
+    /// <summary>리더 — 첫 공격이 대상을 밀쳐 낸다.</summary>
+    public static bool VanguardKnockback(SynergyTier t) => t >= SynergyTier.Silver;
+
+    public const float VanguardPushPower = 3f;
+    public const float VanguardPushStun  = 0.3f;   // 넉백은 경직 중에만 들어간다 (UnitHitSystem)
+
+    /// <summary>금 전용 — 첫 공격이 대상 주변 적을 기절시킨다.</summary>
+    public static float VanguardStunSeconds(SynergyTier t) => t == SynergyTier.Gold ? 1f : 0f;
+
+    public const float VanguardStunRadius = 2.5f;
+
+    // ── 왕권 — 2차 전용 · 권속 소환 ──────────────────────────
+    public static float RoyalBroodCooldownCut(SynergyTier t) => t switch
+    {
+        SynergyTier.Bronze => 0.20f,
+        SynergyTier.Silver => 0.35f,
+        SynergyTier.Gold   => 0.50f,
+        _                  => 0f,
+    };
+
+    public static float RoyalBroodStatBonus(SynergyTier t) => t switch
+    {
+        SynergyTier.Silver => 0.30f,
+        SynergyTier.Gold   => 0.60f,
+        _                  => 0f,
+    };
+
+    /// <summary>금 전용 — 권속이 하나 더 나온다 (ActiveSummonBrood).</summary>
+    public static int RoyalExtraBrood(SynergyTier t) => t == SynergyTier.Gold ? 1 : 0;
+
     // ── 중첩 보너스 — 켜진 시너지 개수 ───────────────────────
     //
     //  ⚠ 금 하나에 덱의 6~7칸이 잠기므로 금과 중첩은 서로 배타적이다.
@@ -904,6 +1061,11 @@ public static class MonsterSynergyRule
         MonsterTag.Steel    => "강철",
         MonsterTag.Plague   => "역병",
         MonsterTag.Sorcery  => "술법",
+        MonsterTag.Hunt     => "사냥",
+        MonsterTag.Marksman => "사격",
+        MonsterTag.Swarm    => "무리",
+        MonsterTag.Vanguard => "선봉",
+        MonsterTag.Royal    => "왕권",
         _                   => "",
     };
 
@@ -951,6 +1113,21 @@ public static class MonsterSynergyRule
     static string Pct1(float ratio)  => $"{ratio * 100f:0.#}%";
 
     /// <summary>한 단계가 무엇을 주는지 한 줄로.</summary>
+    /// <summary>
+    /// 표에서 문장을 찾아 숫자를 끼워 넣는다 — 원본 표가 쓰는 <c>{0}</c> 방식.
+    ///
+    /// ⚠ <b>수치가 든 설명은 반드시 이걸 쓴다. 보간 문자열($"…{값}…")을 쓰지 말 것</b>
+    ///   (2026-09-16). 보간은 실행 시점에 이미 숫자로 바뀌어 있어서 번역표의
+    ///   키(코드에 적힌 그대로의 문자열)와 **영원히 일치하지 않는다** — 표에는
+    ///   줄이 있는데 화면에는 한국어로 남는다.
+    ///
+    /// ⚠ 조건부로 이어 붙는 조각(<c>line += …</c>)은 **합치지 않는다.** 티어에
+    ///   따라 붙었다 말았다 하므로 한 문장으로 묶으면 없는 효과를 말하게 된다.
+    ///   조각마다 제 줄을 갖는다 — 앞의 " · " 까지가 키의 일부다.
+    /// </summary>
+    static string F(string key, params object[] args)
+        => LocalizationManager.Instance.Format(key, args);
+
     public static string Describe(MonsterTag tag, SynergyTier tier)
     {
         if (tier == SynergyTier.None) return "";
@@ -959,76 +1136,125 @@ public static class MonsterSynergyRule
         {
             case MonsterTag.Forest:
             {
-                string line = $"최대 체력 +{Pct(ForestHpBonus(tier))}";
+                string line = F("최대 체력 +{0}", Pct(ForestHpBonus(tier)));
                 float heal = ForestDeathHeal(tier);
-                if (heal > 0f) line += $" · 죽을 때 주변 숲 아군 {Pct(heal)} 회복";
+                if (heal > 0f) line += F(" · 죽을 때 주변 숲 아군 {0} 회복", Pct(heal));
                 return line;
             }
 
             case MonsterTag.Undead:
             {
-                string line = $"죽으면 {Pct(UndeadReviveChance(tier))} 확률로 "
-                            + $"체력 {Pct(UndeadReviveHp(tier))} 로 부활";
+                string line = F("죽으면 {0} 확률로 체력 {1} 로 부활",
+                                Pct(UndeadReviveChance(tier)), Pct(UndeadReviveHp(tier)));
                 float guard = UndeadReviveGuard(tier);
                 if (guard > 0f)
-                    line += $" · 부활 후 {UndeadGuardSeconds:0.#}초간 피해 {Pct(guard)} 감소";
+                    line += F(" · 부활 후 {0:0.#}초간 피해 {1} 감소", UndeadGuardSeconds, Pct(guard));
                 return line;
             }
 
             case MonsterTag.Beast:
             {
-                string line = $"공격속도 +{Pct(BeastAttackSpeed(tier))} · "
-                            + $"이동속도 +{Pct(BeastMoveSpeed(tier))}";
+                string line = F("공격속도 +{0} · 이동속도 +{1}",
+                                Pct(BeastAttackSpeed(tier)), Pct(BeastMoveSpeed(tier)));
 
                 float cap = BeastSpeedMax(tier);
                 if (cap > 0f)
-                    line += $" · 처치마다 공격속도 +{Pct(BeastSpeedPerKill(tier))}"
-                          + $" (최대 +{Pct(cap)})";
+                    line += F(" · 처치마다 공격속도 +{0} (최대 +{1})",
+                              Pct(BeastSpeedPerKill(tier)), Pct(cap));
 
                 return line;
             }
 
             case MonsterTag.Regrowth:
             {
-                string line = $"초당 최대 체력 {Pct1(RegrowthPerSecond(tier))} 회복";
+                string line = F("초당 최대 체력 {0} 회복", Pct1(RegrowthPerSecond(tier)));
                 float mult = RegrowthLowHpMult(tier);
                 if (mult > 1f)
-                    line += $" · 체력 {Pct(RegrowthLowHpThreshold)} 이하에서 {mult:0.#}배";
+                    line += F(" · 체력 {0} 이하에서 {1:0.#}배", Pct(RegrowthLowHpThreshold), mult);
                 return line;
             }
 
             case MonsterTag.Ferocity:
             {
-                string line = $"처치마다 공격력 +{Pct(FerocityPerKill(tier))} "
-                            + $"(최대 {FerocityMaxStacks(tier)}회)";
+                string line = F("처치마다 공격력 +{0} (최대 {1}회)",
+                                Pct(FerocityPerKill(tier)), FerocityMaxStacks(tier));
                 float share = FerocityInherit(tier);
                 if (share > 0f)
-                    line += $" · 죽을 때 누적치 {Pct(share)} 를 주변 투지 아군에게";
+                    line += F(" · 죽을 때 누적치 {0} 를 주변 투지 아군에게", Pct(share));
                 return line;
             }
 
             case MonsterTag.Steel:
             {
-                string line = $"방어율 +{Pp(SteelDefense(tier))}";
+                string line = F("방어율 +{0}", Pp(SteelDefense(tier)));
                 float thorn = SteelThorn(tier);
-                if (thorn > 0f) line += $" · 받은 피해 {Pct(thorn)} 반사";
+                if (thorn > 0f) line += F(" · 받은 피해 {0} 반사", Pct(thorn));
                 return line;
             }
 
             case MonsterTag.Plague:
             {
-                string line = $"공격에 공격력 {Pct(PlagueDps(tier))} 짜리 중독"
-                            + $"({PlagueSeconds:0.#}초)";
+                string line = F("공격에 공격력 {0} 짜리 중독({1:0.#}초)",
+                                Pct(PlagueDps(tier)), PlagueSeconds);
                 float amp = PlagueAmplify(tier);
-                if (amp > 0f) line += $" · 중독된 적이 받는 피해 +{Pct(amp)}";
+                if (amp > 0f) line += F(" · 중독된 적이 받는 피해 +{0}", Pct(amp));
                 return line;
             }
 
             case MonsterTag.Sorcery:
             {
-                string line = $"스킬 쿨다운 −{Pct(SorceryCooldownReduce(tier))}";
+                string line = F("스킬 쿨다운 −{0}", Pct(SorceryCooldownReduce(tier)));
                 float charge = SorceryStartCharge(tier);
-                if (charge > 0f && charge < 1f) line += $" · 쿨다운 {Pct(charge)} 채운 채 소환";
+                if (charge > 0f && charge < 1f)
+                    line += F(" · 쿨다운 {0} 채운 채 소환", Pct(charge));
+                return line;
+            }
+
+            case MonsterTag.Hunt:
+            {
+                string line = F("치명타 확률 +{0} · 치명타 피해 +{1}",
+                                Pp(HuntCritChance(tier)), Pp(HuntCritDamage(tier)));
+                float low = HuntLowHpCritBonus(tier);
+                if (low > 0f)
+                    line += F(" · 체력 {0} 이하 적에게 치명타 확률 +{1}",
+                              Pct(HuntLowHpThreshold), Pp(low));
+                return line;
+            }
+
+            case MonsterTag.Marksman:
+            {
+                string line = F("원거리 공격력 +{0}", Pct(MarksmanAttack(tier)));
+                float range = MarksmanRange(tier);
+                if (range > 0f) line += F(" · 사거리 +{0}", Pct(range));
+                return line;
+            }
+
+            case MonsterTag.Swarm:
+            {
+                string line = F("같은 종족끼리 뭉쳐 있으면 받는 피해 −{0}", Pct(SwarmGuard(tier)));
+                float atk = SwarmAttackBonus(tier);
+                if (atk > 0f) line += F(" · 공격력 +{0}", Pct(atk));
+                float rally = SwarmRallyPerDeath(tier);
+                if (rally > 0f)
+                    line += F(" · 무리가 쓰러질 때마다 주변 무리 공격력 +{0} (최대 {1})",
+                              Pct(rally), Pct(rally * SwarmRallyMaxStacks));
+                return line;
+            }
+
+            case MonsterTag.Vanguard:
+            {
+                string line = F("첫 공격 피해 +{0} · 첫 공격부터 {1:0.#}초간 받는 피해 −{2}",
+                                Pct(VanguardFirstHitBonus(tier)), VanguardGuardSeconds(tier),
+                                Pct(VanguardGuard(tier)));
+                if (VanguardKnockback(tier)) line += F(" · 첫 공격이 적을 밀쳐 낸다");
+                return line;
+            }
+
+            case MonsterTag.Royal:
+            {
+                string line = F("권속 소환 쿨다운 −{0}", Pct(RoyalBroodCooldownCut(tier)));
+                float stat = RoyalBroodStatBonus(tier);
+                if (stat > 0f) line += F(" · 권속 공·체 +{0}", Pct(stat));
                 return line;
             }
         }
@@ -1053,12 +1279,19 @@ public static class MonsterSynergyRule
         MonsterTag.Undead   => "부활한 개체가 한 번 더 부활한다",
         MonsterTag.Beast    => "넉백에 밀리지 않는다",
         MonsterTag.Regrowth => "치명상을 입어도 한 번은 체력 1 로 버틴다",
-        MonsterTag.Ferocity => $"처치 누적 상한이 {FerocityCarryCeiling}회로 풀리고, "
-                             + "스테이지를 넘겨 유지된다",
-        MonsterTag.Steel    => $"한 번에 최대 체력의 {Pct(SteelDamageCap(SynergyTier.Gold))} 를 "
-                             + "넘게 잃지 않는다",
+        MonsterTag.Ferocity => F("처치 누적 상한이 {0}회로 풀리고, 스테이지를 넘겨 유지된다",
+                                 FerocityCarryCeiling),
+        MonsterTag.Steel    => F("한 번에 최대 체력의 {0} 를 넘게 잃지 않는다",
+                                 Pct(SteelDamageCap(SynergyTier.Gold))),
         MonsterTag.Plague   => "죽을 때 주변 적에게 역병이 퍼진다",
         MonsterTag.Sorcery  => "스킬을 준비한 채로 소환된다",
+        MonsterTag.Hunt     => "치명타가 방어율을 무시한다",
+        MonsterTag.Marksman => F("투사체가 하나 더 나간다 (피해 {0})",
+                                 Pct(MarksmanExtraShotRatio(SynergyTier.Gold))),
+        MonsterTag.Swarm    => "무리 카드에서 한 마리씩 더 나온다",
+        MonsterTag.Vanguard => F("첫 공격이 주변 적을 {0:0.#}초 기절시킨다",
+                                 VanguardStunSeconds(SynergyTier.Gold)),
+        MonsterTag.Royal    => "권속이 하나 더 나온다",
         _                   => "",
     };
 
@@ -1186,7 +1419,7 @@ public static class MonsterSynergyRule
         //   카드를 잃고 얻은 숫자라, 어디서 왔는지 안 보이면 제물이
         //   아무 일도 안 한 것처럼 읽힌다. (한때 툴팁 본문의 "지금 N" 줄이
         //   말했는데, 그 줄이 칩·제목과 같은 숫자를 세 번째로 되풀이해 걷어냈다)
-        return boon > 0 ? $"{head}  (제단 +{boon})" : head;
+        return boon > 0 ? F("{0}  (제단 +{1})", head, boon) : head;
     }
 
     // ── 중첩 표시 ────────────────────────────────────────────
@@ -1219,8 +1452,8 @@ public static class MonsterSynergyRule
     {
         int have = ActiveCount;
         foreach (int need in StackThresholds)
-            if (have < need) return $"중첩  {have}/{need}";
-        return $"중첩  {have}";
+            if (have < need) return F("중첩  {0}/{1}", have, need);
+        return F("중첩  {0}", have);
     }
 
     /// <summary>중첩 세 단계 — 열린 단계는 그 단계 색, 아직인 것은 흐리게 (DescribeAll 과 같은 짜임).</summary>
@@ -1232,9 +1465,10 @@ public static class MonsterSynergyRule
         for (int i = 0; i < StackThresholds.Length; i++)
         {
             int    need = StackThresholds[i];
-            string line = $"공격력·최대 체력 +{Pct1(StackBonus(need))}";
-            if (i == 1) line += $" · 소환 직후 {StackRushSeconds:0.#}초간 이동 속도 +{Pct(StackRushMoveBonus)}";
-            if (i == 2) line += " · 라인 복귀 때 한 마리 더 (라인·종족마다 한 번)";
+            string line = F("공격력·최대 체력 +{0}", Pct1(StackBonus(need)));
+            if (i == 1) line += F(" · 소환 직후 {0:0.#}초간 이동 속도 +{1}",
+                                  StackRushSeconds, Pct(StackRushMoveBonus));
+            if (i == 2) line += F(" · 라인 복귀 때 한 마리 더 (라인·종족마다 한 번)");
 
             string hex = step > i ? HexOf((SynergyTier)(i + 1)) : DimHex;
 
@@ -1244,9 +1478,9 @@ public static class MonsterSynergyRule
               .Append("</color>");
         }
 
-        sb.Append('\n').Append("<color=#").Append(DimHex)
-          .Append("><size=85%>켜진 시너지 수로 붙는다 · 윗 단계는 아랫 단계 효과를 함께 받는다 · " +
-                  "켜진 표식을 가진 몬스터만 받는다</size></color>");
+        sb.Append('\n').Append("<color=#").Append(DimHex).Append("><size=85%>")
+          .Append(F("켜진 시너지 수로 붙는다 · 윗 단계는 아랫 단계 효과를 함께 받는다 · 켜진 표식을 가진 몬스터만 받는다"))
+          .Append("</size></color>");
         return sb.ToString();
     }
 

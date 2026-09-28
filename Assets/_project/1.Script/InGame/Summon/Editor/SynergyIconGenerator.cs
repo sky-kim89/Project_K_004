@@ -77,6 +77,7 @@ public static class SynergyIconGenerator
 
     const string Green = "4ED96A", Lime = "9EE04A", Teal = "2FC5B5", Cyan = "3FC8FF";
     const string Violet = "9B5CFF", Crimson = "FF3E62", Orange = "FF9130", Steel = "9FB4CC";
+    const string Gold   = "FFC63A", Rose = "FF6FB0", Sand = "E8C07A";
 
     // ── 조합표 ────────────────────────────────────────────────
     //   글리프는 **시너지 이름**을 가리키게 고른다 (효과가 아니라).
@@ -92,5 +93,12 @@ public static class SynergyIconGenerator
         E(MonsterTag.Steel,    IconArt.Glyph.Shield, Steel,   IconArt.Bg.Plate,    IconArt.Frame.Rivet),
         E(MonsterTag.Plague,   IconArt.Glyph.Spiral, Lime,    IconArt.Bg.Split,    IconArt.Frame.Notch, IconArt.Badge.Minus),
         E(MonsterTag.Sorcery,  IconArt.Glyph.Bolt,   Cyan,    IconArt.Bg.Burst,    IconArt.Frame.Double, IconArt.Badge.Star),
+
+        // ── 2026-09-15 추가 5종 ──  ⚠ 리벳 테두리는 종족 패시브 몫이다 (강철만 예외)
+        E(MonsterTag.Hunt,     IconArt.Glyph.Eye,      Orange,  IconArt.Bg.Split,    IconArt.Frame.Cut,    IconArt.Badge.Up),
+        E(MonsterTag.Marksman, IconArt.Glyph.Bow,      Gold,    IconArt.Bg.Radial,   IconArt.Frame.Double),
+        E(MonsterTag.Swarm,    IconArt.Glyph.Soldiers, Sand,    IconArt.Bg.Plate,    IconArt.Frame.Round,  IconArt.Badge.Plus),
+        E(MonsterTag.Vanguard, IconArt.Glyph.Banner,   Crimson, IconArt.Bg.Diagonal, IconArt.Frame.Notch,  IconArt.Badge.Bolt),
+        E(MonsterTag.Royal,    IconArt.Glyph.Crown,    Rose,    IconArt.Bg.Halo,     IconArt.Frame.Double, IconArt.Badge.Star),
     };
 }

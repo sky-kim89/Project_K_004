@@ -33,9 +33,10 @@ public class InfoIconUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         if (_shown == this) Hide();
     }
 
-    public void OnPointerEnter(PointerEventData _) => Show();
-    public void OnPointerExit(PointerEventData _)  { if (_shown == this) Hide(); }
-    public void OnPointerClick(PointerEventData _) => Show();
+    // PC 는 올려서, 모바일은 눌러서 연다 (TooltipInput)
+    public void OnPointerEnter(PointerEventData _) { if (TooltipInput.HoverMode) Show(); }
+    public void OnPointerExit(PointerEventData _)  { if (TooltipInput.HoverMode && _shown == this) Hide(); }
+    public void OnPointerClick(PointerEventData _) { if (!TooltipInput.HoverMode) Show(); }
 
     void OnDisable() { if (_shown == this) Hide(); }
 

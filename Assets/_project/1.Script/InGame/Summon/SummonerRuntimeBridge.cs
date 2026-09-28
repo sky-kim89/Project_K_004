@@ -271,6 +271,13 @@ public class SummonerRuntimeBridge : UnitRuntimeBridge
         });
     }
 
+    // ⚠ 풀에 돌아가는 것(OnDisable)도 전장을 떠난 것이다 — 파괴를 기다리면 판을 닫은 뒤에도
+    //   '서 있는 소환사' 가 남아, 그걸 보고 몬스터를 세우는 코드가 막히지 않는다.
+    void OnDisable()
+    {
+        if (Current == this) Current = null;
+    }
+
     void OnDestroy()
     {
         if (Current == this) Current = null;

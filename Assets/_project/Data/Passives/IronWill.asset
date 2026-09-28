@@ -14,15 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Type: 17
   SkillName: "\uAC15\uCCA0 \uC758\uC9C0"
-  Description: "\uC7A5\uAD70 HP 50% \uC774\uD558 \uC2DC \uACF5\uACA9\uB825\xB7\uCCB4\uB825
-    +20%\xB7+10% (1\uD68C)."
+  Description: "\uCCB4\uB825 50% \uC774\uD558\uAC00 \uB418\uBA74 \uCCB4\uB825 +20%
+    (\uB298\uC5B4\uB09C \uB9CC\uD07C \uD68C\uBCF5)\xB7\uACF5\uACA9\uB825 +10% (1\uD68C)."
   StatModifiers:
   - Stat: 2
-    Delta: 0.2
+    Delta: 0.1
     IsPercent: 1
     Target: 0
   - Stat: 0
-    Delta: 0.1
+    Delta: 0.2
     IsPercent: 1
     Target: 0
   TriggerType: 1

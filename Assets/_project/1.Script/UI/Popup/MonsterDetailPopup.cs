@@ -117,6 +117,10 @@ public class MonsterDetailPopup : PopupBase
     [Tooltip("각성 패시브 칸에만 켜는 반짝임 (PassiveShineUI). 줄마다 하나.")]
     [SerializeField] GameObject[]      _passiveShines;
 
+    [Tooltip("줄 오른쪽 위 [마릿수][숫자] 배지 — 권속 소환 줄만 켠다. 줄마다 하나.")]
+    [SerializeField] GameObject[]      _passiveCountRoots;
+    [SerializeField] TextMeshProUGUI[] _passiveCountTexts;
+
     [Header("패시브 — 아이콘 모드 (칸 수보다 많을 때)")]
     [Tooltip("패시브가 줄 칸(_passiveRoots)보다 많으면 줄을 끄고 이 격자에 아이콘만 그린다.\n" +
              "설명은 아이콘에 올리거나 누르면 뜬다 (InfoIconUI).")]
@@ -203,9 +207,13 @@ public class MonsterDetailPopup : PopupBase
         /// <summary>각성 패시브 — 반짝이고 맨 위에 선다.</summary>
         public readonly bool Awakened;
 
-        public AbilityRow(Sprite icon, string name, string desc, bool locked = false, bool awakened = false)
+        /// <summary>마릿수 배지에 적을 수. 0 이면 배지를 끈다 (권속 소환 줄만 쓴다 — UI 규칙 7).</summary>
+        public readonly int Count;
+
+        public AbilityRow(Sprite icon, string name, string desc, bool locked = false, bool awakened = false,
+                          int count = 0)
         {
-            Icon = icon; Name = name; Desc = desc; Locked = locked; Awakened = awakened;
+            Icon = icon; Name = name; Desc = desc; Locked = locked; Awakened = awakened; Count = count;
         }
     }
 
@@ -243,6 +251,11 @@ public class MonsterDetailPopup : PopupBase
     float _skillHeadH;  // 스킬 칸 안에서 상자가 시작하는 자리 (제목 높이)
     float _skillBoxH;   // 상자의 기본 높이 — 남는 자리가 넉넉하면 이 값을 쓴다
 
+    float   _descBaseH;   // 종족 소개 칸의 기본 높이 (두 줄)
+    float   _descFontH;   // 소개 글의 기본 크기 — 넘칠 때만 줄였다가 되돌린다
+    float[] _rowBaseY;    // 능력 칸마다 프리팹이 잡은 자리
+    float   _gridBaseY;   // 아이콘 격자 자리
+
     void CacheRightLayout()
     {
         var r0 = (RectTransform)_passiveRoots[0].transform;
@@ -253,6 +266,80 @@ public class MonsterDetailPopup : PopupBase
 
         _skillHeadH = -_skillBox.anchoredPosition.y;
         _skillBoxH  = _skillBox.sizeDelta.y;
+
+        _descBaseH = _descText.rectTransform.sizeDelta.y;
+        _descFontH = _descText.fontSize;
+
+        _rowBaseY = new float[_passiveRoots.Length];
+        for (int i = 0; i < _passiveRoots.Length; i++)
+            _rowBaseY[i] = ((RectTransform)_passiveRoots[i].transform).anchoredPosition.y;
+
+        _gridBaseY = ((RectTransform)_passiveGridRoot.transform).anchoredPosition.y;
+    }
+
+    // ── 종족 소개가 두 줄을 넘으면 칸을 늘리고 아래를 민다 (사용자 지적, 2026-09-15) ──
+    //
+    //  소개 칸은 두 줄(RowSm×2)로 고정돼 있었다. 오른쪽 칸 폭(≈760px)에 FontSm 이면
+    //  한 줄이 스무 자 남짓이라, 줄바꿈을 넣어 두 줄로 적은 소개도 거의 다 세 줄로 접혀
+    //  첫 능력 칸 위로 흘렀다 (TMP 는 넘치는 글을 칸 밖에 그냥 그린다 — UI 규칙 5).
+    //
+    //  ⚠ 네 줄까지는 칸을 늘리고, 그보다 길면 글을 줄인다 — 소개가 능력 칸을 다 밀어내면
+    //    정작 이 창에서 읽어야 할 것이 사라진다.
+
+    const int DescMaxLines = 4;
+
+    /// <summary>소개 칸 높이를 글에 맞추고, 기본 높이보다 늘어난 만큼을 돌려준다.</summary>
+    float FitDescription()
+    {
+        TextMeshProUGUI t = _descText;
+        t.enableAutoSizing = false;
+        t.fontSize         = _descFontH;
+
+        float width = t.rectTransform.rect.width;
+        if (width <= 1f) return 0f;   // 캔버스가 아직 폭을 안 잡았다 — 프리팹 높이 그대로
+
+        float cap  = _descBaseH / 2f * DescMaxLines;
+        float want = Mathf.Ceil(t.GetPreferredValues(t.text, width, 0f).y);
+        float h    = Mathf.Clamp(want, _descBaseH, cap);
+
+        if (want > cap)
+        {
+            t.enableAutoSizing = true;
+            t.fontSizeMax      = _descFontH;
+            t.fontSizeMin      = _descFontH * 0.8f;
+        }
+
+        t.rectTransform.sizeDelta = new Vector2(t.rectTransform.sizeDelta.x, h);
+        return h - _descBaseH;
+    }
+
+    /// <summary>능력 칸·격자를 소개가 늘어난 만큼 아래로 민다.</summary>
+    void ShiftAbilityArea(float extra)
+    {
+        for (int i = 0; i < _passiveRoots.Length; i++)
+        {
+            var rt = (RectTransform)_passiveRoots[i].transform;
+            rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, _rowBaseY[i] - extra);
+        }
+
+        var grid = (RectTransform)_passiveGridRoot.transform;
+        grid.anchoredPosition = new Vector2(grid.anchoredPosition.x, _gridBaseY - extra);
+    }
+
+    /// <summary>
+    /// 줄 모드로 그려도 고유 스킬 상자가 최소 높이를 지키는가.
+    /// ⚠ 소개가 길어진 만큼 줄 칸이 먹을 자리가 준다 — 모자라면 아이콘 모드로 넘긴다.
+    /// </summary>
+    bool RowsFit(int count, float extra)
+    {
+        float colH = ((RectTransform)_skillRoot.transform.parent).rect.height;
+        if (colH <= 1f) return true;
+
+        bool  hasSkill = _species.ActiveSkill != ActiveSkillId.None;
+        float need     = _rowTopY + extra + count * _rowStep
+                       + (hasSkill ? _skillHeadH + MinSkillBoxH : 0f);
+
+        return need <= colH;
     }
 
     /// <summary>도감 칸에서 부른다. 해금되지 않은 종족은 넘기지 않는다.</summary>
@@ -310,7 +397,7 @@ public class MonsterDetailPopup : PopupBase
 
         // 계보 · 특징 — 업그레이드 종족이면 뿌리를 밝힌다. 뿌리 자신이면 특징만.
         MonsterSpeciesData root = _species.RootSpecies;
-        string lineage = root != null && root != _species ? $"{root.DisplayName} 계열" : "";
+        string lineage = root != null && root != _species ? LocalizationManager.Instance.Format("{0} 계열", root.DisplayName) : "";
         string traits  = MonsterTraitNames.Describe(_species.Traits);
 
         _lineageText.text = string.IsNullOrEmpty(lineage) ? traits
@@ -444,7 +531,7 @@ public class MonsterDetailPopup : PopupBase
                     StatKind.Defense     => $"{now.Get(StatType.Defense) * 100f:0.#}%",
                     StatKind.SpawnPace   => SpawnPaceRule.DescribeFor(_species),
                     StatKind.Range       => $"{now.Get(StatType.AttackRange):0.#}",
-                    StatKind.AttackSpeed => $"{now.Get(StatType.AttackSpeed):0.##} 회/초",
+                    StatKind.AttackSpeed => LocalizationManager.Instance.Format("{0:0.##} 회/초", now.Get(StatType.AttackSpeed)),
                     StatKind.MoveSpeed   => $"{now.Get(StatType.MoveSpeed):0.##}",
 
                     // ⚠ 치명타 두 줄을 빠뜨리지 말 것 (2026-09-13)
@@ -466,8 +553,9 @@ public class MonsterDetailPopup : PopupBase
         {
             _statValues[i].text = StatRows[i].kind switch
             {
-                StatKind.Hp          => Growing(WithGear(StatType.MaxHp,  _species.MaxHp  * mult),
-                                                WithGear(StatType.MaxHp,  _species.MaxHp  * next), "0",   max),
+                // 체력만 빠른 종족 보너스를 받는다 — 전투와 같은 자리 (MonsterStatComposer ②, SpeedHpRule)
+                StatKind.Hp          => Growing(WithGear(StatType.MaxHp,  _species.MaxHp  * mult * SpeedHpRule.HpMultiplierFor(_species)),
+                                                WithGear(StatType.MaxHp,  _species.MaxHp  * next * SpeedHpRule.HpMultiplierFor(_species)), "0",   max),
                 StatKind.Attack      => Growing(WithGear(StatType.Attack, _species.Attack * mult),
                                                 WithGear(StatType.Attack, _species.Attack * next), "0",   max),
                 StatKind.Defense     => $"{WithGear(StatType.Defense, _species.Defense) * 100f:0.#}%",
@@ -476,7 +564,8 @@ public class MonsterDetailPopup : PopupBase
                 // 간격만 적으면 손해로만 읽힌다 (SpawnPaceRule).
                 StatKind.SpawnPace   => SpawnPaceRule.DescribeFor(_species),
                 StatKind.Range       => WithGear(StatType.AttackRange, _species.AttackRange).ToString("0.#"),
-                StatKind.AttackSpeed => $"{WithGear(StatType.AttackSpeed, _species.AttackSpeed):0.##} 회/초",
+                StatKind.AttackSpeed => LocalizationManager.Instance.Format("{0:0.##} 회/초",
+                                        WithGear(StatType.AttackSpeed, _species.AttackSpeed)),
                 StatKind.MoveSpeed   => WithGear(StatType.MoveSpeed, _species.MoveSpeed).ToString("0.##"),
                 StatKind.CritChance  => $"{WithGear(StatType.CritChance, _species.CritChance) * 100f:0.#}%",
                 StatKind.CritDamage  => $"{WithGear(StatType.CritDamage, _species.CritDamage) * 100f:0}%",
@@ -536,7 +625,7 @@ public class MonsterDetailPopup : PopupBase
 
         // ⚠ SO 원본 쿨다운이다 — 술법 시너지가 실제로는 이걸 깎는다
         //   (MonsterRuntimeBridge.BuildSkillSlot). 스탯과 같은 이유로 기준값을 적는다.
-        _skillCooldown.text = $"{data.Cooldown:0.#}초";
+        _skillCooldown.text = LocalizationManager.Instance.Format("{0:0.#}초", data.Cooldown);
     }
 
     /// <summary>
@@ -563,6 +652,9 @@ public class MonsterDetailPopup : PopupBase
     {
         _descText.text = _species.Description;
 
+        float extra = FitDescription();
+        ShiftAbilityArea(extra);
+
         _abilityRows.Clear();
 
         // ⚠ 전투와 **같은 함수**로 모은다 (PassiveResolver) — 선천 · 융합 · 장비 + 각성.
@@ -579,6 +671,9 @@ public class MonsterDetailPopup : PopupBase
         foreach (ResolvedPassive r in _resolved)
             if (!r.IsAwakened && (r.Origins & PassiveOrigin.Innate) != 0) AddSpeciesRow(r);
 
+        // ②-b 권속 소환 — 2차 업그레이드가 늘 갖는 능력이라 선천 바로 뒤
+        AddBroodRow();
+
         // ③ 카드 레벨이 여는 것
         AddLevelRows();
 
@@ -590,10 +685,11 @@ public class MonsterDetailPopup : PopupBase
         //   장비 패시브(칸 3 × Lv4·Lv5)가 붙으면 최대 12개가 된다. 줄(94px)로는
         //   7개부터 칸 밖으로 넘친다 — 오른쪽 칸 910 − 머리 183 = 727 이 전부다.
         //   경계는 줄 칸 수(_passiveRoots, Creator 의 PassiveSlots)가 정한다.
-        bool iconMode = _abilityRows.Count > _passiveRoots.Length;
+        bool iconMode = _abilityRows.Count > _passiveRoots.Length
+                     || !RowsFit(_abilityRows.Count, extra);
         _passiveGridRoot.SetActive(iconMode);
 
-        LayoutSkillSection(iconMode ? FillPassiveGrid() : FillPassiveRows());
+        LayoutSkillSection(extra + (iconMode ? FillPassiveGrid() : FillPassiveRows()));
     }
 
     /// <summary>줄 모드 — 아이콘 · 이름 · 설명. 쓴 세로를 돌려준다.</summary>
@@ -619,7 +715,20 @@ public class MonsterDetailPopup : PopupBase
             _passiveDescs[i].text  = row.Desc;
             _passiveDescs[i].color = row.Locked ? LockedC : DescC;
 
+            // ⚠ 설명 칸은 한 줄이다 (88px 줄 여섯 칸) — 번역문이 길면 말줄임(…)으로 잘린다.
+            //   그래서 줄에 올리거나 누르면 **전문이 툴팁으로** 뜬다 (아이콘 모드와 같은 부품).
+            //   (사용자 지적, 2026-09-17 — 스페인어 패시브 설명이 칸 끝에서 잘렸다)
+            if (!_passiveRoots[i].TryGetComponent(out InfoIconUI rowTip))
+            {
+                rowTip = _passiveRoots[i].AddComponent<InfoIconUI>();
+                if (_passiveRoots[i].TryGetComponent(out Image rowBg)) rowBg.raycastTarget = true;
+            }
+            rowTip.Setup(row.Name, row.Desc);
+
             _passiveShines[i].SetActive(row.Awakened);
+
+            _passiveCountRoots[i].SetActive(row.Count > 0);
+            if (row.Count > 0) _passiveCountTexts[i].text = row.Count.ToString();
         }
 
         return shown * _rowStep;
@@ -690,13 +799,34 @@ public class MonsterDetailPopup : PopupBase
             name = $"{p.ToKorean()}  <color=#{AwakenHex}>({b} + {b})</color>";
         }
         else if ((r.Origins & PassiveOrigin.Learned) != 0 && (r.Origins & PassiveOrigin.Innate) == 0)
-            name = $"{p.ToKorean()}  <color=#{LearnedHex}>(융합)</color>";
+            name = LocalizationManager.Instance.Format("{0}  <color=#{1}>(융합)</color>", p.ToKorean(), LearnedHex);
         else if ((r.Origins & PassiveOrigin.Gear) != 0 && (r.Origins & PassiveOrigin.Innate) == 0)
-            name = $"{p.ToKorean()}  <color=#{GearHex}>(장비)</color>";
+            name = LocalizationManager.Instance.Format("{0}  <color=#{1}>(장비)</color>", p.ToKorean(), GearHex);
         else
             name = p.ToKorean();
 
         _abilityRows.Add(new AbilityRow(icon, name, p.Describe(), awakened: r.IsAwakened));
+    }
+
+    /// <summary>
+    /// 권속 소환 — 2차 업그레이드가 주기적으로 제 하위 종족을 불러낸다 (사용자 지시, 2026-09-15).
+    ///
+    /// ■ 실제로는 스킬(ActiveSkillId.SummonBrood)인데 패시브 줄에 둔다
+    ///   고유 스킬 칸은 희귀 스킬 설명만으로 빠듯하고, 권속은 누르지 않아도 늘 도는 능력이라
+    ///   "이 몬스터가 가진 것" 목록에 서는 편이 읽힌다. 줄이 넘치면 아이콘 모드가 받는다.
+    ///
+    /// ⚠ 마릿수는 글로 적지 않는다 — 줄 오른쪽 위 배지다 (UI 규칙 7).
+    ///   그림은 불러내는 종족의 초상화 — 무엇을 부르는지가 그림으로 읽힌다.
+    /// </summary>
+    void AddBroodRow()
+    {
+        MonsterSpeciesData brood = _species.BroodSpecies;
+        if (brood == null || _species.BroodCount <= 0) return;
+
+        _abilityRows.Add(new AbilityRow(MonsterPortraitProvider.Get(brood),
+                                        "권속 소환",
+                                        LocalizationManager.Instance.Format("{0:0.#}초마다 {1} 소환", _species.BroodBaseCooldown, brood.DisplayName),
+                                        count: _species.BroodCount));
     }
 
     /// <summary>
@@ -823,7 +953,7 @@ public class MonsterDetailPopup : PopupBase
                 // 잠긴 칸 — 무엇을 하면 열리는지 적는다.
                 _gearFrames[i].color  = GearLockedC;
                 _gearIcons[i].enabled = false;
-                _gearLabels[i].text   = $"{GradeStyle.GetLabel(MonsterGearRule.GradeToOpen(i))}부터";
+                _gearLabels[i].text   = LocalizationManager.Instance.Format("{0}부터", GradeStyle.GetLabel(MonsterGearRule.GradeToOpen(i)));
                 _gearLabels[i].color  = GearDimText;
                 continue;
             }
@@ -881,13 +1011,16 @@ public class MonsterDetailPopup : PopupBase
         IReadOnlyList<string> worn = inv.EquippedOn(_species.Id);
         MonsterGearData       cur  = slot < worn.Count && db != null ? db.Get(worn[slot]) : null;
 
-        _pickTitle.text = cur != null ? $"{slot + 1}번 칸 — {cur.DisplayName}" : $"{slot + 1}번 칸";
+        _pickTitle.text = cur != null
+            ? LocalizationManager.Instance.Format("{0}번 칸 — {1}", slot + 1, cur.DisplayName)
+            : LocalizationManager.Instance.Format("{0}번 칸", slot + 1);
 
         int shown = FillPickList(inv, db);
 
         _pickEmpty.gameObject.SetActive(shown == 0);
         _pickEmpty.text = inv.HasAny
-            ? $"이 몬스터에 맞는 장비가 없다 ({(_species.BodyType == MonsterBodyType.Humanoid ? "인간형" : "비인간형")} 전용)"
+            ? LocalizationManager.Instance.Format("이 몬스터에 맞는 장비가 없다 ({0} 전용)",
+                  _species.BodyType == MonsterBodyType.Humanoid ? "인간형" : "비인간형")
             : "아직 장비가 없다 — 런을 끝내면 보상 상자가 하나 나온다";
     }
 
@@ -1075,7 +1208,7 @@ public class MonsterDetailPopup : PopupBase
         RefreshStats();
         RefreshSummonCost();
 
-        // 같은 부위가 다른 칸에 있었으면 칸이 당겨진다 — 실제로 들어간 칸을 다시 찾는다.
+        // 빈 칸을 골랐으면 목록 끝에 붙는다 — 실제로 들어간 칸을 다시 찾는다.
         int placed = SlotOf(gear.Id);
         if (_pickSlot >= 0) OpenPicker(placed);
 

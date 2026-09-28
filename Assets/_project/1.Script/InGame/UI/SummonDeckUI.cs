@@ -107,6 +107,9 @@ public class SummonDeckUI : MonoBehaviour, ISummonCardDrag
         // 화면이 켜져 있는 동안만 듣는다.
         SummonCostRule.Changed += HandleCostChanged;
 
+        // 시너지 단계가 바뀌면 카드 표식의 밝기·한 우물 테두리를 다시 그린다 (2026-09-16)
+        MonsterSynergyRule.Changed += Refresh;
+
         // ⚠ 소환사가 선 뒤에 값을 한 번 다시 잰다
         //   카드는 소환사보다 먼저 놓인다(RunBootstrap: BuildStarterDeck → SpawnSummoner).
         //   그래서 처음 그릴 때는 개성 할인이 아직 붙지 않는다.
@@ -121,11 +124,14 @@ public class SummonDeckUI : MonoBehaviour, ISummonCardDrag
     {
         SummonCostRule.Changed         -= HandleCostChanged;
         StageLoopDirector.OnStageReady -= HandleStageReady;
+        MonsterSynergyRule.Changed     -= Refresh;
 
-        if (_mana != null) _mana.OnManaChanged -= RefreshMana;
-        if (_deck != null) _deck.Changed       -= Refresh;
-        _mana = null;
-        _deck = null;
+        if (_mana  != null) _mana.OnManaChanged -= RefreshMana;
+        if (_deck  != null) _deck.Changed       -= Refresh;
+        if (_perks != null) _perks.Changed      -= Refresh;
+        _mana  = null;
+        _deck  = null;
+        _perks = null;
     }
 
     void Update()
@@ -142,6 +148,11 @@ public class SummonDeckUI : MonoBehaviour, ISummonCardDrag
         }
 
         RefreshAvailability();
+
+        // ⚠ 소환사는 HUD 보다 늦게 선다 — 첫 그리기 때 없으면 회복량 줄이 꺼진 채 남는다.
+        //   마나가 바뀔 때까지 기다리지 않고, 소환사가 서는 순간 켠다 (0 이어도 보인다).
+        if (!_manaRegenText.gameObject.activeSelf && SummonerRuntimeBridge.Current != null)
+            RefreshRegen();
     }
 
     public void Refresh()
@@ -178,7 +189,19 @@ public class SummonDeckUI : MonoBehaviour, ISummonCardDrag
             _deck = nextDeck;
             if (_deck != null) _deck.Changed += Refresh;
         }
+
+        // 특성을 얻으면 '한 우물' 이 켜질 수 있다 — 카드 시너지 테두리를 다시 그린다 (2026-09-16)
+        var nextPerks = data.Get<RunPerkData>();
+        if (_perks != nextPerks)
+        {
+            if (_perks != null) _perks.Changed -= Refresh;
+            _perks = nextPerks;
+            if (_perks != null) _perks.Changed += Refresh;
+        }
     }
+
+    /// <summary>런 특성 — 한 우물 테두리 갱신용 구독 (TryBindData).</summary>
+    RunPerkData _perks;
 
     void RefreshMana()
     {
@@ -228,7 +251,7 @@ public class SummonDeckUI : MonoBehaviour, ISummonCardDrag
 
         if (!show) return;
 
-        _manaRegenText.text = $"다음 판 +{ManaRegenRule.PreviewFor(summoner, _mana):0}";
+        _manaRegenText.text = LocalizationManager.Instance.Format("다음 판 +{0:0}", ManaRegenRule.PreviewFor(summoner, _mana));
     }
 
     void RefreshCards()
@@ -258,6 +281,19 @@ public class SummonDeckUI : MonoBehaviour, ISummonCardDrag
 
             card.ShowCard(slot, CardCatalog.Current, _fallbackMonsterIcon);
         }
+
+        // ⚠ ShowCard/ShowEmpty 는 칸을 새로 그리며 선택 표시를 끈다 (사용자 지적, 2026-09-17)
+        //   카드를 내면 덱이 바뀌어(Changed) 여기로 오는데, 선택 값(_selectedSlot)과
+        //   컨트롤러의 선택은 그대로 남아 "풀린 것처럼 보이는데 탭하면 또 소환되는" 상태였다.
+        //   고른 칸이 비었으면 선택을 정말로 놓는다.
+        if (_selectedSlot >= 0 && (_selectedSlot >= visibleSlots || !_cards[_selectedSlot].HasCard))
+        {
+            ClearSelection();
+            return;
+        }
+
+        for (int i = 0; i < _cards.Length; i++)
+            _cards[i].SetSelected(i == _selectedSlot);
     }
 
     void RefreshAvailability()

@@ -408,8 +408,9 @@ public class GearDetailPopup : PopupBase
         // ⚠ 상한이 없다 — "+4 / 20" 처럼 분모를 적지 않는다
         float per = MonsterGearLevelRule.EnhanceStatPct * 100f;
         _enhanceText.text = open
-            ? $"강화 +{enh}  ·  공격력·체력 +{MonsterGearLevelRule.EnhancePct(enh) * 100f:0}%"
-            : $"강화 — Lv{max} 부터  ·  한 번에 공격력·체력 +{per:0}%";
+            ? LocalizationManager.Instance.Format("강화 +{0}  ·  공격력·체력 +{1:0}%",
+                                                 enh, MonsterGearLevelRule.EnhancePct(enh) * 100f)
+            : LocalizationManager.Instance.Format("강화 — Lv{0} 부터  ·  한 번에 공격력·체력 +{1:0}%", max, per);
         _enhanceText.color = open ? GoldC : DimText;
     }
 

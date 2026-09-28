@@ -25,9 +25,10 @@ using UnityEngine.EventSystems;
 public class ManaRegenHoverUI : MonoBehaviour,
                                 IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
-    public void OnPointerEnter(PointerEventData _) => Open();
-    public void OnPointerExit(PointerEventData _)  => TooltipLayer.Close();
-    public void OnPointerClick(PointerEventData _) => Open();
+    // PC 는 올려서, 모바일은 눌러서 연다 (TooltipInput)
+    public void OnPointerEnter(PointerEventData _) { if (TooltipInput.HoverMode) Open(); }
+    public void OnPointerExit(PointerEventData _)  { if (TooltipInput.HoverMode) TooltipLayer.Close(); }
+    public void OnPointerClick(PointerEventData _) { if (!TooltipInput.HoverMode) Open(); }
 
     /// <summary>칸이 꺼지면 설명도 닫는다 — 가리키던 것이 사라졌는데 글만 남으면 안 된다.</summary>
     void OnDisable() => TooltipLayer.Close();
@@ -40,7 +41,7 @@ public class ManaRegenHoverUI : MonoBehaviour,
         if (summoner == null || mana == null) return;
 
         TooltipLayer.Open((RectTransform)transform,
-                          $"다음 판 회복  +{ManaRegenRule.PreviewFor(summoner, mana):0.#}",
+                          LocalizationManager.Instance.Format("다음 판 회복  +{0:0.#}", ManaRegenRule.PreviewFor(summoner, mana)),
                           ManaRegenRule.Describe(summoner, mana),
                           string.Empty);
     }

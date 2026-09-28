@@ -72,6 +72,9 @@ public class ActiveDeathSentence : ActiveSkillData
             radius        : EffectRadius   > 0f ? EffectRadius   : 6f,
             executeRatio  : ExecuteHpRatio,
             damage        : ctx.CasterStat.Final[StatType.Attack] * DamageMultiplier * EffectValue,
+            // 소환사 시그니처면 처형되지 않은 적에게 최대 체력 비례 × 패기 (SignatureDamageRule)
+            maxHpRatio    : SignatureDamageRule.RatioFor(em, ctx.CasterEntity, SignatureDamageRule.DeathSentenceRatio)
+                            * EffectValue,
             attackPerKill : AttackPerExecute,
             executeBosses : ExecuteBosses,
             knockMult     : KnockbackMult,

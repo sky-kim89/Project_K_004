@@ -160,7 +160,8 @@ public static class RelicTreeApplier
         {
             if (def.System != effect) continue;
             if (LevelOf(data, def) >= def.MaxLevel) continue;
-            return def.Name;
+            // ⚠ 화면에 나가는 값이라 DisplayName 이다 — Name 은 한국어 원문(진단용)이다
+            return def.DisplayName;
         }
         return null;
     }

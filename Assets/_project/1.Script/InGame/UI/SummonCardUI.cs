@@ -454,6 +454,9 @@ public class SummonCardUI : MonoBehaviour,
 
         int shown = 0;
 
+        // 특성 '한 우물' 이 카운트 +2 를 얹은 표식들 — 없으면 None
+        MonsterTag wellTags = MonsterSynergyRule.SingleWellTags;
+
         if (species != null && _synergyIconSet != null)
         {
             foreach (MonsterTag tag in MonsterSynergyRule.AllTags)
@@ -472,11 +475,40 @@ public class SummonCardUI : MonoBehaviour,
                 slot.color  = MonsterSynergyRule.TierOf(tag) != SynergyTier.None
                             ? Color.white
                             : new Color(1f, 1f, 1f, 0.42f);
+
+                SetWellOutline(slot, (wellTags & tag) != 0);
             }
         }
 
         for (int i = shown; i < _synergyIcons.Length; i++)
+        {
+            SetWellOutline(_synergyIcons[i], false);
             _synergyIcons[i].gameObject.SetActive(false);
+        }
+    }
+
+    static readonly Color WellOutlineColor = new(1f, 0.82f, 0.25f, 1f);
+
+    /// <summary>
+    /// 한 우물 표식 — 아이콘 둘레에 금빛 테두리 (사용자 지시, 2026-09-16 — "무엇에 +2 가 붙었는지 모른다").
+    ///
+    /// ⚠ 형제 오브젝트로 테두리를 두지 않는다 — 표식 줄이 레이아웃 그룹이라 형제를 끼우면 칸이 밀린다.
+    ///   대신 아이콘 자체에 Outline 효과를 켜고 끈다 (레이아웃 무관 · 프리팹 재굽기 불필요).
+    /// </summary>
+    static void SetWellOutline(Image icon, bool on)
+    {
+        var outline = icon.GetComponent<Outline>();
+        if (!on)
+        {
+            if (outline != null) outline.enabled = false;
+            return;
+        }
+
+        if (outline == null) outline = icon.gameObject.AddComponent<Outline>();
+        outline.effectColor     = WellOutlineColor;
+        outline.effectDistance  = new Vector2(2f, -2f);
+        outline.useGraphicAlpha = true;
+        outline.enabled         = true;
     }
 
     public void ShowEmpty(Sprite fallbackIcon)

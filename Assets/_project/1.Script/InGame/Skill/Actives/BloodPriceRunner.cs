@@ -29,16 +29,16 @@ public class BloodPriceRunner : MonoBehaviour
 
     public void Run(EntityManager em, Entity casterEntity, TeamType casterTeam,
                     float3 origin, float3 forward, float range, float halfAngleDeg,
-                    float damage, float knockMult, float chargeTime,
+                    float damage, float maxHpRatio, float knockMult, float chargeTime,
                     SkillEffectConfig fx)
     {
         StartCoroutine(Sequence(em, casterEntity, casterTeam, origin, forward, range,
-                                halfAngleDeg, damage, knockMult, chargeTime, fx));
+                                halfAngleDeg, damage, maxHpRatio, knockMult, chargeTime, fx));
     }
 
     IEnumerator Sequence(EntityManager em, Entity casterEntity, TeamType casterTeam,
                          float3 origin, float3 forward, float range, float halfAngleDeg,
-                         float damage, float knockMult, float chargeTime,
+                         float damage, float maxHpRatio, float knockMult, float chargeTime,
                          SkillEffectConfig fx)
     {
         float   angle = math.degrees(math.atan2(forward.y, forward.x));
@@ -87,7 +87,7 @@ public class BloodPriceRunner : MonoBehaviour
 
             Vector3 tp = SkillCrowdControl.PositionOf(em, hit.Entity);
             SkillEffectHelper.Spawn(fx.TargetEffectKey, tp, fx.DespawnDelay, rot, 1.3f);
-            SkillCrowdControl.DealDamage(em, hit.Entity, damage, forward, knockMult, casterEntity);
+            SignatureDamageRule.Hit(em, hit.Entity, damage, maxHpRatio, forward, knockMult, casterEntity);
         }
     }
 

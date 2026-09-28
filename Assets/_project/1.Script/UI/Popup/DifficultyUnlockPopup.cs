@@ -113,7 +113,7 @@ public class DifficultyUnlockPopup : PopupBase
         SetAlpha(_summary, 0f);
 
         float mul = DifficultyConfig.Current.Get(tier).ReincarnationMultiplier;
-        _reward.text  = $"환생 포인트 ×{mul:0.0#}";
+        _reward.text  = LocalizationManager.Instance.Format("환생 포인트 ×{0:0.0#}", mul);
         _reward.color = RewardOn;
         SetAlpha(_reward, 0f);
 

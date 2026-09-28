@@ -42,12 +42,17 @@ MonoBehaviour:
   SkillUsesPerStage: 1
   SignatureSummonSpecies: {fileID: 0}
   SignatureSummonCount: 1
-  ListOrder: 12
+  ListOrder: 14
   Unlocks:
   - Kind: 1
     Value: 0
     SpeciesIds:
     - arcane_lich
+    - lich_king
+    Traits: 0
+  - Kind: 0
+    Value: 25
+    SpeciesIds: []
     Traits: 0
   StarterMonsters:
   - {fileID: 11400000, guid: 6681437f350796e46a78d04f257abea7, type: 2}

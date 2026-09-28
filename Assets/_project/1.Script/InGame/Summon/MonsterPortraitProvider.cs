@@ -70,6 +70,17 @@ public class MonsterPortraitProvider : MonoBehaviour
     /// 여기는 카드 6장과 라인 대기열이 전부다.
     /// </summary>
     public static Sprite Get(MonsterSpeciesData species)
+        => Get(species, species != null ? species.Mark : MonsterMark.None);
+
+    /// <summary>
+    /// 표식을 <b>따로</b> 지정해 초상화를 만든다 — 소환사가 쓴다.
+    ///
+    /// ⚠ 소환사는 종족과 표식이 갈려 있다 (SummonerData.AppearanceSpecies / AppearanceMark)
+    ///   '슬라임 킹' 은 <b>평범한 슬라임</b> 그림에 왕관만 얹은 것이다. 종족의 Mark
+    ///   (슬라임 = None)를 쓰면 왕관이 영영 안 나온다 — 전장에서는 나오는데
+    ///   선택 화면·전투 통계에서만 맨 슬라임이었다.
+    /// </summary>
+    public static Sprite Get(MonsterSpeciesData species, MonsterMark mark)
     {
         if (species == null) return null;
 
@@ -80,12 +91,16 @@ public class MonsterPortraitProvider : MonoBehaviour
         //   도감·상세·카드·대기열 초상화는 전부 맨몸이라 "껴도 외형이 안 바뀐다" 로 보였다.
         //   전장(MonsterRuntimeBridge)과 같은 BuildVisual 을 불러 같은 겉모습을 만든다.
         MonsterGearVisual gear = MonsterGearRule.BuildVisual(species.Id);
-        string key = species.Id + "#" + (gear.Key ?? "");
+
+        // ⚠ 표식도 열쇠다 — 같은 종족이 표식만 다를 수 있다
+        //   소환사 '슬라임 킹'(슬라임 + 왕관)과 카드 '슬라임'(맨몸)이 바로 그 경우다.
+        //   빼면 먼저 만들어진 쪽이 캐시에 남아 둘 중 하나가 남의 그림을 쓴다.
+        string key = species.Id + "#" + (gear.Key ?? "") + "#" + (int)mark;
 
         if (inst._cache.TryGetValue(key, out Sprite cached) && cached != null)
             return cached;
 
-        Sprite made = inst.Build(species, gear);
+        Sprite made = inst.Build(species, gear, mark);
         if (made != null) inst._cache[key] = made;
 
         return made;
@@ -93,7 +108,7 @@ public class MonsterPortraitProvider : MonoBehaviour
 
     // ── 합성 ─────────────────────────────────────────────────
 
-    Sprite Build(MonsterSpeciesData species, in MonsterGearVisual gear)
+    Sprite Build(MonsterSpeciesData species, in MonsterGearVisual gear, MonsterMark mark)
     {
         // ⚠ "손으로 넣어 둔 그림이 우선" 이라는 예외는 없앴다 (2026-08-28)
         //   그 한 줄 때문에 종족 아이콘을 데이터에 채운 순간 게임 전체의
@@ -102,15 +117,15 @@ public class MonsterPortraitProvider : MonoBehaviour
         //   조절할 일이지, 완성 그림을 끼워 넣을 일이 아니다.
 
         return species.BodyType == MonsterBodyType.Humanoid
-            ? BuildHumanoid(species, gear)
-            : BuildNonHumanoid(species, gear);
+            ? BuildHumanoid(species, gear, mark)
+            : BuildNonHumanoid(species, gear, mark);
     }
 
     /// <summary>
     /// 인간형 — 원작 장수 초상화와 완전히 같은 절차다.
     /// 장비 칸은 전장과 같은 덮어쓰기(UnitAppearanceBridge.WithGear)로 얹는다.
     /// </summary>
-    Sprite BuildHumanoid(MonsterSpeciesData species, in MonsterGearVisual gear)
+    Sprite BuildHumanoid(MonsterSpeciesData species, in MonsterGearVisual gear, MonsterMark mark)
     {
         if (!EnsureBuilder()) return null;
 
@@ -150,7 +165,8 @@ public class MonsterPortraitProvider : MonoBehaviour
         Color[] px = ReadRegion(_sheet, l[0], l[1], l[2], l[3]);
         if (px == null) return null;
 
-        return CropAndTrim(px, l[2], l[3], species.BodyTint);
+        // PixelFantasy 합성 시트는 16 PPU 다
+        return CropAndTrim(px, l[2], l[3], species.BodyTint, species.BodyScale, mark, 16f);
     }
 
     /// <summary>
@@ -158,7 +174,7 @@ public class MonsterPortraitProvider : MonoBehaviour
     ///
     /// 자르기·트림·캐시는 인간형과 같은 경로를 탄다.
     /// </summary>
-    Sprite BuildNonHumanoid(MonsterSpeciesData species, in MonsterGearVisual gear)
+    Sprite BuildNonHumanoid(MonsterSpeciesData species, in MonsterGearVisual gear, MonsterMark mark)
     {
         if (species.NonHumanoidLibrary == null)
         {
@@ -184,7 +200,8 @@ public class MonsterPortraitProvider : MonoBehaviour
         if (px == null) return null;
 
         // 비인간형 장비(가죽)는 색조로 입는다 — 전장(MonsterAppearanceBridge)과 같은 곱이다.
-        return CropAndTrim(px, (int)r.width, (int)r.height, gear.Tint * species.BodyTint);
+        return CropAndTrim(px, (int)r.width, (int)r.height,
+                           gear.Tint * species.BodyTint, species.BodyScale, mark, src.pixelsPerUnit);
     }
 
     bool EnsureBuilder()
@@ -270,7 +287,119 @@ public class MonsterPortraitProvider : MonoBehaviour
     ///   ⚠ 덩치(BodyScale)는 반영하지 않는다 — 여기서 여백을 걷어내 칸에 꽉 채우므로
     ///     크기를 곱해도 결과가 같다. 덩치는 전장에서만 읽히는 축이다.
     /// </summary>
-    static Sprite CropAndTrim(Color[] px, int fw, int fh, Color tint)
+    // ── 초상화에도 덩치가 보여야 한다 (사용자 지시, 2026-09-15) ────
+    //
+    //  ■ 예전에는 여백을 바짝 걷어내 칸을 꽉 채웠다
+    //    그래서 **전 종족이 같은 크기로 보였다.** 고블린(0.85)과 슬라임 킹(2.0)이
+    //    도감에서 나란히 같은 덩치라, 전장에서 두 배 차이인 것이 카드에서는
+    //    아무 데도 안 남았다. 덩치는 이 게임이 종족을 가르는 두 축 중 하나인데
+    //    (다른 하나가 색조) 한 축이 화면의 절반에서 통째로 사라져 있었다.
+    //
+    //  ■ 잘라낸 그림을 **투명 여백으로 다시 감싼다** — 그림을 키우지 않는다
+    //    픽셀 아트라 확대는 뭉개지고 축소는 픽셀이 깨진다. 대신 작은 종족일수록
+    //    여백을 넓게 둘러 같은 칸 안에서 작게 보이게 한다. 리샘플링이 없다.
+    //
+    //  ⚠ 선형이 아니라 눌러서 매핑한다 (PortraitScaleCurve)
+    //    그대로 비율을 쓰면 고블린이 칸의 42% 로 쪼그라들어 무엇인지 안 읽힌다.
+    //    0.65 제곱이면 57% 로 올라오면서 순서는 그대로 유지된다 —
+    //    "작다" 를 전하되 "안 보인다" 로 가지 않는 선이다.
+    //
+    //  ⚠ 기준값을 넘는 종족이 생기면 그 종족만 칸을 넘어 보인다
+    //    MonsterCodexCreator 의 검산이 굽는 순간 잡는다.
+
+    /// <summary>초상화 크기의 기준이 되는 가장 큰 덩치. 이 종족이 칸을 꽉 채운다.</summary>
+    public const float PortraitMaxBodyScale = 2.0f;
+
+    /// <summary>덩치 → 칸 점유율의 눌림 정도. 1 이면 그대로, 작을수록 작은 종족이 커진다.</summary>
+    public const float PortraitScaleCurve = 0.65f;
+
+    /// <summary>그 덩치가 초상화 칸에서 차지하는 비율 (0~1).</summary>
+    public static float PortraitFillFor(float bodyScale)
+    {
+        float ratio = Mathf.Clamp01(bodyScale / PortraitMaxBodyScale);
+        if (ratio <= 0f) return 1f;
+
+        return Mathf.Pow(ratio, PortraitScaleCurve);
+    }
+
+    // ── 머리 위 표식 — 전장과 같은 그림을 초상화에도 얹는다 (2026-09-15) ──
+    //
+    //  ■ 표식이 전장에만 있었다
+    //    힐 슬라임의 십자도, 독 슬라임의 물방울도, 왕관도 카드·도감·전황에는
+    //    안 나왔다. 덱을 짤 때 보는 그림과 전장에서 보는 그림이 서로 다른 말을 했다.
+    //
+    //  ⚠ 도트는 MonsterMarkView 가 정본이다 — 여기서 다시 그리지 않는다
+    //    두 벌이 되면 왕관을 고칠 때 한쪽만 고쳐진다.
+    //
+    //  ⚠ 몸 여백(덩치 반영)보다 **먼저** 합성한다
+    //    표식도 몸과 함께 커지고 작아져야 한다. 뒤에 얹으면 덩치가 두 배인 왕의
+    //    왕관만 그대로여서 머리 위에 점처럼 앉는다 (전장에서 이미 한 번 겪은 함정).
+
+    //  ■ 크기·높이는 전장 값(MonsterMarkView.MarkSize/MarkHeight)을 원본 픽셀로 옮긴다 (사용자 지적, 2026-09-15)
+    //    한때 몸통 폭 대비 비율(0.55)에 머리 위 간격(6%)을 따로 두고, 왕관 배율을 정수 1 이상으로만 잡았다.
+    //    슬라임 몸통은 17px 뿐이라 11px 왕관이 1배로도 몸의 65% 가 됐다(전장은 28%).
+    //    간격까지 떠서 초상화에서만 "크고 공중에 뜬" 왕관이었다.
+    //  ⚠ 왕관을 줄일 수는 없다(1배 아래는 도트가 깨진다) — 대신 **몸통을 정수배로 키워** 비율을 맞춘다.
+
+    /// <summary>몸통을 키울 수 있는 최대 정수배. 크게 둘수록 비율이 정확하고 텍스처가 커진다.</summary>
+    const int MaxMarkBodyZoom = 8;
+
+    /// <summary>
+    /// 잘라낸 몸통 위에 표식을 얹은 새 버퍼를 돌려준다. 표식이 없으면 원본 그대로.
+    /// <paramref name="ppu"/> 원본 스프라이트의 유닛당 픽셀 · <paramref name="frameMinY"/> 버퍼 0행이 원본 프레임의 몇 행인가(발밑 = 0).
+    /// </summary>
+    static Color[] ComposeMark(Color[] body, ref int w, ref int h, MonsterMark mark,
+                               float ppu, int frameMinY)
+    {
+        if (!MonsterMarkView.TryGetPixels(mark, out Color32[] art, out int aw, out int ah))
+            return body;
+
+        // 전장의 표식 폭을 원본 픽셀로 — 몸통 k배 · 표식 z배 조합 중 가장 가까운 것
+        float targetW = MonsterMarkView.MarkSize * ppu;
+        int   k = 1, zoom = 1;
+        float bestErr = float.MaxValue;
+        for (int bk = 1; bk <= MaxMarkBodyZoom; bk++)
+        {
+            int   bz  = Mathf.Max(1, Mathf.RoundToInt(targetW * bk / aw));
+            float err = Mathf.Abs((float)aw * bz / bk - targetW) / targetW;
+            if (err < bestErr) { bestErr = err; k = bk; zoom = bz; }
+            if (err <= 0.05f) break;
+        }
+
+        int bw = w * k, bh = h * k;
+        int mw = aw * zoom;
+        int mh = ah * zoom;
+
+        // 전장과 같은 높이 — 발밑(프레임 0행)에서 MarkHeight. 머리에 살짝 걸쳐 앉는다.
+        int markY = Mathf.Max(0, Mathf.RoundToInt((MonsterMarkView.MarkHeight * ppu - frameMinY) * k));
+
+        int cw = Mathf.Max(bw, mw);
+        int ch = Mathf.Max(bh, markY + mh);
+
+        var canvas = new Color[cw * ch];   // 기본값이 투명이다
+
+        int bodyX = (cw - bw) / 2;
+        for (int y = 0; y < bh; y++)
+        for (int x = 0; x < bw; x++)
+            canvas[y * cw + bodyX + x] = body[(y / k) * w + x / k];   // 몸통은 아래에 (최근접 확대)
+
+        int markX = (cw - mw) / 2;
+
+        for (int y = 0; y < mh; y++)
+        for (int x = 0; x < mw; x++)
+        {
+            Color32 c = art[(y / zoom) * aw + (x / zoom)];
+            if (c.a == 0) continue;
+
+            canvas[(markY + y) * cw + markX + x] = c;
+        }
+
+        w = cw; h = ch;
+        return canvas;
+    }
+
+    static Sprite CropAndTrim(Color[] px, int fw, int fh, Color tint, float bodyScale,
+                              MonsterMark mark, float ppu)
     {
         int minX = fw, maxX = -1, minY = fh, maxY = -1;
 
@@ -305,11 +434,41 @@ public class MonsterPortraitProvider : MonoBehaviour
                 sub[i]  = new Color(c.r * tint.r, c.g * tint.g, c.b * tint.b, c.a);
             }
 
-        var tex = new Texture2D(w, h, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
-        tex.SetPixels(sub);
+        // ⚠ 표식은 **색조 뒤**에 얹는다 — 왕관까지 종족 색으로 물들면 금색이 죽는다
+        sub = ComposeMark(sub, ref w, ref h, mark, ppu, minY);
+
+        // ── 덩치만큼 투명 여백을 두른다 ──
+        //   ⚠ 가로·세로에 **같은 배율**을 건다. 따로 잡으면 비율이 틀어져
+        //     preserveAspect 가 켜진 칸에서 종족이 늘어나 보인다.
+        //
+        //   ⚠ 캔버스는 **정사각형**이고 몸은 **바닥에 붙인다** (사용자 지적, 2026-09-15)
+        //     예전엔 가로·세로를 따로 늘리고 가운데 정렬했다. 초상화 칸은 정사각형 +
+        //     preserveAspect 라 납작한 그림(슬라임)은 칸 가운데에, 길쭉한 그림은 칸을 꽉 채워
+        //     도감에서 종족마다 발밑 높이가 제각각이었다. 정사각형이면 칸과 비율이 같아
+        //     그림이 칸을 정확히 채우고, oy = 0 이라 전 종족의 발이 칸 바닥에 선다.
+        //     크기는 그대로다 — preserveAspect 는 원래도 긴 변으로 칸에 맞췄다.
+        float fill = PortraitFillFor(bodyScale);
+        int   side = Mathf.Max(Mathf.Max(w, h), Mathf.RoundToInt(Mathf.Max(w, h) / fill));
+
+        int canvasW = side;
+        int canvasH = side;
+
+        var canvas = new Color[canvasW * canvasH];   // 기본값이 투명(0,0,0,0)이다
+
+        int ox = (canvasW - w) / 2;   // 가로는 가운데
+        const int oy = 0;             // 세로는 바닥 기준
+
+        for (int y = 0; y < h; y++)
+            Array.Copy(sub, y * w, canvas, (oy + y) * canvasW + ox, w);
+
+        var tex = new Texture2D(canvasW, canvasH, TextureFormat.RGBA32, false)
+        {
+            filterMode = FilterMode.Point,
+        };
+        tex.SetPixels(canvas);
         tex.Apply(false, false);
 
-        return Sprite.Create(tex, new Rect(0, 0, w, h),
+        return Sprite.Create(tex, new Rect(0, 0, canvasW, canvasH),
                              new Vector2(0.5f, 0.5f), 16, 0, SpriteMeshType.FullRect);
     }
 }

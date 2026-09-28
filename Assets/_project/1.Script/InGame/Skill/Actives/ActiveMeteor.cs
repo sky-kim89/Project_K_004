@@ -41,6 +41,9 @@ public class ActiveMeteor : ActiveSkillData
             em               : em,
             casterTeam       : casterIdentity.Team,
             damageMultiplier : DamageMultiplier * EffectValue,
+            // 소환사 시그니처면 대상 최대 체력 비례 × 패기 (SignatureDamageRule)
+            maxHpRatio       : SignatureDamageRule.RatioFor(em, ctx.CasterEntity, SignatureDamageRule.MeteorRatio)
+                               * EffectValue,
             aoeRadius        : EffectRadius > 0f ? EffectRadius : 3f,
             delay            : EffectDuration > 0f ? EffectDuration : 1.5f,
             knockbackMult    : KnockbackMult,

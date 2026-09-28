@@ -54,6 +54,16 @@ public abstract class TutorialScenario
     public virtual bool CompleteOnAbort => false;
 
     /// <summary>
+    /// 앱이 끊겼다 다시 켜졌을 때 끊긴 스텝부터 이어 볼 것인가. 기본 true.
+    ///
+    /// ⚠ 게임 상태를 따라가는 시나리오는 false 로 둔다
+    ///   인게임 안내는 [시작] 을 누른 뒤의 스텝이 "판이 돌고 있다" 를 전제한다.
+    ///   이어하기는 같은 스테이지의 <b>대기</b>로 돌아오므로, 중간부터 이으면
+    ///   돌지 않는 판에서 전투 UI 를 가리킨다. 처음부터 다시 보는 편이 맞다.
+    /// </summary>
+    public virtual bool Resumable => true;
+
+    /// <summary>
     /// 이 시나리오가 자기 무대로 삼는 팝업. 기본 None = 팝업이 하나도 없을 때만 시작한다.
     ///
     /// ⚠ 강제 진행 튜토리얼은 남의 팝업 위에서 시작하면 안 된다

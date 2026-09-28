@@ -67,7 +67,7 @@ public class FirstRelicTutorial : TutorialScenario
     {
         yield return Show(TutorialStep.Say(
             "여정이 끝나고 <b>환생</b>했습니다.\n" +
-            "장수·장비·특성은 사라졌지만, 그 대가로 <b>환생 포인트</b>를 받았습니다.\n" +
+            "카드·특성·런 골드는 사라졌지만, 그 대가로 <b>환생 포인트</b>를 받았습니다.\n" +
             "이 포인트로 다음 여정의 출발선을 끌어올립니다."));
     }
 
@@ -100,8 +100,8 @@ public class FirstRelicTutorial : TutorialScenario
         yield return Show(TutorialStep.Point(
             RootNode,
             "유물은 <b>한 그루의 나무</b>로 이어져 있습니다.\n" +
-            "가운데 <b>근원의 각인</b>이 시작점이고, 여기서 네 갈래가 뻗습니다 —\n" +
-            "위 공격력 · 아래 체력 · 왼쪽 병사 수 · 오른쪽 경험치.",
+            "가운데 <b>마왕의 각인</b>이 시작점이고, 여기서 네 갈래가 뻗습니다 —\n" +
+            "위 소환수 · 아래 마왕성 · 왼쪽 마나 · 오른쪽 통솔.",
             TutorialAnchor.Auto));
     }
 
@@ -109,7 +109,7 @@ public class FirstRelicTutorial : TutorialScenario
     {
         yield return Show(TutorialStep.Point(
             BuyBtn,
-            "노드 아래 <b>▲ 버튼</b>으로 레벨을 올립니다. 옆 숫자가 드는 포인트입니다.\n" +
+            "노드 아래 <b>버튼</b>으로 레벨을 올립니다. 버튼의 숫자가 드는 포인트입니다.\n" +
             "환생해도 사라지지 않으니, 여기 찍은 만큼이 그대로 영구 성장입니다.",
             TutorialAnchor.Below));
     }
@@ -127,8 +127,8 @@ public class FirstRelicTutorial : TutorialScenario
     IEnumerator Closing()
     {
         yield return Show(TutorialStep.Say(
-            "포인트를 다 쓰고 나면 창을 닫고 다시 출전하세요.\n" +
-            "이번에는 지난 여정보다 앞에서 출발합니다."));
+            "포인트를 다 쓰고 나면 창을 닫으세요.\n" +
+            "이어서 <b>도감</b>에서 몬스터를 강하게 만드는 법을 알려 드립니다."));
     }
 
     // ── 타겟 ─────────────────────────────────────────────────

@@ -123,9 +123,13 @@ public static class CodexCatalog
 
         var mon = UserDataManager.Instance?.Get<MonsterCodexData>();
 
+        var order = new Dictionary<MonsterSpeciesData, int>();
+
         foreach (var s in cards.Monsters)
         {
             if (s == null) continue;
+
+            order[s] = order.Count;
 
             bool owned = mon != null && mon.IsUnlocked(s.Id);
 
@@ -148,22 +152,24 @@ public static class CodexCatalog
             });
         }
 
-        // 해금한 것부터, 그중 품질이 높은 것부터.
-        // ⚠ 미해금을 뒤로 미는 것뿐이지 목록에서 빼지 않는다 —
-        //   몇 칸이 남았는지 보여야 모으고 싶어진다 (파일 머리 주석).
+        // ── 순서는 고정이다 — 기본 → 1차 → 2차, 같은 단계는 카드 목록 순 (사용자 지시, 2026-09-15) ──
+        //   ⚠ 이름으로 정렬하지 않는다 — 번역이 들어갈 때마다 칸이 뒤섞인다.
+        //   ⚠ 품질·해금으로도 정렬하지 않는다 — 개선을 누를 때마다 칸이 자리를 옮겨
+        //     방금 누른 종족을 다시 찾아야 했다. 미해금은 칸 모양이 이미 말한다.
         result.Sort((a, b) =>
         {
-            if (a.Owned != b.Owned) return b.Owned.CompareTo(a.Owned);
-
-            if (a.Owned)
-            {
-                UnitGrade ga = mon.GetGrade(a.Species.Id);
-                UnitGrade gb = mon.GetGrade(b.Species.Id);
-                if (ga != gb) return gb.CompareTo(ga);
-            }
-
-            return string.CompareOrdinal(a.Name, b.Name);
+            int ta = TierOf(a.Species), tb = TierOf(b.Species);
+            if (ta != tb) return ta.CompareTo(tb);
+            return order[a.Species].CompareTo(order[b.Species]);
         });
+    }
+
+    /// <summary>진화 단계 — 뿌리 0 · 1차 1 · 2차 2. 대표 부모(UpgradeOf) 줄을 센다.</summary>
+    static int TierOf(MonsterSpeciesData s)
+    {
+        int tier = 0;
+        for (var c = s.UpgradeOf; c != null && tier < 8; c = c.UpgradeOf) tier++;   // 8 = 순환 참조 보호
+        return tier;
     }
 
     /// <summary>
@@ -293,7 +299,7 @@ public static class CodexCatalog
     static string MonsterStatLine(MonsterSpeciesData s)
     {
         var sb = new System.Text.StringBuilder(96);
-        sb.Append($"공격력 {s.Attack:0.#} · 체력 {s.MaxHp:0.#}");
+        sb.Append(LocalizationManager.Instance.Format("공격력 {0:0.#} · 체력 {1:0.#}", s.Attack, s.MaxHp));
 
         var passives = new List<SpeciesPassive>(4);
         s.CollectSpeciesPassives(passives);

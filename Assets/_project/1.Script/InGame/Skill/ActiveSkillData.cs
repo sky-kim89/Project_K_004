@@ -239,6 +239,12 @@ public enum ActiveSkillId : int
 
     // ── 소환사 시그니처 (36~, 2026-09-12) ─────────────────────
     ManaBurst        = 36,  // 마나 폭발      — 남은 마나 절반을 태워 비례 광역 피해 (대마법사)
+
+    // ── 2차 업그레이드 전용 (37~, 2026-09-15) ─────────────────
+    SummonBrood      = 37,  // 권속 소환      — 제 하위 종족을 주기적으로 불러낸다 (슬라임 킹·리치 킹)
+
+    // ── 몬스터 고유 (38~, 2026-09-15) ────────────────────────
+    FlameAura        = 38,  // 화염 오라      — 몸 주위에 불길이 번진다. 따라다니는 장판 (화염 멧돼지)
 }
 
 public static class ActiveSkillIdExtensions
@@ -283,6 +289,11 @@ public static class ActiveSkillIdExtensions
         ActiveSkillId.SummonSignature  => "skill_summon_signature",
         // 치유 점액은 치유 오라 그림을 빌린다 — 광폭화와 같은 이유 (새 그림을 굽지 않는다)
         ActiveSkillId.SlimeMend        => "skill_heal_aura",
+        // 권속 소환 — 시그니처 소환과 **같은 그림**을 쓴다. 하는 일이 같고(무료 소환),
+        // 그림을 따로 두면 같은 동작이 두 얼굴을 갖는다 (시그니처 아이콘 주석과 같은 이유).
+        ActiveSkillId.SummonBrood      => "skill_summon_signature",
+        // 불 그림이라 메테오 것을 빌린다 — 전용 그림을 굽기 전까지.
+        ActiveSkillId.FlameAura        => "skill_meteor",
         // 마나 폭발은 중력 붕괴 그림을 빌린다 — 같은 이유 (새 그림을 굽지 않는다)
         ActiveSkillId.ManaBurst        => "skill_gravity_collapse",
         _                              => null,
@@ -294,7 +305,13 @@ public static class ActiveSkillIdExtensions
     ///   용사가 뽑으면 "몬스터 아군을 치유" 하는 스킬이 적의 손에서 플레이어를 돕는다.
     /// </summary>
     public static bool IsMonsterOnly(this ActiveSkillId id)
-        => id == ActiveSkillId.SlimeMend;
+        => id == ActiveSkillId.SlimeMend
+        // 권속은 **시전자의 종족**에서 나온다 (MonsterSpeciesData.BroodSpecies).
+        // 용사가 뽑으면 MonsterRuntimeBridge 가 없어 조용히 아무 일도 안 한다.
+        || id == ActiveSkillId.SummonBrood
+        // 화염 멧돼지의 서명이다. 용사가 뽑아 쓰면 화면에 같은 불이 양쪽에 생겨
+        // "저 불이 누구 것인가" 가 안 갈린다 — 기능이 아니라 정체성으로 막는다.
+        || id == ActiveSkillId.FlameAura;
 
     /// <summary>
     /// 우두머리 전용 패턴 스킬인가.
@@ -352,6 +369,10 @@ public static class ActiveSkillIdExtensions
         // 아군이 도망치거나 원거리로만 때리는 동안 60초 쿨이 통째로 날아간다.
         ActiveSkillId.BossEnrage       => true,   // 버프 (자기 강화)
         ActiveSkillId.SlimeMend        => true,   // 치유 — 적이 없어도 아군이 다쳤으면 쓴다
+        ActiveSkillId.SummonBrood      => true,   // 소환 — 제 발밑에 세운다. 적이 멀어도 미리 불러 둔다
+        // 몸에 두르는 불이다 — 타겟이 없어도 두른다. 사거리를 따지면 적이
+        // 붙기 전까지 못 켜서, 정작 부딪히는 순간에 쿨다운이 돌고 있다.
+        ActiveSkillId.FlameAura        => true,
         _                              => false,
     };
 

@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3293ffc88440014396a89c49aab65b7, type: 3}
+  m_Name: Monster_blood_wolf
+  m_EditorClassIdentifier: 
+  Id: blood_wolf
+  DisplayName: "\uD54F\uBE5B \uB291\uB300"
+  BodyType: 1
+  Race: 0
+  NonHumanoidLibrary: {fileID: 11400000, guid: 9ae10c2674b25cb4aa0246334ce63a71, type: 2}
+  BodyTint: {r: 1, g: 1, b: 1, a: 1}
+  BodyScale: 1
+  BodyStretch: {x: 1.04, y: 0.98}
+  Mark: 0
+  PoolKey: Monster
+  LineageIcon: {fileID: 0}
+  ManaCost: 9
+  SummonCount: 4
+  AttackKind: 0
+  Projectile: 0
+  ProjectileSpeed: 0
+  Traits: 72
+  Tags: 2304
+  Description: "\uD53C \uB0C4\uC0C8\uB97C \uCAD3\uB294 \uC0AC\uB0E5\uAFBC. \uAE09\uC18C\uB97C
+    \uBB3C\uC5B4 \uAC11\uC637\uC744 \uBB34\uC2DC\uD55C\uB2E4."
+  MaxHp: 125
+  Attack: 36
+  AttackRange: 1
+  AttackSpeed: 1.3
+  MoveSpeed: 3.9
+  Defense: 0.03
+  CritChance: 0.05
+  CritDamage: 1.5
+  SummonPowerToHp: 0.7
+  SummonPowerToAttack: 1.4
+  UpgradeOf: {fileID: 11400000, guid: 02e69958661d2fb43a93e248cb71c7c9, type: 2}
+  AlsoUpgradeOf: []
+  SpeciesTrait: 42
+  ExtraTraits: 
+  BlockedInherit: 
+  ActiveSkill: 0
+  Passives: 
+  BroodSpecies: {fileID: 0}
+  BroodCount: 0
+  BroodCooldown: 0
+  LevelBonuses:
+  - Label: "\uD53C \uB0C4\uC0C8"
+    Stat1: 6
+    Value1: 0.08
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 0
+  - Label: "\uCC22\uB294 \uC1A1\uACF3\uB2C8"
+    Stat1: 2
+    Value1: 0.12
+    HasStat2: 1
+    Stat2: 7
+    Value2: 0.15
+    Passive: 0
+  - Label: "\uC0AC\uB0E5\uC758 \uB05D"
+    Stat1: 0
+    Value1: 0.12
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 40
+  - Label: "\uBD89\uC740 \uB2EC"
+    Stat1: 2
+    Value1: 0.18
+    HasStat2: 1
+    Stat2: 6
+    Value2: 0.06
+    Passive: 0
+  SignaturePassive: 40
+  SummonDelay: 0.1
+  SummonCircleEffectKey: FX_Summon_Circle

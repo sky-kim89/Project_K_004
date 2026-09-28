@@ -203,6 +203,7 @@ public class SummonController : MonoBehaviour
         SummonerSkillRule.ArmedChanged += HandleArmedChanged;
         StageLoopDirector.OnStageStart += HandleStageStart;
         StageLoopDirector.OnStageReady += HandleStageReady;
+        BattleManager.OnDefeat         += Halt;
     }
 
     void OnDisable()
@@ -211,6 +212,23 @@ public class SummonController : MonoBehaviour
         SummonerSkillRule.ArmedChanged -= HandleArmedChanged;
         StageLoopDirector.OnStageStart -= HandleStageStart;
         StageLoopDirector.OnStageReady -= HandleStageReady;
+        BattleManager.OnDefeat         -= Halt;
+    }
+
+    /// <summary>
+    /// 배출·풀 채우기를 전부 멈춘다 — 패배 순간과 판을 닫을 때(BattleArena.Close) 부른다.
+    ///
+    /// ⚠ 이게 없으면 '즉시 환생' 뒤에도 몬스터가 계속 나왔다 (사용자 지적, 2026-09-22)
+    ///   전투 도중 포기하면 대기열이 남은 채 배출 코루틴이 그대로 돈다. 판을 닫아(DespawnAllUnits)
+    ///   필드를 비운 **다음에** 나온 개체는 아무도 거두지 않아 로비 뒤에 남고 풀에도 안 돌아갔다.
+    ///   소환사가 풀에 돌아가도 SummonerRuntimeBridge.Current 가 남아 있어 SpawnOne 이 막히지 않았다.
+    /// </summary>
+    public void Halt()
+    {
+        StopDrains();
+
+        if (_prewarm != null) StopCoroutine(_prewarm);
+        _prewarm = null;
     }
 
     // ── 풀 미리 채우기 ───────────────────────────────────────
@@ -272,6 +290,9 @@ public class SummonController : MonoBehaviour
     {
         ReadTap();
         CheckWaveCleared();
+
+        // 시너지 선봉(첫 공격 후처리) · 무리(뭉침 판정) — 2026-09-15
+        MonsterSynergyRuntime.Tick();
 
         // 역병 술사 — 이번 프레임에 쓰러뜨린 자리마다 좀비 (거둔 판이면 버린다).
         SummonerPerkRuntime.FlushPlague(SummonerRuntimeBridge.Current?.Data, _swept);
@@ -598,6 +619,34 @@ public class SummonController : MonoBehaviour
     /// 그 라인의 배출 루프를 돌린다. 이미 돌고 있으면 아무것도 하지 않는다.
     /// 대기 중에는 돌지 않는다 — 시작 전에 빠져나가면 미리 소환하는 셈이 된다.
     /// </summary>
+    /// <summary>
+    /// 전투 도중 쓰러진 몬스터를 제 라인 대기열에 도로 세운다 — 숲 금 · 특성 '귀환'.
+    ///
+    /// ⚠ 넣기만 하면 안 된다 — 배출도 켠다 (2026-09-16 버그)
+    ///   그 라인의 배출이 이미 끝났으면(대기열이 비어 코루틴이 멈췄다) 넣은 몬스터가
+    ///   **다음 판까지 대기열에 갇혔다.** 보스 성벽 판정(CoreBreachSystem)이 대기열을
+    ///   "싸울 아군" 으로 세던 때는 필드가 텅 빈 채 보스가 영원히 붙들렸다.
+    /// </summary>
+    public void ReturnToLine(MonsterSpeciesData species, int lane)
+    {
+        Reservation.EnqueueOne(species, lane);
+        EnsureDraining(lane);
+    }
+
+    /// <summary>
+    /// 지금 실제로 나오고 있는 대기열이 있는가 — 배출이 도는(매복 대기 포함) 라인에 몬스터가 남았다.
+    /// ⚠ 대기열 수만 보지 않는다 — 판이 거둔 뒤나 배출이 멈춘 라인의 몬스터는 이번 판에 안 나온다.
+    /// </summary>
+    public bool HasPendingSpawns
+    {
+        get
+        {
+            for (int lane = 0; lane < _drains.Length; lane++)
+                if (_drains[lane] != null && Reservation.RemainingCount(lane) > 0) return true;
+            return false;
+        }
+    }
+
     void EnsureDraining(int lane)
     {
         if (_drains[lane] != null) return;
@@ -639,8 +688,12 @@ public class SummonController : MonoBehaviour
             //     트롤이 나오고 나서 슬라임 간격만큼만 쉬면 트롤이 무겁게
             //     나온 그림이 그 자리에서 지워진다.
             //   선발대는 앞 몇 마리에만 걸린다 — 세고 나서 배율을 정한다.
+            //   ⚠ 초조(Rush)는 판이 열린 뒤 흐른 시간이 정한다 — 적 광폭화와 같은
+            //     60초 시계로 한 단계씩, 단계마다 간격이 절반이 된다.
+            //     매 마리마다 다시 재야 판 도중에 단계가 올라도 그 자리에서 빨라진다.
             float interval = SpawnPaceRule.IntervalFor(species)
-                           * RunPerkRule.DrainMultiplierFor(_laneSpawned[lane]);
+                           * RunPerkRule.DrainMultiplierFor(_laneSpawned[lane])
+                           * SpawnPaceRule.RushMultiplierAt(RunPerkRule.SecondsSinceStageStart);
             _laneSpawned[lane]++;
 
             yield return CountDown(lane, interval);

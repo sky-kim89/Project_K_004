@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3293ffc88440014396a89c49aab65b7, type: 3}
+  m_Name: Monster_orc_warlord
+  m_EditorClassIdentifier: 
+  Id: orc_warlord
+  DisplayName: "\uC624\uD06C \uC6CC\uB85C\uB4DC"
+  BodyType: 0
+  Race: 0
+  NonHumanoidLibrary: {fileID: 0}
+  BodyTint: {r: 1, g: 0.6745098, b: 0.627451, a: 1}
+  BodyScale: 1.45
+  BodyStretch: {x: 1, y: 1}
+  Mark: 0
+  PoolKey: Monster
+  LineageIcon: {fileID: 21300000, guid: 1b2f7a087892fea4da4abf5d624094c3, type: 3}
+  ManaCost: 13
+  SummonCount: 1
+  AttackKind: 0
+  Projectile: 0
+  ProjectileSpeed: 0
+  Traits: 6
+  Tags: 6176
+  Description: "\uC804\uC7A5\uC744 \uD55C \uBC88\uC5D0 \uAC00\uB978\uB2E4. \uC9C1\uC120
+    \uC704\uC758 \uBAA8\uB4E0 \uAC83\uC774 \uB450 \uB3D9\uAC15 \uB09C\uB2E4.\n\uC801\uC744
+    \uC4F0\uB7EC\uB728\uB9B4\uC218\uB85D \uAC77\uC7A1\uC744 \uC218 \uC5C6\uC774 \uC138\uC9C4\uB2E4."
+  MaxHp: 1760
+  Attack: 122
+  AttackRange: 1.8
+  AttackSpeed: 0.8
+  MoveSpeed: 2.2
+  Defense: 0.15
+  CritChance: 0.05
+  CritDamage: 1.5
+  SummonPowerToHp: 3.3
+  SummonPowerToAttack: 2.47
+  UpgradeOf: {fileID: 11400000, guid: 9ac8feb343716f9448e7a1b6a8bb3ea5, type: 2}
+  AlsoUpgradeOf:
+  - {fileID: 11400000, guid: e62a10d37a02196498de3ebc8ffceb2d, type: 2}
+  SpeciesTrait: 104
+  ExtraTraits: 
+  BlockedInherit: 
+  ActiveSkill: 21
+  Passives: 
+  BroodSpecies: {fileID: 11400000, guid: b7ed4536c2c31bd4cba91a06df7843b0, type: 2}
+  BroodCount: 3
+  BroodCooldown: 14
+  LevelBonuses:
+  - Label: "\uAC70\uB300 \uB3C4\uB07C"
+    Stat1: 2
+    Value1: 0.18
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 0
+  - Label: "\uBB34\uC1E0 \uAC11\uC8FC"
+    Stat1: 1
+    Value1: 0.07
+    HasStat2: 1
+    Stat2: 0
+    Value2: 0.12
+    Passive: 0
+  - Label: "\uD53C\uC758 \uAD11\uB780"
+    Stat1: 2
+    Value1: 0.15
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 20
+  - Label: "\uC804\uC7A5\uC758 \uAD70\uC8FC"
+    Stat1: 2
+    Value1: 0.2
+    HasStat2: 1
+    Stat2: 0
+    Value2: 0.15
+    Passive: 0
+  SignaturePassive: 20
+  SummonDelay: 0.1
+  SummonCircleEffectKey: FX_Summon_Circle

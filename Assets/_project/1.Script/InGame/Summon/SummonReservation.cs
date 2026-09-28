@@ -281,6 +281,17 @@ public class SummonReservation
     /// <summary>그 라인에 남은 총 마릿수.</summary>
     public int RemainingCount(int laneIndex) => _lanes[laneIndex].Count;
 
+    /// <summary>모든 라인 대기열의 합 — 보스 성벽 판정(CoreBreachSystem)이 "아직 싸울 아군이 있나" 를 본다.</summary>
+    public int TotalCount
+    {
+        get
+        {
+            int n = 0;
+            for (int i = 0; i < _lanes.Length; i++) n += _lanes[i].Count;
+            return n;
+        }
+    }
+
     public void Clear()
     {
         bool had = false;

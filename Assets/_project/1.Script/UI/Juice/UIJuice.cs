@@ -156,7 +156,7 @@ public static class UIJuice
             Rings       = 2,  RingSize = 330f,
             Life        = 0.70f,
             LabelSize   = UIScale.FontLg, LabelOffset = 46f, LabelRise = 84f,
-        }, anchor, $"유물 Lv.{newLevel}", at);
+        }, anchor, LocalizationManager.Instance.Format("유물 Lv.{0}", newLevel), at);
 
     /// <summary>
     /// 장수 등급업 — 이 게임에서 가장 드물고 비싼 성장.

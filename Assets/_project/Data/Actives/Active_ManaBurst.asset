@@ -14,13 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   SkillId: 36
   SkillName: "\uB9C8\uB098 \uD3ED\uBC1C"
-  Description: "\uB0A8\uC740 \uB9C8\uB098\uC758 \uC808\uBC18\uC744 \uD0DC\uC6CC,
-    \uD0ED\uD55C \uC790\uB9AC \uC8FC\uBCC0\uC758 \uC801 \uC804\uBD80\uC5D0\uAC8C
-    \uD0DC\uC6B4 \uB9C8\uB098 1\uB2F9 \uCD5C\uB300 \uCCB4\uB825\uC758 2% \uD53C\uD574\uB97C
-    \uC900\uB2E4 (\uBC29\uC5B4\uC728 \uBB34\uC2DC \xB7 \uBCF4\uC2A4\uB294 \uC808\uBC18)."
+  Description: "\uD654\uBA74 \uC804\uCCB4\uC758 \uC801\uC5D0\uAC8C \uCD5C\uB300 \uCCB4\uB825\uC758
+    30% \uD53C\uD574\uB97C \uC8FC\uACE0, \uB0A8\uC740 \uB9C8\uB098\uC758 \uC808\uBC18\uC744
+    \uD0DC\uC6CC \uD0DC\uC6B4 \uB9C8\uB098 1\uB2F9 1.5% \uB97C \uB354\uD55C\uB2E4
+    (\uD328\uAE30 \uBC30\uC728 \xB7 \uBC29\uC5B4\uC728 \uBB34\uC2DC \xB7 \uBCF4\uC2A4\uB294
+    \uC808\uBC18)."
   Cooldown: 8
   EffectValue: 1
-  EffectRadius: 4
+  EffectRadius: 0
   EffectDuration: 0
   AllowedJobs: 
   IsRare: 0
@@ -31,6 +32,7 @@ MonoBehaviour:
   RangeIndicatorDuration: 0
   EffectDespawnDelay: 2
   BurnRatio: 0.5
-  MaxHpRatioPerMana: 0.02
+  BaseMaxHpRatio: 0.3
+  MaxHpRatioPerMana: 0.015
   BossMult: 0.5
   KnockbackMult: 4

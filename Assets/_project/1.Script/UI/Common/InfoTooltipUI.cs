@@ -68,7 +68,8 @@ public class InfoTooltipUI : MonoBehaviour
         var parentRt = transform.parent as RectTransform;
         if (parentRt == null) return;
 
-        _rect = GetComponent<RectTransform>();
+        _rect  = GetComponent<RectTransform>();
+        _owner = owner;
 
         Fill(title, desc, stat);
         gameObject.SetActive(true);
@@ -114,6 +115,7 @@ public class InfoTooltipUI : MonoBehaviour
     public void Show(string title, string desc, string stat)
     {
         CaptureParent();
+        _owner = _originalParent as RectTransform;
 
         Fill(title, desc, stat);
 
@@ -203,8 +205,27 @@ public class InfoTooltipUI : MonoBehaviour
         _parentCaptured   = true;
     }
 
+    // ⚠ 폭은 구운 값(한국어 기준) × 언어 배율이다 (사용자 지적, 2026-09-17)
+    //   툴팁마다 Creator 가 한국어 길이에 맞춘 폭(300~620)을 박아 두어, 번역문이 들어가면
+    //   줄 수가 두세 배로 늘어 화면을 세로로 덮었다. 여기 한 곳에서 모든 툴팁이 함께 넓어진다.
+    //   화면 폭을 넘지 않게 MaxWidth 로 막는다.
+    const float MaxWidth = 900f;
+    float _baseWidth = -1f;
+
+    void ApplyLanguageWidth()
+    {
+        _rect ??= GetComponent<RectTransform>();
+        if (_baseWidth < 0f) _baseWidth = _rect.sizeDelta.x;
+
+        float scale = LocalizationManager.Instance.TextWidthScale;
+        float width = scale > 1f ? Mathf.Min(MaxWidth, Mathf.Max(_baseWidth, _baseWidth * scale)) : _baseWidth;
+        _rect.sizeDelta = new Vector2(width, _rect.sizeDelta.y);
+    }
+
     void Fill(string title, string desc, string stat)
     {
+        ApplyLanguageWidth();
+
         _nameText.text = title;
 
         _descText.text = desc ?? "";
@@ -238,7 +259,27 @@ public class InfoTooltipUI : MonoBehaviour
     {
         if (_skipFrame) { _skipFrame = false; return; }
 
-        if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2))
-            Close();
+        if (!(Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2)))
+            return;
+
+        // ⚠ PC 는 올려서 연 툴팁이다 — 올린 채로 그 칸을 눌렀다고 닫지 않는다 (2026-09-17)
+        //   닫는 것은 벗어날 때(OnPointerExit)다. 칸 밖을 누르면 여전히 닫는다.
+        if (TooltipInput.HoverMode && PointerOverOwner()) return;
+
+        Close();
+    }
+
+    RectTransform _owner;
+
+    bool PointerOverOwner()
+    {
+        if (_owner == null) return false;
+
+        Canvas canvas = _owner.GetComponentInParent<Canvas>();
+        Camera cam    = canvas == null || canvas.rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay
+            ? null
+            : canvas.rootCanvas.worldCamera;
+
+        return RectTransformUtility.RectangleContainsScreenPoint(_owner, Input.mousePosition, cam);
     }
 }

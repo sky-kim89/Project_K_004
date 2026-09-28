@@ -111,8 +111,11 @@ public static class EnemyAppearanceRoller
     static readonly string[] OrcRanged =
         { "BattleBow", "LongBow" };
 
-    static readonly string[] ZombieARanged = { "HermitStaff" };
-    static readonly string[] ZombieBRanged = { "WingedStaff" };
+    /// <summary>좀비 — 주워 든 지팡이. 휘두르는 것 말고는 못 한다.</summary>
+    static readonly string[] ZombieARanged = { "HermitStaff", "NatureWand" };
+
+    /// <summary>역병 좀비 — 썩은 것을 던진다. 병색 지팡이.</summary>
+    static readonly string[] ZombieBRanged = { "WingedStaff", "GreenWand" };
 
     /// <summary>목록에 없는 종족이 원거리로 오면 쓰는 최후의 풀.</summary>
     static readonly string[] FallbackRanged =

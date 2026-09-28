@@ -174,6 +174,12 @@ public enum SpeciesPassive
     // ── 마나 패시브 (130~, 2026-09-12 사용자 지시) — 새 업그레이드 두 종이 갖는다 ──
     ManaResonance = 130,   // 마나 공명 — 최대 마나 1당 공·체 + (비전 리치)
     ManaRelease   = 131,   // 마나 방출 — 죽을 때 마나 + · 한 판 상한 (마력 해골)
+
+    // ── 2차 업그레이드 전용 (사용자 지시, 2026-09-15) ────────
+    //  ⚠ 분열(1)·대분열(101)과 다른 물건이다 — 그 둘은 **자기 자신**을 쪼개지만
+    //    이쪽은 **권속(BroodSpecies)** 을 쏟아 낸다. 왕이 터지며 부하가 흩어지는 그림이다.
+    KingSplit     = 132,   // 왕의 분열 — 죽을 때 권속을 KingSplitCount 마리 남긴다 (슬라임 킹)
+    Cleave        = 133,   // 휩쓸기 — 느려지는 대신 평타가 주변까지 닿는다 (고대 트롤)
 }
 
 /// <summary>
@@ -300,6 +306,50 @@ public static class SpeciesPassiveRule
 
     // ── 각성 (원래 것과 나란히 두어 '상위 호환' 인지 한눈에 보이게 한다) ──
 
+    /// <summary>
+    /// 왕의 분열 — 죽을 때 남기는 <b>권속</b>의 수 (사용자 지시, 2026-09-15).
+    ///
+    /// ⚠ 자기 자신이 아니라 MonsterSpeciesData.BroodSpecies 를 낸다
+    ///   같은 종족으로 쪼개면 12기가 전부 왕이 되어 **각자 권속 소환 스킬을 갖는다** —
+    ///   한 판에 슬라임이 지수로 불어난다. 권속을 내면 그 12기는 평범한 슬라임이라
+    ///   더 낳지 않는다 (세대 제한과 별개로 구조적으로 막힌다).
+    ///
+    /// ⚠ 세대 제한(MaxReproduceGeneration)도 그대로 받는다 — 카드로 낸 왕만 터진다.
+    /// </summary>
+    // ── 휩쓸기 (사용자 지시, 2026-09-15) ─────────────────────
+    //
+    //  ■ 느려지는 값으로 범위를 산다 — 순수한 강화가 아니다
+    //    공격 속도를 깎지 않으면 "평타가 그냥 넓어진" 것이라 앞줄 몬스터라면
+    //    누구나 갖고 싶은 능력이 된다. 느린 대신 넓은 것이라야 축이 갈린다.
+    //
+    //  ⚠ 셋은 한 묶음이다 — 하나만 만지면 DPS 가 통째로 어긋난다
+    //    단일 대상 DPS 는 공속 배율만큼 그대로 줄고(×0.7), 그 손해를 주변 몫이
+    //    메운다. 붙어 있는 적이 셋이면 1 + 0.5×2 = 2.0 배 → 실효 ×1.4.
+    //    혼자 있는 적에게는 손해라는 것이 이 능력의 값이다.
+    //
+    //  ⚠ 반경은 제 덩치와 함께 본다 — 고대 트롤은 Size 가 가장 크다.
+    //    작은 종족에 그대로 얹으면 팔이 몸의 두 배까지 닿는 그림이 된다.
+
+    /// <summary>휩쓸기 — 주 타겟 주변 이 반경 안의 적도 맞는다.</summary>
+    public const float CleaveRadius         = 1.8f;
+
+    /// <summary>휩쓸기 — 주변이 받는 몫. 주 타겟이 받은 피해의 비율이다.</summary>
+    public const float CleaveSplashRatio    = 0.5f;
+
+    /// <summary>휩쓸기 — 그 대가로 곱해지는 공격 속도. 1 미만이면 느려진다.</summary>
+    public const float CleaveAttackSpeedMult = 0.7f;
+
+    public const int   KingSplitCount        = 12;
+
+    /// <summary>
+    /// 왕의 분열로 나온 권속의 스탯·크기 배율.
+    ///
+    /// ⚠ 합계로 재야 한다 — 분열 2×0.5 = 1.0(본전) · 대분열 4×0.35 = 1.4 ·
+    ///   왕의 분열 12×0.15 = <b>1.8</b>. 마릿수가 셋 중 가장 많으니 한 마리는 가장 작다.
+    ///   화면에서는 "왕이 터지자 줄이 다시 찬다" 로 읽히면 된다.
+    /// </summary>
+    public const float KingSplitScale        = 0.15f;
+
     public const int   GreatSplitCount      = 4;      // 분열 2
     public const float GreatSplitScale      = 0.35f;  // 분열 0.5 — 합계 1.4 vs 1.0
     public const float UndyingScale         = 0.85f;  // 재조립 0.7 (확률 40% → 100%)
@@ -403,6 +453,7 @@ public static class SpeciesPassiveRule
 
         // ── 마나 (2026-09-12) ──
         SpeciesPassive.ManaResonance, SpeciesPassive.ManaRelease,
+        SpeciesPassive.KingSplit,      SpeciesPassive.Cleave,
     };
 
     /// <summary>All 안에서의 자리. 없으면 −1 (아이콘을 숨기라는 뜻이다).</summary>
@@ -474,6 +525,8 @@ public static class SpeciesPassiveNames
 
         SpeciesPassive.ManaResonance  => "마나 공명",
         SpeciesPassive.ManaRelease    => "마나 방출",
+        SpeciesPassive.KingSplit      => "왕의 분열",
+        SpeciesPassive.Cleave         => "휩쓸기",
 
         // 단계 패시브 — 이름은 GearTierPassive 가 계열·단계에서 만든다
         _ => GearTierPassive.NameOf(passive),
@@ -490,11 +543,11 @@ public static class SpeciesPassiveNames
         SpeciesPassive.PackHunt       => "처치할 때마다 이동속도가 누적된다",
         // ⚠ 수치는 손으로 적지 말 것 — SpeciesPassiveRule 에서 뽑는다
         //   한 번 적어 두면 밸런스를 고쳐도 설명만 옛 숫자를 말한다.
-        SpeciesPassive.Sturdy         => $"최대 체력이 {Pct(SpeciesPassiveRule.SturdyHpBonus)} 늘어난다",
+        SpeciesPassive.Sturdy         => F("최대 체력이 {0} 늘어난다", Pct(SpeciesPassiveRule.SturdyHpBonus)),
         SpeciesPassive.SoulDrain      => "준 피해의 일부를 회복한다",
-        SpeciesPassive.Regrow         => $"초당 최대 체력의 {Pct(SpeciesPassiveRule.RegrowPerSecond)}를 재생한다",
-        SpeciesPassive.HealOnDeath    => $"죽을 때 주변 아군을 자기 최대 체력의 " +
-                                         $"{Pct(SpeciesPassiveRule.HealOnDeathRatio)}만큼 회복시킨다",
+        SpeciesPassive.Regrow         => F("초당 최대 체력의 {0}를 재생한다", Pct(SpeciesPassiveRule.RegrowPerSecond)),
+        SpeciesPassive.HealOnDeath    => F("죽을 때 주변 아군을 자기 최대 체력의 {0}만큼 회복시킨다",
+                                           Pct(SpeciesPassiveRule.HealOnDeathRatio)),
         SpeciesPassive.PoisonOnHit    => "자기를 때린 적을 중독시킨다",
         SpeciesPassive.ThornOnHit     => "피격 시 받은 피해의 일부를 되돌려준다",
         SpeciesPassive.ChillOnHit     => "자기를 때린 적을 둔화시킨다",
@@ -503,64 +556,101 @@ public static class SpeciesPassiveNames
         SpeciesPassive.ExplodeOnDeath => "죽을 때 주변 적에게 피해를 준다",
         SpeciesPassive.Volley         => "한 번에 두 발을 쏜다",
         SpeciesPassive.BurnOnAttack   => "자기가 때린 적을 태운다",
-        SpeciesPassive.Swiftness      => $"공격속도와 이동속도가 {Pct(SpeciesPassiveRule.SwiftAttackBonus)} 오른다",
+        SpeciesPassive.Swiftness      => F("공격속도와 이동속도가 {0} 오른다", Pct(SpeciesPassiveRule.SwiftAttackBonus)),
 
         // ── 특이 ──
-        SpeciesPassive.Bravado        => $"체력이 {Pct(SpeciesPassiveRule.BravadoHpThreshold)} 이상이면 " +
-                                         $"공격력 +{Pct(SpeciesPassiveRule.BravadoAttackBonus)}",
-        SpeciesPassive.Recoil         => $"평타로 적을 밀쳐 낼 때마다 최대 체력의 " +
-                                         $"{Pct(SpeciesPassiveRule.RecoilHealRatio)}를 회복한다",
+        SpeciesPassive.Bravado        => F("체력이 {0} 이상이면 공격력 +{1}",
+                                           Pct(SpeciesPassiveRule.BravadoHpThreshold),
+                                           Pct(SpeciesPassiveRule.BravadoAttackBonus)),
+        SpeciesPassive.Recoil         => F("평타로 적을 밀쳐 낼 때마다 최대 체력의 {0}를 회복한다",
+                                           Pct(SpeciesPassiveRule.RecoilHealRatio)),
         SpeciesPassive.VitalStrike    => "치명타는 방어율을 무시한다",
-        SpeciesPassive.LoneWolf       => $"소환될 때 같은 라인에 다른 아군이 없으면 " +
-                                         $"공격력 +{Pct(SpeciesPassiveRule.LoneWolfAttackBonus)}",
-        SpeciesPassive.Rampart        => $"이동 속도 -{Pct(SpeciesPassiveRule.RampartMovePenalty)}, " +
-                                         $"받는 피해 -{Pct(SpeciesPassiveRule.RampartDamageCut)}",
-        SpeciesPassive.Executioner    => $"체력이 {Pct(SpeciesPassiveRule.ExecuteHpThreshold)} 이하인 적에게는 " +
-                                         "치명타가 확정된다",
-        SpeciesPassive.Anchor         => $"넉백을 받지 않는다, 이동 속도 -{Pct(SpeciesPassiveRule.AnchorMovePenalty)}",
-        SpeciesPassive.Photosynthesis => $"스킬을 쓸 때마다 최대 체력의 " +
-                                         $"{Pct(SpeciesPassiveRule.PhotosynthesisHeal)}를 회복한다",
+        SpeciesPassive.LoneWolf       => F("소환될 때 같은 라인에 다른 아군이 없으면 공격력 +{0}",
+                                           Pct(SpeciesPassiveRule.LoneWolfAttackBonus)),
+        SpeciesPassive.Rampart        => F("이동 속도 -{0}, 받는 피해 -{1}",
+                                           Pct(SpeciesPassiveRule.RampartMovePenalty),
+                                           Pct(SpeciesPassiveRule.RampartDamageCut)),
+        SpeciesPassive.Executioner    => F("체력이 {0} 이하인 적에게는 치명타가 확정된다",
+                                           Pct(SpeciesPassiveRule.ExecuteHpThreshold)),
+        SpeciesPassive.Anchor         => F("넉백을 받지 않는다, 이동 속도 -{0}",
+                                           Pct(SpeciesPassiveRule.AnchorMovePenalty)),
+        SpeciesPassive.Photosynthesis => F("스킬을 쓸 때마다 최대 체력의 {0}를 회복한다",
+                                           Pct(SpeciesPassiveRule.PhotosynthesisHeal)),
         SpeciesPassive.BurstBody      => "죽을 때 주변 적을 밀쳐 낸다",
-        SpeciesPassive.Hunger         => $"공격 속도 +{Pct(SpeciesPassiveRule.HungerAttackSpeed)}, " +
-                                         $"최대 체력 -{Pct(SpeciesPassiveRule.HungerHpPenalty)}",
-        SpeciesPassive.Embers         => $"죽을 때 주변 적을 {SpeciesPassiveRule.EmbersDuration:0}초간 태운다",
-        SpeciesPassive.Vengeance      => $"같은 종족 아군이 죽을 때마다 공격력 +" +
-                                         $"{Pct(SpeciesPassiveRule.VengeancePerStack)} " +
-                                         $"(최대 {SpeciesPassiveRule.VengeanceMaxStacks}번)",
+        SpeciesPassive.Hunger         => F("공격 속도 +{0}, 최대 체력 -{1}",
+                                           Pct(SpeciesPassiveRule.HungerAttackSpeed),
+                                           Pct(SpeciesPassiveRule.HungerHpPenalty)),
+        SpeciesPassive.Embers         => F("죽을 때 주변 적을 {0:0}초간 태운다",
+                                           SpeciesPassiveRule.EmbersDuration),
+        SpeciesPassive.Vengeance      => F("같은 종족 아군이 죽을 때마다 공격력 +{0} (최대 {1}번)",
+                                           Pct(SpeciesPassiveRule.VengeancePerStack),
+                                           SpeciesPassiveRule.VengeanceMaxStacks),
 
         // ── 각성 — 원래 것보다 무엇이 더 좋은지를 말한다 ──
-        SpeciesPassive.GreatSplit     => $"죽으면 {SpeciesPassiveRule.GreatSplitCount}마리로 나뉜다",
+        SpeciesPassive.GreatSplit     => F("죽으면 {0}마리로 나뉜다", SpeciesPassiveRule.GreatSplitCount),
         SpeciesPassive.Undying        => "죽으면 반드시 그 자리에서 한 번 다시 일어난다",
-        SpeciesPassive.GoldRush       => $"죽을 때 골드를 {SpeciesPassiveRule.GoldRushMult}배 떨군다",
+        SpeciesPassive.GoldRush       => F("죽을 때 골드를 {0}배 떨군다", SpeciesPassiveRule.GoldRushMult),
         SpeciesPassive.Pandemic       => "죽을 때 더 넓게, 더 오래, 두 배로 중독시킨다",
-        SpeciesPassive.Berserker      => $"처치할 때마다 공격력 누적 + 공격력 +{Pct(SpeciesPassiveRule.BerserkerAttackBonus)}",
-        SpeciesPassive.Alpha          => $"처치할 때마다 이동속도 누적 + 공격·이동 속도 +{Pct(SpeciesPassiveRule.AlphaSpeedBonus)}",
-        SpeciesPassive.Colossus       => $"최대 체력 +{Pct(SpeciesPassiveRule.ColossusHpBonus)}, 넉백을 받지 않는다",
+        SpeciesPassive.Berserker      => F("처치할 때마다 공격력 누적 + 공격력 +{0}",
+                                           Pct(SpeciesPassiveRule.BerserkerAttackBonus)),
+        SpeciesPassive.Alpha          => F("처치할 때마다 이동속도 누적 + 공격·이동 속도 +{0}",
+                                           Pct(SpeciesPassiveRule.AlphaSpeedBonus)),
+        SpeciesPassive.Colossus       => F("최대 체력 +{0}, 넉백을 받지 않는다",
+                                           Pct(SpeciesPassiveRule.ColossusHpBonus)),
         SpeciesPassive.Vampire        => "준 피해를 흡수하고, 처치할 때마다 체력을 회복한다",
-        SpeciesPassive.TrollBlood     => $"초당 최대 체력의 {Pct(SpeciesPassiveRule.TrollBloodPerSecond)}를 재생, " +
-                                         $"체력이 {Pct(SpeciesPassiveRule.TrollBloodLowHp)} 이하면 두 배",
-        SpeciesPassive.LifeSeed       => $"죽을 때 넓은 범위의 아군을 최대 체력의 " +
-                                         $"{Pct(SpeciesPassiveRule.LifeSeedRatio)}만큼 회복시킨다",
+        SpeciesPassive.TrollBlood     => F("초당 최대 체력의 {0}를 재생, 체력이 {1} 이하면 두 배",
+                                           Pct(SpeciesPassiveRule.TrollBloodPerSecond),
+                                           Pct(SpeciesPassiveRule.TrollBloodLowHp)),
+        SpeciesPassive.LifeSeed       => F("죽을 때 넓은 범위의 아군을 최대 체력의 {0}만큼 회복시킨다",
+                                           Pct(SpeciesPassiveRule.LifeSeedRatio)),
         SpeciesPassive.Venom          => "때린 적을 강하게 중독시키고 받은 피해 일부를 되돌려준다",
-        SpeciesPassive.IronThorns     => $"받은 피해의 {Pct(SpeciesPassiveRule.IronThornsRatio)}를 되돌려준다",
-        SpeciesPassive.Frostbite      => $"때린 적을 {Pct(SpeciesPassiveRule.FrostbiteSlowRatio)} 둔화시킨다 " +
-                                         $"({SpeciesPassiveRule.FrostbiteDuration:0}초)",
-        SpeciesPassive.Fortress       => $"피격 시 방어율이 오르고, 방어율 +{Pct(SpeciesPassiveRule.FortressDefense)}, " +
-                                         "넉백을 받지 않는다",
-        SpeciesPassive.WarDrum        => $"죽을 때 주변 아군 공격력 +{Pct(SpeciesPassiveRule.WarDrumAttackBonus)} · " +
-                                         $"공격 속도 +{Pct(SpeciesPassiveRule.WarDrumSpeedBonus)}",
+        SpeciesPassive.IronThorns     => F("받은 피해의 {0}를 되돌려준다",
+                                           Pct(SpeciesPassiveRule.IronThornsRatio)),
+        SpeciesPassive.Frostbite      => F("때린 적을 {0} 둔화시킨다 ({1:0}초)",
+                                           Pct(SpeciesPassiveRule.FrostbiteSlowRatio),
+                                           SpeciesPassiveRule.FrostbiteDuration),
+        SpeciesPassive.Fortress       => F("피격 시 방어율이 오르고, 방어율 +{0}, 넉백을 받지 않는다",
+                                           Pct(SpeciesPassiveRule.FortressDefense)),
+        SpeciesPassive.WarDrum        => F("죽을 때 주변 아군 공격력 +{0} · 공격 속도 +{1}",
+                                           Pct(SpeciesPassiveRule.WarDrumAttackBonus),
+                                           Pct(SpeciesPassiveRule.WarDrumSpeedBonus)),
         SpeciesPassive.Cataclysm      => "죽을 때 더 넓게, 두 배로 터진다",
-        SpeciesPassive.Barrage        => $"한 번에 두 발을 쏘고 공격 속도 +{Pct(SpeciesPassiveRule.BarrageAttackSpeed)}",
+        SpeciesPassive.Barrage        => F("한 번에 두 발을 쏘고 공격 속도 +{0}",
+                                           Pct(SpeciesPassiveRule.BarrageAttackSpeed)),
         SpeciesPassive.Hellfire       => "때린 적을 두 배 넘게, 더 오래 태운다",
-        SpeciesPassive.Gale           => $"공격속도와 이동속도가 {Pct(SpeciesPassiveRule.GaleBonus)} 오른다",
+
+        // ⚠ Swiftness 와 **같은 문장**이다 — 표에는 한 줄만 있으면 둘 다 받는다
+        SpeciesPassive.Gale           => F("공격속도와 이동속도가 {0} 오른다", Pct(SpeciesPassiveRule.GaleBonus)),
 
         // ── 마나 — 0.2% 라 Pct(정수 반올림)를 쓰지 않는다 ──
-        SpeciesPassive.ManaResonance  => $"최대 마나 1당 공격력·최대 체력 +{SpeciesPassiveRule.ManaResonancePerMana * 100f:0.#}% (소환될 때 정해짐)",
-        SpeciesPassive.ManaRelease    => $"죽을 때 마나 +{SpeciesPassiveRule.ManaReleaseAmount} (한 판에 최대 {SpeciesPassiveRule.ManaReleaseStageCap})",
+        SpeciesPassive.ManaResonance  => F("최대 마나 1당 공격력·최대 체력 +{0:0.#}% (소환될 때 정해짐)",
+                                           SpeciesPassiveRule.ManaResonancePerMana * 100f),
+        SpeciesPassive.ManaRelease    => F("죽을 때 마나 +{0} (한 판에 최대 {1})",
+                                           SpeciesPassiveRule.ManaReleaseAmount,
+                                           SpeciesPassiveRule.ManaReleaseStageCap),
+        SpeciesPassive.KingSplit      => F("죽을 때 권속 {0}마리로 흩어진다",
+                                           SpeciesPassiveRule.KingSplitCount),
+        SpeciesPassive.Cleave         => F("공격 속도 {0} 느려지는 대신, 평타가 대상 주변의 적에게도 {1} 피해를 준다",
+                                           Pct(1f - SpeciesPassiveRule.CleaveAttackSpeedMult),
+                                           Pct(SpeciesPassiveRule.CleaveSplashRatio)),
 
         _ => GearTierPassive.DescribeOf(passive),
     };
 
     /// <summary>비율을 사람이 읽는 %로. MonsterSynergyRule.Pct 와 같은 규칙이다.</summary>
     static string Pct(float ratio) => $"{Mathf.RoundToInt(ratio * 100f)}%";
+
+    /// <summary>
+    /// 표에서 문장을 찾아 숫자를 끼워 넣는다 — 원본 표가 쓰는 <c>{0}</c> 방식.
+    ///
+    /// ⚠ <b>수치가 든 설명은 반드시 이걸 쓴다. 보간 문자열($"…{값}…")을 쓰지 말 것</b>
+    ///   (2026-09-16). 보간은 실행 시점에 이미 숫자로 바뀌어 있어서 번역표의
+    ///   키(코드에 적힌 그대로의 문자열)와 **영원히 일치하지 않는다** — 표에는
+    ///   줄이 있는데 화면에는 한국어로 남는다.
+    ///
+    /// ⚠ 한 문장을 <c>+</c> 로 나눠 쓰지 말 것. 나누면 조각마다 표에 줄이 필요한데
+    ///   조각은 언어마다 어순이 달라 옮길 수가 없다. 줄바꿈은 인자 쪽에서 한다.
+    /// </summary>
+    static string F(string key, params object[] args)
+        => LocalizationManager.Instance.Format(key, args);
 }

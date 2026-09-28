@@ -9,8 +9,13 @@ using UnityEngine.UI;
 //  제단 — 내 카드 하나를 **바친다**. 카드는 사라지고 표식 하나가 남는다.
 //
 //  ■ 화면이 답해야 하는 질문은 "무엇을 잃고 무엇이 남는가" 다
-//    그래서 칸마다 그 카드가 가진 **표식(시너지)** 을 적는다. 바치면 그중
+//    그래서 칸마다 그 카드가 가진 **표식(시너지)** 을 그린다. 바치면 그중
 //    하나가 남으므로, 무엇이 남을 수 있는지가 고르는 유일한 근거다.
+//
+//    ⚠ 표식은 **아이콘**이다 (사용자 요청, 2026-09-18 — UI 규칙 7)
+//      아이콘에 올리거나 누르면 동·은·금 효과가 툴팁으로 뜬다 (SynergyChipUI).
+//      바칠 카드를 고르는 자리에서 "그 표식이 무엇을 주는가" 를 모르면
+//      고를 근거가 이름뿐이다. 켜진 표식은 밝게, 아직인 것은 흐리게 나온다.
 //
 //  ■ ⚠ 강화소와 화면을 합치지 않는다 (사용자 지적, 2026-09-06)
 //    둘 다 "카드를 고른다" 로 시작하지만, 여기서는 **카드가 사라진다.**
@@ -58,23 +63,28 @@ public class AltarPopup : CardPickPopupBase
         return this;
     }
 
-    /// <summary>칸 아래 줄 — 이 카드가 가진 표식. 바치면 이 중 하나가 남는다.</summary>
+    /// <summary>칸 아래 줄에 <b>표식 아이콘</b>을 세운다 — 바치면 이 중 하나가 남는다.</summary>
+    protected override bool ShowsTagRow => true;
+
+    /// <summary>
+    /// 칸 아래 줄의 글.
+    ///
+    /// ⚠ 표식이 있으면 <b>비운다</b> — 아이콘이 이미 그 말을 한다 (사용자 요청, 2026-09-18)
+    ///   예전에는 "숲 · 야수" 처럼 이름을 글자로 적었다. 같은 것을 글과 그림으로
+    ///   두 번 말하면 208px 칸에서 둘 다 작아지고, 글자로는 그 표식이 지금 켜져
+    ///   있는지도 알 수 없다. 지금은 아이콘이 밝기로 그것까지 말한다.
+    ///
+    /// ⚠ 표식이 없는 종족은 그대로 글이다 — 빈 줄로 두면 "아직 안 그려졌나" 로 읽힌다.
+    /// </summary>
     protected override string DescribeCell(in SummonDeckSlot slot, MonsterSpeciesData species)
     {
         if (species == null) return "";
 
-        var sb = new System.Text.StringBuilder(32);
-
         // ⚠ 정본 순서(AllTags)를 훑는다 — 비트를 직접 세면 표식이 늘 때 어긋난다
         foreach (MonsterTag tag in MonsterSynergyRule.AllTags)
-        {
-            if ((species.Tags & tag) == 0) continue;
+            if ((species.Tags & tag) != 0) return "";
 
-            if (sb.Length > 0) sb.Append(" · ");
-            sb.Append(MonsterSynergyRule.NameOf(tag));
-        }
-
-        return sb.Length > 0 ? sb.ToString() : "표식 없음";
+        return "표식 없음";
     }
 
     protected override void OnSelectionChanged()
@@ -97,7 +107,7 @@ public class AltarPopup : CardPickPopupBase
 
         // ⚠ 사라진다는 것을 못 박는다 — 되돌릴 수 없는 일이다
         //   ⚠ 한 줄이다. 두 줄로 늘리면 아래 버튼이 밀려 내려간다.
-        _actionHint.text = $"<color=#FF8080>{name}</color> 를 바친다 — 표식 하나가 남는다";
+        _actionHint.text = LocalizationManager.Instance.Format("<color=#FF8080>{0}</color> 를 바친다 — 표식 하나가 남는다", name);
 
         bool afford = RunGoldRule.Current >= RunNodeRule.AltarCost;
 

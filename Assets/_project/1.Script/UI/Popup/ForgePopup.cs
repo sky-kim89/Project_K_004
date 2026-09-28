@@ -110,7 +110,7 @@ public class ForgePopup : CardPickPopupBase
         SummonDeckSlot slot = deck.GetSlot(SelectedSlot);
 
         MonsterSpeciesData sp = CardCatalog.Current.GetMonster(slot.Id);
-        _actionHint.text = $"{(sp != null ? sp.DisplayName : slot.Id)} — 무엇을 새길까";
+        _actionHint.text = LocalizationManager.Instance.Format("{0} — 무엇을 새길까", sp != null ? sp.DisplayName : slot.Id);
 
         // ⚠ 한 카드에 각인·증식은 각각 한 번뿐이다 (파일 머리 주석)
         int  cost   = RunNodeRule.ForgeCost(StageNumber);

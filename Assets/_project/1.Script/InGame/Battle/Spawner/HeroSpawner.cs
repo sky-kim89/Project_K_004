@@ -91,6 +91,16 @@ public class HeroSpawner : MonoBehaviour
     }
 
     /// <summary>
+    /// 세우던 편성을 버린다 — 판을 닫을 때(BattleArena.Close) 부른다.
+    /// ⚠ 안 멈추면 닫은 뒤에 남은 부대가 서서 로비 뒤를 걸어 다닌다 (몬스터 배출과 같은 버그).
+    /// </summary>
+    public void Halt()
+    {
+        StopAllCoroutines();
+        IsSpawning = false;
+    }
+
+    /// <summary>
     /// 코루틴 없이 같은 프레임에 끝내는 즉시 스폰.
     /// 웨이브 시작과 동시에 편성이 서 있어야 할 때 쓴다.
     /// </summary>
@@ -272,7 +282,7 @@ public class HeroSpawner : MonoBehaviour
     /// </summary>
     void SpawnSoldierSquad(SpawnEntry entry, Transform slot)
     {
-        UnitGrade grade = UnitJobRoller.GetBirthGrade(entry.Name);
+        UnitGrade grade = UnitJobRoller.GetBirthGrade(entry.Name, entry.Level);   // 초반 등급 상한
         UnitJob   job   = UnitJobRoller.GetJob(entry.Name);
         UnitStat  stat  = GeneralStatRoller.Roll(entry.Name, entry.Level, grade);
 

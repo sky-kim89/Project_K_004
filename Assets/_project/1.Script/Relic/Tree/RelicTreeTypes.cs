@@ -70,7 +70,7 @@ public enum RelicNodeId
     N_SwarmCall         = 109,  // 무리의 부름     — 카드당 마릿수 +1 (100pt, 2026-09-12)
 
     // ── 소환수 · 종족 패시브 (왼쪽 위) ───────────────────────
-    N_FeralMemory       = 111,  // 야성의 기억     — 종족 패시브 수치 +10%
+    N_FeralMemory       = 111,  // 치유의 기억     — 재생·회복량 +10% (옛 '야성의 기억')
     N_SplitLegacy       = 112,  // 분열의 유산     — 분열·재조립체 배율 +0.07
     N_DeathToll         = 113,  // 죽음의 대가     — 사망 발동 패시브 +25%
     N_PlagueLore        = 114,  // 역병의 지혜     — 중독·화상·역병 피해 +15%
@@ -161,6 +161,25 @@ public sealed class RelicNodeDef
     public RelicSystemEffect System;        // EffectType == System (None 이면 스탯 노드)
     public float            SystemPerLevel;
 
+    /// <summary>
+    /// 화면에 띄울 이름. <b>표에서 <c>Relic.&lt;Id&gt;</c> 기호 키로 찾는다.</b>
+    ///
+    /// ⚠ <b><see cref="Name"/> 을 화면에 직접 쓰지 말 것</b> (2026-09-16) —
+    ///   노드 이름은 `절약`·`인내`·`질주`·`안목` 처럼 **짧고 흔한 낱말**이다.
+    ///   한국어 키로 표에 넣으면 <see cref="LocalizationManager.LocalizeText"/> 의
+    ///   부분 치환이 **다른 문구 속 같은 글자까지 조용히 바꾼다**
+    ///   (`인내` → "인내심", `질주` → "야성 질주"). 그래서 기호 키다.
+    ///   같은 이유로 `HeroNameRule` 도 `Hero.*` 기호 키를 쓴다.
+    ///
+    /// ⚠ 반대로 <see cref="Name"/> 은 **한국어 원문 그대로 남긴다** — 개발자 진단이 쓴다
+    ///   (`RelicTreeCatalog.Verify` 의 예외 · `RelicTreeAudit` 의 목록).
+    ///   거기까지 기호 키로 바꾸면 에러가 `'Relic.N_Claw' 의 Target 이…` 로 읽힌다.
+    ///
+    /// ⚠ 표에 줄이 없으면 <c>Get</c> 이 <b>키를 그대로 돌려준다</b> — 화면에
+    ///   `Relic.N_Claw` 가 뜨고 에러는 안 난다. 노드를 추가하면 표에도 한 줄 넣을 것.
+    /// </summary>
+    public string DisplayName => LocalizationManager.Instance.Get("Relic." + Id);
+
     /// <summary>레벨이 없는 한 방 노드 — 아이콘 테두리와 툴팁 표기가 다르다.</summary>
     public bool Special => MaxLevel == 1 && Branch != RelicBranch.Root;
 
@@ -214,7 +233,7 @@ public sealed class RelicNodeDef
 
         if (!s.Absolute) return $"{label} {sign}{total * 100f:0.#}%";
 
-        if (s.Stat == StatType.SoldierCount)  return $"{label} {sign}{Mathf.RoundToInt(total)}명";
+        if (s.Stat == StatType.SoldierCount)  return F("{0} {1}{2}명", label, sign, Mathf.RoundToInt(total));
         if (s.Stat == StatType.CommandPower)  return $"{label} {sign}{Mathf.RoundToInt(total)}";
         return $"{label} {sign}{total * 100f:0.#}%p";
     }
@@ -228,20 +247,35 @@ public sealed class RelicNodeDef
     /// </summary>
     public bool HasEffectText => !IsSystem || !string.IsNullOrEmpty(SystemLine(SystemPerLevel));
 
+    /// <summary>
+    /// 표에서 문장을 찾아 숫자를 끼워 넣는다 — 원본 표가 쓰는 <c>{0}</c> 방식.
+    ///
+    /// ⚠ <b>수치가 든 설명에 보간 문자열($"…{값}…")을 쓰지 말 것</b> (2026-09-16).
+    ///   보간은 실행 시점에 이미 숫자로 바뀌어 있어서 번역표의 키(코드에 적힌 그대로의
+    ///   문자열)와 **영원히 일치하지 않는다** — 표에는 줄이 있는데 화면에는 한국어로 남고,
+    ///   에러도 경고도 안 난다. 그렇게 죽어 있던 119줄을 한 번 걷어냈다.
+    ///
+    /// ⚠ 한글이 없는 줄(`{label} {sign}{v}%`)은 번역할 것이 없으니 그대로 둔다 —
+    ///   라벨은 이미 Get 으로 번역되어 들어온다.
+    /// </summary>
+    static string F(string key, params object[] args)
+        => LocalizationManager.Instance.Format(key, args);
+
     string SystemLine(float v) => System switch
     {
-        RelicSystemEffect.AbilityRefreshCount   => $"어빌리티 새로고침 +{Mathf.RoundToInt(v)}회",
-        RelicSystemEffect.AbilityChoiceCount    => $"어빌리티 선택지 +{Mathf.RoundToInt(v)}개",
-        RelicSystemEffect.AbilityAdvancedChance => $"고급 이상 어빌리티 확률 +{v * 100f:0.#}%p",
-        RelicSystemEffect.GoldGainBonus         => $"골드 획득량 +{v * 100f:0.#}%",
-        RelicSystemEffect.EnemyMaxHpReduction   => $"적 최대 체력 -{v * 100f:0.#}%",
-        RelicSystemEffect.EnemyAttackReduction  => $"적 공격력 -{v * 100f:0.#}%",
-        RelicSystemEffect.GeneralSlotBonus      => $"장수 배치 슬롯 +{Mathf.RoundToInt(v)}칸",
+        RelicSystemEffect.AbilityRefreshCount   => F("어빌리티 새로고침 +{0}회", Mathf.RoundToInt(v)),
+        RelicSystemEffect.AbilityChoiceCount    => F("어빌리티 선택지 +{0}개", Mathf.RoundToInt(v)),
+        RelicSystemEffect.AbilityAdvancedChance => F("고급 이상 어빌리티 확률 +{0:0.#}%p", v * 100f),
+        RelicSystemEffect.GoldGainBonus         => F("골드 획득량 +{0:0.#}%", v * 100f),
+        RelicSystemEffect.EnemyMaxHpReduction   => F("적 최대 체력 -{0:0.#}%", v * 100f),
+        RelicSystemEffect.EnemyAttackReduction  => F("적 공격력 -{0:0.#}%", v * 100f),
+        RelicSystemEffect.GeneralSlotBonus      => F("장수 배치 슬롯 +{0}칸", Mathf.RoundToInt(v)),
         // 배속 값의 정본은 TopBarUI.SpeedSteps 다. 여기에 숫자를 박으면 둘이 갈라진다.
         // ⚠ v 는 '이 노드가 주는 양'(둘 다 1)이라 노드만으로는 몇 번째 단계인지 모른다.
         //   두 번째 해금 노드(찰나의 지배)만 짚어 준다 — 아니면 둘 다 같은 배속을 말한다.
         RelicSystemEffect.BattleSpeedUnlock     =>
-            $"전투 배속 {TopBarUI.SpeedAtStep(Id == RelicNodeId.N_MomentMastery ? 2 : 1):0.##}× 해금",
+            F("전투 배속 {0:0.##}× 해금",
+              TopBarUI.SpeedAtStep(Id == RelicNodeId.N_MomentMastery ? 2 : 1)),
 
         // ── 이 게임의 효과 (2026-09-07) ───────────────────────
         //  ⚠ 여기를 빠뜨리면 노드가 **빈칸으로 뜬다.** 에러가 안 난다 —
@@ -252,38 +286,40 @@ public sealed class RelicNodeDef
         //    비율(%)·절대값·%p 가 효과마다 다르다. 눈대중으로 적지 말 것.
 
         // 소환수
-        RelicSystemEffect.SpeciesPassivePower   => $"종족 패시브 효과 +{v * 100f:0.#}%",
-        RelicSystemEffect.DerivedScaleBonus     => $"분열·재조립체 스탯 배율 +{v:0.##}",
-        RelicSystemEffect.DeathTriggerPower     => $"죽을 때 터지는 패시브 +{v * 100f:0.#}%",
-        RelicSystemEffect.GearBoxBonus          => $"여정 종료 장비 상자 +{Mathf.RoundToInt(v)}개",
-        RelicSystemEffect.GearStatBonus         => $"몬스터 장비 스탯 +{v * 100f:0.#}%",
+        // ⚠ 실제 범위를 적는다 — 한때 "종족 패시브 효과" 라 적었는데 재생 둘에만 걸려 있었다 (2026-09-16)
+        RelicSystemEffect.SpeciesPassivePower   => F("재생·회복량 +{0:0.#}%", v * 100f),
+        RelicSystemEffect.DerivedScaleBonus     => F("분열·재조립체 스탯 배율 +{0:0.##}", v),
+        RelicSystemEffect.DeathTriggerPower     => F("죽을 때 터지는 패시브 +{0:0.#}%", v * 100f),
+        RelicSystemEffect.GearBoxBonus          => F("여정 종료 장비 상자 +{0}개", Mathf.RoundToInt(v)),
+        RelicSystemEffect.GearStatBonus         => F("몬스터 장비 스탯 +{0:0.#}%", v * 100f),
 
         // 마왕성
-        RelicSystemEffect.CoreHpBonus           => $"마왕성 체력 +{Mathf.RoundToInt(v)}",
-        RelicSystemEffect.SummonerStrikeBonus   => $"소환사 평타 피해 +{v * 100f:0.#}%p (적 최대 체력 비례)",
-        RelicSystemEffect.CampHealBonus         => $"야영지 회복량 +{Mathf.RoundToInt(v)}",
-        RelicSystemEffect.EnemyMoveReduction    => $"용사 이동속도 -{v * 100f:0.#}%",
+        RelicSystemEffect.CoreHpBonus           => F("마왕성 체력 +{0}", Mathf.RoundToInt(v)),
+        RelicSystemEffect.SummonerStrikeBonus   => F("소환사 평타 피해 +{0:0.#}%p (적 최대 체력 비례)", v * 100f),
+        RelicSystemEffect.CampHealBonus         => F("야영지 회복량 +{0}", Mathf.RoundToInt(v)),
+        RelicSystemEffect.EnemyMoveReduction    => F("용사 이동속도 -{0:0.#}%", v * 100f),
 
         // 마나
-        RelicSystemEffect.ManaCapacityBonus     => $"최대 마나 +{v * 100f:0.#}%",
-        RelicSystemEffect.SummonCostCut         => $"소환 비용 -{v:0.##}",
-        RelicSystemEffect.ManaRegenBonus        => $"스테이지 마나 회복 +{v * 100f:0.#}%",
-        RelicSystemEffect.OverloadRelief        => $"과부하 증가폭 -{v * 100f:0.#}%p",
+        RelicSystemEffect.ManaCapacityBonus     => F("최대 마나 +{0:0.#}%", v * 100f),
+        RelicSystemEffect.SummonCostCut         => F("소환 비용 -{0:0.##}", v),
+        RelicSystemEffect.ManaRegenBonus        => F("스테이지 마나 회복 +{0:0.#}%", v * 100f),
+        RelicSystemEffect.OverloadRelief        => F("과부하 증가폭 -{0:0.#}%p", v * 100f),
 
         // 통솔
-        RelicSystemEffect.DrainSpeedBonus       => $"라인 배출 간격 -{v * 100f:0.#}%",
-        RelicSystemEffect.SummonCountBonus      => $"카드당 소환 마릿수 +{Mathf.RoundToInt(v)}",
-        RelicSystemEffect.CardChoiceCount       => $"카드 선택지 +{Mathf.RoundToInt(v)}장",
-        RelicSystemEffect.PerkChoiceCount       => $"특성 선택지 +{Mathf.RoundToInt(v)}개",
-        RelicSystemEffect.NewCardLevel          => $"새로 받는 카드가 {Mathf.RoundToInt(v) + 1}레벨로 들어온다",
-        RelicSystemEffect.SynergyStepCut        => $"시너지 동 문턱 -{Mathf.RoundToInt(v)}",
-        RelicSystemEffect.SynergyStackBonus     => $"시너지 중첩 보너스 +{v * 100f:0.#}%p",
-        RelicSystemEffect.ReincarnPointBonus    => $"환생 포인트 +{v * 100f:0.#}%",
-        RelicSystemEffect.ShopPriceCut          => $"상점·시설 값 -{v * 100f:0.#}%",
-        RelicSystemEffect.DotDamageBonus        => $"중독·화상·역병 피해 +{v * 100f:0.#}%",
-        RelicSystemEffect.CoreRegenPerStage     => $"스테이지를 넘길 때마다 마왕성 체력 +{Mathf.RoundToInt(v)}",
-        RelicSystemEffect.DeckSlotBonus         => $"카드 칸 +{Mathf.RoundToInt(v)} (최대 {RunPerkRule.MaxDeckSlots}칸)",
-        RelicSystemEffect.StartingPerkCount     => $"런을 시작할 때 무작위 특성 +{Mathf.RoundToInt(v)}개",
+        RelicSystemEffect.DrainSpeedBonus       => F("라인 배출 간격 -{0:0.#}%", v * 100f),
+        RelicSystemEffect.SummonCountBonus      => F("카드당 소환 마릿수 +{0}", Mathf.RoundToInt(v)),
+        RelicSystemEffect.CardChoiceCount       => F("카드 선택지 +{0}장", Mathf.RoundToInt(v)),
+        RelicSystemEffect.PerkChoiceCount       => F("특성 선택지 +{0}개", Mathf.RoundToInt(v)),
+        RelicSystemEffect.NewCardLevel          => F("새로 받는 카드가 {0}레벨로 들어온다", Mathf.RoundToInt(v) + 1),
+        RelicSystemEffect.SynergyStepCut        => F("시너지 동 문턱 -{0}", Mathf.RoundToInt(v)),
+        RelicSystemEffect.SynergyStackBonus     => F("시너지 중첩 보너스 +{0:0.#}%p", v * 100f),
+        RelicSystemEffect.ReincarnPointBonus    => F("환생 포인트 +{0:0.#}%", v * 100f),
+        RelicSystemEffect.ShopPriceCut          => F("상점·시설 값 -{0:0.#}%", v * 100f),
+        RelicSystemEffect.DotDamageBonus        => F("중독·화상·역병 피해 +{0:0.#}%", v * 100f),
+        RelicSystemEffect.CoreRegenPerStage     => F("스테이지를 넘길 때마다 마왕성 체력 +{0}", Mathf.RoundToInt(v)),
+        RelicSystemEffect.DeckSlotBonus         => F("카드 칸 +{0} (최대 {1}칸)",
+                                                     Mathf.RoundToInt(v), RunPerkRule.MaxDeckSlots),
+        RelicSystemEffect.StartingPerkCount     => F("런을 시작할 때 무작위 특성 +{0}개", Mathf.RoundToInt(v)),
 
         _                                       => string.Empty,
     };

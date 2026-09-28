@@ -100,8 +100,13 @@ namespace BattleGame.Units
                     //   ForEach 가 WithoutBurst().Run() 이라 관리형 호출이 안전하다.
                     // ⚠ 성벽을 통과해 거둬진 용사는 제외한다 (BreachedTag)
                     //   처치가 아니다. 돈까지 주면 "일부러 흘려보내기" 가 이득이 된다.
+                    // ⚠ 같은 편이 죽인 것도 제외한다 (사용자 지적, 2026-09-15 — "스테이지 시작하면 골드가 모인다")
+                    //   용사 스킬 '병사 희생' 은 제 병사를 999,999 피해로 죽이고, '자폭 병사' 는 스스로 터진다.
+                    //   용사 스킬은 쿨다운 0 으로 서므로 **스테이지가 열리자마자** 시전돼, 화면 오른쪽에서
+                    //   동전이 날아왔다. 플레이어가 잡은 것이 아니므로 골드도 '강적의 정수' 도 없다.
                     if (identity.Team == Faction.Hero &&
-                        !EntityManager.HasComponent<BreachedTag>(entity))
+                        !EntityManager.HasComponent<BreachedTag>(entity) &&
+                        !KilledByOwnSide(entity, identity.Team))
                     {
                         bool isBoss  = EntityManager.HasComponent<BossComponent>(entity);
                         bool isElite = EntityManager.HasComponent<EliteComponent>(entity);
@@ -205,6 +210,30 @@ namespace BattleGame.Units
         ///   ("내가 잡았을 때" 라고 적힌 장비가 남의 전과로 터지는 것이 더 큰 거짓말이다).
         /// </summary>
         /// <summary>마지막 일격을 넣은 공격자가 이 컴포넌트를 갖고 있는가.</summary>
+        /// <summary>
+        /// 마지막 일격을 넣은 것이 **같은 진영**인가 — 병사 희생·자폭처럼 제 편을 죽인 경우.
+        /// ⚠ 공격자가 이미 사라졌으면 false 다 — 확인할 수 없는 처치까지 골드를 빼앗지 않는다.
+        /// </summary>
+        bool KilledByOwnSide(Entity victim, TeamType victimTeam)
+        {
+            if (!EntityManager.HasBuffer<DamageResultElement>(victim)) return false;
+
+            var results = EntityManager.GetBuffer<DamageResultElement>(victim);
+            for (int i = results.Length - 1; i >= 0; i--)
+            {
+                if (!results[i].IsKill) continue;
+
+                Entity attacker = results[i].AttackerEntity;
+                return attacker != Entity.Null
+                    && attacker != victim
+                    && EntityManager.Exists(attacker)
+                    && EntityManager.HasComponent<UnitIdentityComponent>(attacker)
+                    && EntityManager.GetComponentData<UnitIdentityComponent>(attacker).Team == victimTeam;
+            }
+
+            return false;
+        }
+
         bool LastHitterHas<T>(Entity victim) where T : unmanaged, IComponentData
         {
             if (!EntityManager.HasBuffer<DamageResultElement>(victim)) return false;

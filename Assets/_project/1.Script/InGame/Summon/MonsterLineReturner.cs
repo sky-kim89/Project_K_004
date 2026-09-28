@@ -69,22 +69,20 @@ public class MonsterLineReturner : MonoBehaviour
         _species    = species;
         _returnable = returnable;
 
-        // ⚠ 시너지의 '지금 존재하는 종족' 은 여기서 센다 (2026-09-09)
-        //   모든 몬스터가 이 컴포넌트를 달고 나오므로 — 카드 소환도, 분열체도,
-        //   스킬 소환도 — 여기 한 곳이면 빠지는 경로가 없다.
+        // ⚠ 시너지의 '지금 존재하는 몬스터' 는 여기서 센다 — **카드 몬스터만** (사용자 지시, 2026-09-16)
+        //   권속·시그니처·분열체(returnable false)는 시너지를 받기만 하고 카운트에 넣지 않는다.
         //   ⚠ 반드시 짝이 맞아야 한다: 여기서 +1, OnDisable 에서 −1.
-        //     한쪽만 돌면 전멸해도 시너지가 안 꺼지거나, 살아 있는데 꺼진다.
         //   ⚠ 한 번만 센다 — Setup 은 개체 하나에 두 번 불릴 수 있다
-        //     (MonsterSpawner 가 스폰 때 한 번, 카드 소환이 자격을 올리며 한 번).
-        if (!_counted)
+        //     (MonsterSpawner 가 스폰 때 한 번, 카드 소환이 자격을 올리며 한 번 — 두 번째에서 켜질 수 있다).
+        if (returnable && !_countedCard)
         {
-            _counted = true;
-            MonsterSynergyRule.NoteAlive(species, +1);
+            _countedCard = true;
+            MonsterSynergyRule.NoteCardAlive(species, +1);
         }
     }
 
-    /// <summary>시너지 집계에 이 개체를 더해 두었는가 (짝을 맞추기 위한 표식).</summary>
-    bool _counted;
+    /// <summary>시너지 집계에 이 개체를 카드 몬스터로 더해 두었는가 (짝을 맞추기 위한 표식).</summary>
+    bool _countedCard;
 
     void OnEnable()
     {
@@ -93,8 +91,8 @@ public class MonsterLineReturner : MonoBehaviour
         //   대기열을 불리는 것보다, 조용히 사라지는 편이 안전하다.
         _lane       = 0;
         _species    = null;
-        _returnable = false;
-        _counted    = false;
+        _returnable  = false;
+        _countedCard = false;
 
         _live.Add(this);
     }
@@ -103,14 +101,17 @@ public class MonsterLineReturner : MonoBehaviour
     {
         _live.Remove(this);
 
-        if (!_counted) return;
-
-        _counted = false;
-        MonsterSynergyRule.NoteAlive(_species, -1);
+        if (_countedCard)
+        {
+            _countedCard = false;
+            MonsterSynergyRule.NoteCardAlive(_species, -1);
+        }
     }
 
     // ── 라인별 머릿수 — 특성 '소수정예'·'군세' 가 읽는다 ──────
 
+    /// <summary>지금 필드에 서 있는 몬스터 수 (카드·분열체·스킬 소환 전부).</summary>
+    public static int AliveCount => _live.Count;
     /// <summary>지금 그 라인에 서 있는 몬스터 수.</summary>
     public static int AliveInLane(int lane)
     {

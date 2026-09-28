@@ -90,7 +90,7 @@ public class BattleStatsPopup : PopupBase
         float dps = _elapsedSec > 0f ? total / _elapsedSec : 0f;
 
         if (_titleText != null) _titleText.text = "전투 통계";
-        if (_totalText != null) _totalText.text = $"총 피해  {Format(total)}  |  DPS  {Format(dps)}";
+        if (_totalText != null) _totalText.text = LocalizationManager.Instance.Format("총 피해  {0}  |  DPS  {1}", Format(total), Format(dps));
         if (_emptyText != null) _emptyText.gameObject.SetActive(_entries.Count == 0);
 
         BuildRows();

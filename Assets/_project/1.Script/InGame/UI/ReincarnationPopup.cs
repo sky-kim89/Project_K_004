@@ -13,6 +13,7 @@ using TMPro;
 //    헤더 밴드: "패  배" + 웨이브·처치(좌) / 총피해·DPS(우)
 //    "전투 기록" 섹션 → 딜·탱·힐 탭 → 장수별 StatBar 목록(VScroll)
 //    포인트 패널 (보유 › 획득 › 환생 후) / 환생 버튼
+//    오른쪽 칸 '이번 런' — 보유 특성 아이콘 격자 · 덱 카드 8칸 (2026-09-16)
 // ============================================================
 
 public class ReincarnationPopup : PopupBase
@@ -36,11 +37,43 @@ public class ReincarnationPopup : PopupBase
     [SerializeField] TextMeshProUGUI _totalPtsText;
     [SerializeField] Button          _reincarnateBtn;
 
+    // ── 이번 런 — 특성 · 덱 (사용자 요청, 2026-09-16) ─────────
+    //
+    //  ■ "무엇으로 여기까지 왔나" 를 결산에서 본다
+    //    카드와 특성은 FinishRun 에서 지워진다. 그 전에 볼 곳이 이 창뿐인데
+    //    전투 기록(딜·탱·힐)만 있어, 어떤 빌드였는지 되짚을 수가 없었다.
+    //  ⚠ 특성 목록은 RunPerkBarUI.Collect 가 정본이다 — HUD 줄과 같은 것을 같은 순서로 세운다.
+    //  ⚠ 덱 칸을 누르면 몬스터 상세(런 값 모드)가 열린다 — 전황 창과 같은 규칙. 여기서 다시 그리지 않는다.
+
+    [Serializable]
+    public class DeckCell
+    {
+        public GameObject      Root;
+        public Button          Button;
+        public Image           Portrait;
+        public TextMeshProUGUI NameText;
+        public TextMeshProUGUI LevelText;
+        public TextMeshProUGUI GradeText;
+    }
+
+    [Header("이번 런 — 특성")]
+    [SerializeField] Transform   _perkArea;       // 격자 content
+    [SerializeField] TraitIconUI _perkTemplate;   // 비활성 — 런타임에 복제한다 (칸 수가 런마다 다르다)
+    [SerializeField] GameObject  _perkEmpty;      // "주운 특성이 없다"
+    [Tooltip("제단 표식 그림. ⚠ MonsterSynergyRule.AllTags 순서 (Creator 가 채운다).")]
+    [SerializeField] Sprite[]    _synergyIcons;
+
+    [Header("이번 런 — 덱")]
+    [SerializeField] DeckCell[]  _deckCells;
+
     int           _earnPoints;
     CombatStatTab _currentTab = CombatStatTab.Damage;
     Action        _onReincarnated;
     BattleContext _context;
-    readonly List<GeneralStatRowUI> _generalRows = new();
+    readonly List<GeneralStatRowUI>     _generalRows = new();
+    readonly List<TraitIconUI>          _perkIcons   = new();
+    readonly List<RunPerkBarUI.Entry>   _perkEntries = new();
+    readonly List<SummonDeckSlot>       _deck        = new();
 
     // 색은 ReincarnationPopupCreator 의 팔레트와 맞춰 둔다.
     static readonly Color TabActiveColor = new Color(0.42f, 0.62f, 1.00f);
@@ -85,8 +118,10 @@ public class ReincarnationPopup : PopupBase
         //   갈리므로(스테이지 기반) 같은 줄에 있어야 납득이 된다.
         int stage = context?.StageNumber ?? 0;
         _subText.text = stage > 0
-            ? $"도달 스테이지 {stage}  ·  웨이브 {currentWave} / {totalWaves}  ·  처치 {killCount}명"
-            : $"웨이브 {currentWave} / {totalWaves}  ·  처치 {killCount}명";
+            ? LocalizationManager.Instance.Format("도달 스테이지 {0}  ·  웨이브 {1} / {2}  ·  처치 {3}명",
+                                                   stage, currentWave, totalWaves, killCount)
+            : LocalizationManager.Instance.Format("웨이브 {0} / {1}  ·  처치 {2}명",
+                                                   currentWave, totalWaves, killCount);
 
         float totalDmg = 0f;
         if (context?.CombatStats != null && context.CombatStats.Count > 0)
@@ -95,10 +130,14 @@ public class ReincarnationPopup : PopupBase
             foreach (var e in BattleStatsTracker.Instance.GetAllEntries()) totalDmg += e.TotalDamageDealt;
 
         float dps = elapsedSec > 0f ? totalDmg / elapsedSec : 0f;
-        _statsText.text = $"총 피해  {FormatNum(totalDmg)}  |  DPS  {FormatNum(dps)}";
+        _statsText.text = LocalizationManager.Instance.Format("총 피해  {0}  |  DPS  {1}",
+                                                              FormatNum(totalDmg), FormatNum(dps));
 
         BuildGeneralRows(context);
         RefreshTabHighlight();
+
+        BuildPerks();
+        BuildDeck();
 
         var reincarData = UserDataManager.Instance?.Get<ReincarnationData>();
         var progress    = UserDataManager.Instance?.Get<StageProgressData>();
@@ -107,9 +146,9 @@ public class ReincarnationPopup : PopupBase
         _earnPoints     = ReincarnationData.PreviewPoints(cleared);
         int current     = reincarData?.ReincarnationPoints ?? 0;
 
-        _currentPtsText.text = $"보유  {current} pt";
+        _currentPtsText.text = LocalizationManager.Instance.Format("보유  {0} pt", current);
         _earnPtsText.text    = $"+{_earnPoints} pt";
-        _totalPtsText.text   = $"환생 후  {current + _earnPoints} pt";
+        _totalPtsText.text   = LocalizationManager.Instance.Format("환생 후  {0} pt", current + _earnPoints);
     }
 
     // ── 장수 행 ───────────────────────────────────────────────
@@ -145,6 +184,78 @@ public class ReincarnationPopup : PopupBase
             row.RefreshTab(_currentTab, maxValue);
             _generalRows.Add(row);
         }
+    }
+
+    // ── 이번 런 — 특성 ────────────────────────────────────────
+
+    void BuildPerks()
+    {
+        foreach (var icon in _perkIcons) Destroy(icon.gameObject);
+        _perkIcons.Clear();
+
+        _perkEntries.Clear();
+        RunPerkBarUI.Collect(_perkEntries, UserDataManager.Instance.Get<RunPerkData>(), _synergyIcons);
+
+        foreach (RunPerkBarUI.Entry e in _perkEntries)
+        {
+            TraitIconUI icon = Instantiate(_perkTemplate, _perkArea);
+            icon.gameObject.SetActive(true);
+            icon.SetupCustom(e.Icon, e.Title, e.Desc);
+            _perkIcons.Add(icon);
+        }
+
+        _perkEmpty.SetActive(_perkEntries.Count == 0);
+    }
+
+    // ── 이번 런 — 덱 ──────────────────────────────────────────
+
+    void BuildDeck()
+    {
+        _deck.Clear();
+
+        var deck = UserDataManager.Instance.Get<SummonDeckData>();
+        for (int i = 0; i < deck.SlotCount; i++)
+        {
+            SummonDeckSlot slot = deck.GetSlot(i);
+            if (slot.IsEmpty || slot.Kind != SummonKind.Monster) continue;
+            _deck.Add(slot);
+        }
+
+        var codex   = UserDataManager.Instance.Get<MonsterCodexData>();
+        var catalog = CardCatalog.Current;
+
+        for (int i = 0; i < _deckCells.Length; i++)
+        {
+            DeckCell cell = _deckCells[i];
+            bool     has  = i < _deck.Count;
+            cell.Root.SetActive(has);
+            if (!has) continue;
+
+            SummonDeckSlot     slot = _deck[i];
+            MonsterSpeciesData sp   = catalog.GetMonster(slot.Id);
+
+            cell.Portrait.sprite  = MonsterPortraitProvider.Get(sp);
+            cell.Portrait.enabled = cell.Portrait.sprite != null;
+            cell.NameText.text    = sp.DisplayName;
+
+            UnitGrade g = codex.IsUnlocked(sp.Id) ? codex.GetGrade(sp.Id) : UnitGrade.Normal;
+            cell.LevelText.text  = $"Lv {slot.Level}";
+            cell.GradeText.text  = LocalizationManager.Instance.Get(g.ToString());
+            cell.GradeText.color = GradeStyle.GetColor(g);   // 도감·전황과 같은 등급색
+
+            int captured = i;
+            cell.Button.onClick.RemoveAllListeners();
+            cell.Button.onClick.AddListener(() => ShowDeckDetail(captured));
+        }
+    }
+
+    /// <summary>덱 칸 → 몬스터 상세(런 값 모드). 전황 창(BattleInfoPopup)과 같은 창을 연다.</summary>
+    void ShowDeckDetail(int index)
+    {
+        SummonDeckSlot     slot = _deck[index];
+        MonsterSpeciesData sp   = CardCatalog.Current.GetMonster(slot.Id);
+
+        PopupManager.Instance.Open<MonsterDetailPopup>(PopupType.MonsterDetail).SetupRun(sp, slot);
     }
 
     // ── 탭 전환 ──────────────────────────────────────────────

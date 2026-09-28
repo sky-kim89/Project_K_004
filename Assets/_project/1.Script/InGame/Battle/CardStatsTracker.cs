@@ -249,9 +249,12 @@ public class CardStatsTracker : SingletonPure<CardStatsTracker>
                 row.GeneralName = data != null ? data.DisplayName : "소환사";
 
                 // 몬스터 모습의 소환사(슬라임 킹)는 그 종족의 초상화 — 시드 합성은 인간형 전용이다.
+                //   ⚠ 표식도 함께 넘긴다 — 안 넘기면 왕관 없는 맨 슬라임이 된다
+                //     (종족 슬라임의 Mark 는 None 이다). 전장에는 왕관이 있으므로 어긋난다.
                 if (data != null && data.AppearanceSpecies != null)
                 {
-                    row.Portrait = MonsterPortraitProvider.Get(data.AppearanceSpecies);
+                    row.Portrait = MonsterPortraitProvider.Get(data.AppearanceSpecies,
+                                                               data.AppearanceMark);
                 }
                 else if (data != null)
                 {

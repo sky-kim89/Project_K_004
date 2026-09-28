@@ -65,6 +65,16 @@ public static class CardPickPopupCreator
     const float ActionBtnW = 560f;
     const float ActionBtnH = 116f;
 
+    // ── 칸 아래 줄의 시너지 표식 (제단) ──
+    //
+    //  ⚠ 배지·글과 **같은 자리**를 쓴다 — 셋 중 하나만 켜진다 (CardPickPopupBase).
+    //  ⚠ 폭 검산: 3 × 38 + 2 × 10 = 134 ≤ 200 − 16 = 184 ✔
+    //    (칸 208 − 본체 여백 4×2 = 200). 아이콘을 키우면 이 식부터 다시 볼 것.
+    //  ⚠ 아이콘은 글자보다 커야 한다 (UI 규칙 7) — 도감 칸이 32 이고 여기는 38 이다.
+    //    RowSm(43) 안에 들어가므로 줄 높이는 그대로다.
+    const float TagIcon = 38f;
+    const float TagGap  = 10f;
+
     static readonly Color PanelBg  = new Color(0.075f, 0.082f, 0.135f, 0.99f);
     static readonly Color CellBg   = new Color(0.115f, 0.125f, 0.20f, 1f);
     static readonly Color ActionBg = new Color(0.055f, 0.062f, 0.105f, 1f);
@@ -80,6 +90,7 @@ public static class CardPickPopupCreator
         if (!RunNodeArtAssets.TryLoad(Tag, out Sprite[] nodeArt))                  return;
         if (!UIIconAssets.TryLoad(Tag, out Sprite manaIcon, out Sprite countIcon)) return;
         if (!UIIconAssets.TryLoadGold(Tag, out Sprite goldIcon))                   return;
+        if (!SynergyIconAssets.TryLoad(Tag, out Sprite[] synergyIcons))            return;
 
         GameObject root = MakeShell("ForgePopup", goldIcon,
                                     out GameObject panel, out Image art,
@@ -104,7 +115,7 @@ public static class CardPickPopupCreator
                                     out var brdCostRoot, out var brdCost);
 
         var so = new SerializedObject(ui);
-        WriteCommon(so, PopupType.Forge, art, title, flavor, purse, closeBtn, cells, nodeArt);
+        WriteCommon(so, PopupType.Forge, art, title, flavor, purse, closeBtn, cells, nodeArt, synergyIcons);
 
         EditorUIBuilder.SetObj(so, "_actionRoot",      bar,         Tag);
         EditorUIBuilder.SetObj(so, "_actionHint",      hint,        Tag);
@@ -135,6 +146,7 @@ public static class CardPickPopupCreator
         if (!RunNodeArtAssets.TryLoad(Tag, out Sprite[] nodeArt))                  return;
         if (!UIIconAssets.TryLoad(Tag, out Sprite manaIcon, out Sprite countIcon)) return;
         if (!UIIconAssets.TryLoadGold(Tag, out Sprite goldIcon))                   return;
+        if (!SynergyIconAssets.TryLoad(Tag, out Sprite[] synergyIcons))            return;
 
         GameObject root = MakeShell("AltarPopup", goldIcon,
                                     out GameObject panel, out Image art,
@@ -154,7 +166,7 @@ public static class CardPickPopupCreator
                                         out var sacCostRoot, out var sacCost);
 
         var so = new SerializedObject(ui);
-        WriteCommon(so, PopupType.Altar, art, title, flavor, purse, closeBtn, cells, nodeArt);
+        WriteCommon(so, PopupType.Altar, art, title, flavor, purse, closeBtn, cells, nodeArt, synergyIcons);
 
         EditorUIBuilder.SetObj(so, "_actionRoot",        bar,         Tag);
         EditorUIBuilder.SetObj(so, "_actionHint",        hint,        Tag);
@@ -297,6 +309,12 @@ public static class CardPickPopupCreator
                                                     out TextMeshProUGUI countValue);
         PlaceBadge(countBadge, -y - 1f, 46f);
 
+        // 시너지 표식 — 같은 줄의 세 번째 입주자 (제단만 켠다)
+        GameObject tagRow = BuildTagRow(body, -y,
+                                        out GameObject[] tagRoots,
+                                        out Image[] tagIcons,
+                                        out SynergyChipUI[] tagChips);
+
         slot.SetActive(false);
 
         return new CardPickPopupBase.CardCell
@@ -312,7 +330,78 @@ public static class CardPickPopupCreator
             ManaValue  = manaValue,
             CountBadge = countBadge,
             CountValue = countValue,
+            TagRow     = tagRow,
+            TagRoots   = tagRoots,
+            TagIcons   = tagIcons,
+            TagChips   = tagChips,
         };
+    }
+
+    /// <summary>
+    /// 칸 아래 줄의 시너지 표식 — 최대 셋 (CardPickPopupBase.TagSlots).
+    ///
+    /// ⚠ 그림을 꽂는 것은 런타임이다 (표식이 종족마다 다르다)
+    ///   여기서는 빈 칸만 굽고 전부 꺼 둔다 — 켜 둔 채로 구우면 흰 사각형이 셋 보인다.
+    ///
+    /// ⚠ 칩은 칸 버튼 **안**에 선다 — 칩을 직접 누르면 카드가 골라지지 않는다
+    ///   카드 3택(RunPopupCreator.BuildSynergyChip)이 이미 같은 모양이다. 칩이
+    ///   클릭을 먹는 대신 툴팁을 여는 것이 그쪽에서 정해 둔 규칙이라 여기서도 같게 둔다.
+    ///   PC 는 올리기만 해도 뜨므로(TooltipInput.HoverMode) 고르는 데 방해가 없다.
+    /// </summary>
+    static GameObject BuildTagRow(GameObject body, float yFromTop,
+                                  out GameObject[] roots, out Image[] icons,
+                                  out SynergyChipUI[] chips)
+    {
+        VerifyTagRow();
+
+        var row = EditorUIBuilder.Go("TagRow", body);
+        {
+            var rt = row.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0f, 1f); rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot     = new Vector2(0.5f, 1f);
+            rt.anchoredPosition = new Vector2(0f, yFromTop);
+            rt.sizeDelta        = new Vector2(-12f, UIScale.RowSm);
+        }
+
+        var hlg = row.AddComponent<HorizontalLayoutGroup>();
+        hlg.spacing               = TagGap;
+        hlg.childAlignment        = TextAnchor.MiddleCenter;
+        hlg.childControlWidth     = true;  hlg.childControlHeight     = true;
+        hlg.childForceExpandWidth = false; hlg.childForceExpandHeight = false;
+
+        roots = new GameObject[CardPickPopupBase.TagSlots];
+        icons = new Image[CardPickPopupBase.TagSlots];
+        chips = new SynergyChipUI[CardPickPopupBase.TagSlots];
+
+        for (int i = 0; i < CardPickPopupBase.TagSlots; i++)
+        {
+            var chip = EditorUIBuilder.Go($"Tag_{i + 1}", row);
+            EditorUIBuilder.LE(chip, TagIcon, TagIcon);
+
+            // ⚠ 클릭·호버를 받을 면이 필요하다 — 빈 오브젝트는 레이캐스트를 못 받는다
+            //   카드 면이 그대로 비쳐야 하므로 거의 투명한 색만 깐다
+            //   (카드 3택의 시너지 칩이 쓰는 것과 같은 수법).
+            var hit = EditorUIBuilder.Img(chip, "Hit", new Color(0f, 0f, 0f, 0.001f));
+            EditorUIBuilder.Stretch(hit.gameObject);
+            hit.raycastTarget = true;
+
+            Image icon = EditorUIBuilder.Img(chip, "Icon", Color.white);
+            icon.preserveAspect = true;
+            icon.raycastTarget  = false;
+            EditorUIBuilder.Stretch(icon.gameObject);
+
+            // ⚠ 툴팁 본체는 여기서 만들지 않는다 — TooltipLayer 의 한 장을 함께 쓴다
+            //   칩 자식으로 두면 카드 면·어둠 판 밑으로 깔린다 (SynergyChipUI 주석).
+            chips[i] = chip.AddComponent<SynergyChipUI>();
+
+            chip.SetActive(false);
+
+            roots[i] = chip;
+            icons[i] = icon;
+        }
+
+        row.SetActive(false);
+        return row;
     }
 
     /// <summary>칸 안의 배지 자리 — 가운데를 기준으로 좌우로 벌린다.</summary>
@@ -440,7 +529,7 @@ public static class CardPickPopupCreator
                             Image art, TextMeshProUGUI title, TextMeshProUGUI flavor,
                             TextMeshProUGUI purse,
                             Button closeBtn, CardPickPopupBase.CardCell[] cells,
-                            Sprite[] nodeArt)
+                            Sprite[] nodeArt, Sprite[] synergyIcons)
     {
         EditorUIBuilder.SetEnum(so, "_popupType", (int)type, Tag);
         EditorUIBuilder.SetObj(so, "_art",        art,       Tag);
@@ -451,6 +540,11 @@ public static class CardPickPopupCreator
 
         // ⚠ RunNodeRule.AllKinds 순서 그대로 — 런타임이 그 인덱스로 그림을 찾는다
         EditorUIBuilder.SetObjArray(so, "_nodeArt", nodeArt, Tag);
+
+        // ⚠ MonsterSynergyRule.AllTags 순서 그대로 — 런타임이 그 인덱스로 그림을 찾는다
+        //   ⚠ 강화소도 함께 받는다. 그 화면은 표식 줄을 끄지만(ShowsTagRow),
+        //     칸 굽기가 공유라 배열만 비워 두면 "제단만 되는" 갈림이 생긴다.
+        EditorUIBuilder.SetObjArray(so, "_synergyIcons", synergyIcons, Tag);
 
         SerializedProperty arr = so.FindProperty("_cells");
         arr.arraySize = cells.Length;
@@ -468,7 +562,46 @@ public static class CardPickPopupCreator
             e.FindPropertyRelative("ManaValue") .objectReferenceValue = cells[i].ManaValue;
             e.FindPropertyRelative("CountBadge").objectReferenceValue = cells[i].CountBadge;
             e.FindPropertyRelative("CountValue").objectReferenceValue = cells[i].CountValue;
+            e.FindPropertyRelative("TagRow")    .objectReferenceValue = cells[i].TagRow;
+
+            SetRefArray(e, "TagRoots", cells[i].TagRoots);
+            SetRefArray(e, "TagIcons", cells[i].TagIcons);
+            SetRefArray(e, "TagChips", cells[i].TagChips);
         }
+    }
+
+    /// <summary>
+    /// 표식 줄이 칸 안에 들어가는가 — 굽는 순간 잰다.
+    ///
+    /// ⚠ 조용한 실패를 시끄러운 실패로 바꾼 것이다
+    ///   HorizontalLayoutGroup 은 넘쳐도 에러를 내지 않고 아이콘을 칸 밖으로 밀어낸다.
+    ///   이웃 카드 위에 얹혀 "왜 여기 표식이 둘이지" 로만 보인다.
+    /// </summary>
+    static void VerifyTagRow()
+    {
+        const float Inner = CellW - 8f;   // 본체 여백 4×2
+        const float Side  = 12f;          // Row 가 좌우로 물리는 폭 (sizeDelta −12)
+
+        float need = CardPickPopupBase.TagSlots * TagIcon
+                   + (CardPickPopupBase.TagSlots - 1) * TagGap;
+
+        if (need > Inner - Side)
+            Debug.LogError($"[{Tag}] 표식 줄이 칸을 넘친다 — 필요 {need}, 자리 {Inner - Side}. " +
+                           "TagIcon·TagGap 이나 CellW 를 다시 볼 것.");
+
+        if (TagIcon > UIScale.RowSm)
+            Debug.LogError($"[{Tag}] 표식 아이콘({TagIcon})이 줄 높이(RowSm {UIScale.RowSm})보다 크다 — " +
+                           "아래 줄이 카드 밖으로 밀린다.");
+    }
+
+    /// <summary>요소 안에 든 배열 하나를 채운다 (CardCell.TagRoots 처럼).</summary>
+    static void SetRefArray(SerializedProperty element, string field, System.Array values)
+    {
+        SerializedProperty arr = element.FindPropertyRelative(field);
+        arr.arraySize = values.Length;
+
+        for (int i = 0; i < values.Length; i++)
+            arr.GetArrayElementAtIndex(i).objectReferenceValue = (Object)values.GetValue(i);
     }
 
     static void Save(GameObject root, string fileName)

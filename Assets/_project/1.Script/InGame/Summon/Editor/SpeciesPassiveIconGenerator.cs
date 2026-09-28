@@ -213,6 +213,14 @@ public static class SpeciesPassiveIconGenerator
         // ── 마나 패시브 (2026-09-12) — 시너지 조합(Spiral+Lime 등)을 피한다 ──
         E(SpeciesPassive.ManaResonance, IconArt.Glyph.Spiral, Violet, IconArt.Bg.Halo,  IconArt.Badge.Up),
         E(SpeciesPassive.ManaRelease,   IconArt.Glyph.Drop,   Sky,    IconArt.Bg.Burst, IconArt.Badge.Plus),
+
+        // ── 2차 업그레이드 (2026-09-15) ──
+        //  ⚠ 분열(Arrows + Lime + Split)과 **갈리게** 잡았다 — 왕관 글리프에 금색이다.
+        //    같은 Arrows 를 쓰면 왕의 분열이 그냥 분열로 읽혀, 12마리라는 것이
+        //    아이콘에서 안 드러난다.
+        E(SpeciesPassive.KingSplit,     IconArt.Glyph.Crown,  Gold,   IconArt.Bg.Split, IconArt.Badge.Plus),
+        // 휩쓸기 — 넓게 베는 것이라 부채꼴(Diagonal) 바탕에 화살표다.
+        E(SpeciesPassive.Cleave,        IconArt.Glyph.Arrows, Orange, IconArt.Bg.Diagonal, IconArt.Badge.Star),
     };
 
     /// <summary>단계 패시브 한 장 — 계열은 글리프·색, 단계(1~3)는 배경·뱃지가 가른다.</summary>

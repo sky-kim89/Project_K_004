@@ -164,7 +164,7 @@ public static class StatDisplayHelper
                 ? $"{EffectiveDefensePct(value):F1}%"
                 : $"{sign}{value * 100f:F1}%",
             StatType.AttackSpeed => isFinal
-                ? $"{value:F2}/초"
+                ? LocalizationManager.Instance.Format("{0:F2}/초", value)
                 : $"{sign}{value:F2}",
             StatType.MoveSpeed    => $"{sign}{value:F1}",
             // ⚠ 소수 둘째 자리까지 — F1 이면 근접 직업의 증감이 안 보인다
@@ -172,7 +172,7 @@ public static class StatDisplayHelper
             //   분해 줄에 "+0.0" 이 뜨고 합계도 그대로라, 옵션이 안 붙은 것처럼 보였다.
             //   (궁수 7.7 에서는 F1 로도 보이지만 표기는 한 가지여야 한다)
             StatType.AttackRange  => $"{sign}{value:F2}",
-            StatType.SoldierCount => $"{sign}{Mathf.RoundToInt(value)}명",
+            StatType.SoldierCount => LocalizationManager.Instance.Format("{0}{1}명", sign, Mathf.RoundToInt(value)),
             StatType.CritChance   => $"{sign}{value * 100f:F1}%",
             // 치명피해는 배수(1.8)로 저장되지만 화면에는 % 로 뿌린다 — 180.0%.
             // ⚠ 증감분(isFinal=false)도 같은 규칙이다
@@ -195,7 +195,7 @@ public static class StatDisplayHelper
         float maxCDR = GameplayConfig.CooldownCap;
         if (cdr <= maxCDR + 0.001f)
             return $"{cdr * 100f:F1}%";
-        return $"{maxCDR * 100f:F1}% <size=80%><color=#888888>(상한)</color></size>";
+        return LocalizationManager.Instance.Format("{0:F1}% <size=80%><color=#888888>(상한)</color></size>", maxCDR * 100f);
     }
 
     /// <summary>
@@ -220,8 +220,11 @@ public static class StatDisplayHelper
             float final    = Mathf.Min(combined, maxCDR);
 
             if (Mathf.Abs(sum - final) > 0.001f)
-                sb.Append($"\n<color=#AAAAAA>→ 중첩 적용 {final * 100f:F1}%" +
-                          (combined > maxCDR + 0.001f ? " (상한)" : "") + "</color>");
+                sb.Append("\n<color=#AAAAAA>")
+                  .Append(combined > maxCDR + 0.001f
+                          ? LocalizationManager.Instance.Format("→ 중첩 적용 {0:F1}% (상한)", final * 100f)
+                          : LocalizationManager.Instance.Format("→ 중첩 적용 {0:F1}%", final * 100f))
+                  .Append("</color>");
         }
         else if (stat == StatType.Defense)
         {
@@ -229,7 +232,9 @@ public static class StatDisplayHelper
             float effective = StatDisplayHelper.EffectiveDefensePct(rawTotal);
             float rawPct    = rawTotal * 100f;
             if (Mathf.Abs(rawPct - effective) > 0.1f)
-                sb.Append($"\n<color=#AAAAAA>→ 체감 {effective:F1}%</color>");
+                sb.Append("\n<color=#AAAAAA>")
+              .Append(LocalizationManager.Instance.Format("→ 체감 {0:F1}%", effective))
+              .Append("</color>");
         }
 
         return sb.ToString();

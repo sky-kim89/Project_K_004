@@ -107,7 +107,7 @@ public static class MonsterSpawner
         // 살아남으면 이 라인 대기열로 돌아가 다음 판에 다시 나온다.
         //   ⚠ Spawn 안에서 이미 Setup(returnable: false) 이 돌았다 — 여기서
         //     자격만 올린다. 두 번 불러도 시너지 집계는 어긋나지 않는다
-        //     (NoteAlive 는 Setup 안에서 _counted 로 짝을 맞춘다).
+        //     (NoteCardAlive 는 Setup 안에서 _countedCard 로 짝을 맞춘다).
         go.GetComponent<MonsterLineReturner>().Setup(lane, species, returnable: true);
 
         // 이 개체가 죽으면 분열·부활이 여기 담긴 것을 그대로 물려받는다.
@@ -139,11 +139,12 @@ public static class MonsterSpawner
     ///   횟수 제한이 이미 물량의 상한이라 카드보다 더 낼 수도 없다.
     /// </param>
     public static GameObject SpawnFree(MonsterSpeciesData species, SummonerData summoner,
-                                       Vector3 at, int generation = 1)
+                                       Vector3 at, int generation = 1, float statMult = 1f)
         // ⚠ 외형 시드는 물려받지 않는다 — 죽은 개체가 일어난 것이 아니라 새로 부른 것이다.
         //   대신 **덱에 그 종족이 있으면 그 카드로 낸다** (아래 DeckCardFor).
+        // statMult — 공·체만 곱한다. 크기는 그대로다 (시너지 왕권의 권속 강화).
         => SpawnDerived(species, summoner, at, powerScale: 1f, generation: generation,
-                        origin: DeckCardFor(species));
+                        origin: DeckCardFor(species), statMult: statMult);
 
     /// <summary>
     /// 덱에 그 종족의 카드가 있으면 그것으로, 없으면 빈 카드(Lv1)로 낸다.
@@ -196,12 +197,12 @@ public static class MonsterSpawner
     public static GameObject SpawnDerived(MonsterSpeciesData species, SummonerData summoner,
                                           Vector3 at, float powerScale, int generation,
                                           in MonsterOrigin origin,
-                                          bool scaleHpOnly = false)
+                                          bool scaleHpOnly = false, float statMult = 1f)
     {
         GameObject go = Spawn(species, summoner, at, origin.CardLevel, origin.Card,
                               powerScale: powerScale, generation: generation,
                               scaleHpOnly: scaleHpOnly,
-                              seedName: origin.SeedName);
+                              seedName: origin.SeedName, statMult: statMult);
         if (go == null) return null;
 
         // ⚠ 파생 개체는 대기열로 돌아가지 않는다 (사용자 확정, 2026-08-28)
@@ -231,7 +232,8 @@ public static class MonsterSpawner
     static GameObject Spawn(MonsterSpeciesData species, SummonerData summoner, Vector3 at,
                             int cardLevel, in SummonDeckSlot card,
                             float powerScale, int generation, bool scaleHpOnly = false,
-                            int lane = -1, string seedName = null, float drainMult = 1f)
+                            int lane = -1, string seedName = null, float drainMult = 1f,
+                            float statMult = 1f)
     {
         if (!string.IsNullOrEmpty(species.SummonCircleEffectKey))
             SkillEffectHelper.Spawn(species.SummonCircleEffectKey, at, 1f);
@@ -261,6 +263,9 @@ public static class MonsterSpawner
                                                       card.InheritBonus, drainMult);
 
         if (!Mathf.Approximately(powerScale, 1f)) ScalePower(stat, powerScale, scaleHpOnly);
+
+        // 공·체만 — 겉모습(visualScale)은 powerScale 만 본다
+        if (!Mathf.Approximately(statMult, 1f)) ScalePower(stat, statMult, false);
 
         // ── 겉모습 배율은 스탯 배율과 갈린다 (사용자 확정, 2026-09-07) ──
         //   ⚠ 부활은 작아지지 않는다
@@ -489,5 +494,20 @@ public static class MonsterSpawner
 
         watcher.Arm(summoner, species, isCardSummoned, generation,
                     new MonsterOrigin(cardLevel, card, seedName));
+
+        // ── 파생 개체는 권속을 부르지 않는다 (2026-09-15) ──
+        //
+        //  ⚠ 여기가 세대를 아는 유일한 자리다
+        //    권속 소환 슬롯은 InitializeWithStat 안에서 채워지는데, 그때는 이 개체가
+        //    몇 세대인지 아직 아무도 모른다 (세대는 Arm 이 받는다). 그래서 채운 뒤
+        //    여기서 거둔다.
+        //
+        //  ⚠ 왜 막나 — 분열체는 왕이 아니다
+        //    슬라임 킹은 계보에서 분열(SplitOnDeath)을 물려받아 죽을 때 **반쪽 왕 둘**을
+        //    남긴다. 그 둘이 권속 소환 슬롯을 그대로 들고 있으면 왕이 죽을 때마다
+        //    소환기가 둘로 늘어난다. 세대 제한(MaxReproduceGeneration)은 사망 증식만
+        //    막을 뿐 **스킬은 세대를 보지 않는다**.
+        if (generation >= 1)
+            go.GetComponent<MonsterRuntimeBridge>().ClearBroodSlot();
     }
 }

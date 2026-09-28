@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3293ffc88440014396a89c49aab65b7, type: 3}
+  m_Name: Monster_corpse_lord
+  m_EditorClassIdentifier: 
+  Id: corpse_lord
+  DisplayName: "\uC2DC\uCCB4 \uAD70\uC8FC"
+  BodyType: 0
+  Race: 6
+  NonHumanoidLibrary: {fileID: 0}
+  BodyTint: {r: 0.7294118, g: 0.6666667, b: 0.78431374, a: 1}
+  BodyScale: 1.35
+  BodyStretch: {x: 1, y: 1}
+  Mark: 0
+  PoolKey: Monster
+  LineageIcon: {fileID: 21300000, guid: c27eb661a2ec44d43b7b91de10dabc49, type: 3}
+  ManaCost: 14
+  SummonCount: 1
+  AttackKind: 0
+  Projectile: 0
+  ProjectileSpeed: 0
+  Traits: 38
+  Tags: 4168
+  Description: "\uC369\uC740 \uC0B4\uB85C \uC313\uC544 \uC62C\uB9B0 \uBCBD. \uC801\uC5D0\uAC8C
+    \uB099\uC778\uC744 \uCC0D\uACE0 \uD55C\uAEBC\uBC88\uC5D0 \uCC98\uD615\uD55C\uB2E4.\n\uD130\uC9C8
+    \uB54C \uD37C\uC9C0\uB294 \uC5ED\uBCD1\uC774 \uD310\uC744 \uB36E\uB294\uB2E4."
+  MaxHp: 3843
+  Attack: 94
+  AttackRange: 1.6
+  AttackSpeed: 0.65
+  MoveSpeed: 1.5
+  Defense: 0.14
+  CritChance: 0.05
+  CritDamage: 1.5
+  SummonPowerToHp: 5.76
+  SummonPowerToAttack: 1.64
+  UpgradeOf: {fileID: 11400000, guid: b9e7a55fd618a424a93b28d4b64e2ffb, type: 2}
+  AlsoUpgradeOf:
+  - {fileID: 11400000, guid: b4c170ad34a85414b8b7a5c84ce148f1, type: 2}
+  SpeciesTrait: 103
+  ExtraTraits: 
+  BlockedInherit: 
+  ActiveSkill: 26
+  Passives: 
+  BroodSpecies: {fileID: 11400000, guid: b828576fbc378234499d743bf81bfa6b, type: 2}
+  BroodCount: 3
+  BroodCooldown: 14
+  LevelBonuses:
+  - Label: "\uC2DC\uCCB4 \uB354\uBBF8"
+    Stat1: 0
+    Value1: 0.18
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 0
+  - Label: "\uC369\uC740 \uAC11\uC8FC"
+    Stat1: 1
+    Value1: 0.07
+    HasStat2: 1
+    Stat2: 0
+    Value2: 0.12
+    Passive: 0
+  - Label: "\uC5ED\uBCD1\uC758 \uB099\uC778"
+    Stat1: 2
+    Value1: 0.15
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 19
+  - Label: "\uB9CC\uC778\uC758 \uBB34\uB364"
+    Stat1: 0
+    Value1: 0.2
+    HasStat2: 1
+    Stat2: 2
+    Value2: 0.15
+    Passive: 0
+  SignaturePassive: 17
+  SummonDelay: 0.1
+  SummonCircleEffectKey: FX_Summon_Circle

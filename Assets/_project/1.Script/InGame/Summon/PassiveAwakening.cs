@@ -246,12 +246,26 @@ public static class PassiveResolver
             into.Add(new ResolvedPassive(awakened, _origins[i], _order[i]));
         }
 
-        // 나머지 — 각성으로 바뀐 것은 빠진다 (원래 것이 사라지고 각성판이 선다)
+        // 나머지 — 각성판이 서면 원래 것은 빠진다
         for (int i = 0; i < _order.Count; i++)
         {
-            bool awakened = _counts[i] >= 2 &&
-                            PassiveAwakening.AwakenedOf(_order[i]) != SpeciesPassive.None;
-            if (awakened) continue;
+            SpeciesPassive up = PassiveAwakening.AwakenedOf(_order[i]);
+
+            // ① 같은 것이 둘 모여 각성한 경우 — 위 루프가 이미 각성판을 세웠다
+            if (up != SpeciesPassive.None && _counts[i] >= 2) continue;
+
+            // ② 각성판을 **직접** 들고 있는 경우 (2차 업그레이드가 그렇다, 2026-09-15)
+            //
+            //  ⚠ 이 줄이 없으면 2차가 원본과 각성판을 **둘 다** 발동한다
+            //    2차는 제 뿌리 패시브의 각성판을 갖는다 — 본 로드 = 불사(재조립 ×2).
+            //    그런데 '재조립' 은 계보를 타고 스켈레톤에서 저절로 상속된다
+            //    (CollectSpeciesPassives). 둘이 나란히 서면 죽을 때 40% 로 한 번,
+            //    100% 로 또 한 번 — 한 마리가 둘로 일어난다.
+            //
+            //  ⚠ 겹침(①)으로 만들어진 각성과 **같은 규칙**이어야 한다
+            //    각성판은 정의상 원본의 상위 호환이다(PassiveAwakening.Table 주석).
+            //    상위 호환을 들었는데 하위가 함께 남는 조합은 어떤 경로로도 없어야 한다.
+            if (up != SpeciesPassive.None && _order.Contains(up)) continue;
 
             into.Add(new ResolvedPassive(_order[i], _origins[i], SpeciesPassive.None));
         }

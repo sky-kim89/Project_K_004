@@ -29,12 +29,12 @@ MonoBehaviour:
   Projectile: 0
   ProjectileSpeed: 0
   Traits: 17
-  Tags: 66
+  Tags: 768
   Description: "\uACE8\uB4DC\uB97C \uB5A8\uAD6C\uACE0, \uD55C \uBC88\uC5D0 \uB450
     \uBC1C\uC744 \uC3DC\uB2E4.\n\uD63C\uC790 \uB450\uBA74 \uBD99\uB294 \uC989\uC2DC
     \uB179\uB294\uB2E4 \u2014 \uBCBD\uACFC \uD568\uAED8 \uC4F4\uB2E4."
   MaxHp: 70
-  Attack: 19
+  Attack: 20
   AttackRange: 6
   AttackSpeed: 1
   MoveSpeed: 2.6
@@ -44,9 +44,15 @@ MonoBehaviour:
   SummonPowerToHp: 0.6
   SummonPowerToAttack: 1.2
   UpgradeOf: {fileID: 11400000, guid: 23a07e7c40c8f7347b213eceac0a8f4a, type: 2}
+  AlsoUpgradeOf: []
   SpeciesTrait: 27
+  ExtraTraits: 
+  BlockedInherit: 
   ActiveSkill: 0
   Passives: 
+  BroodSpecies: {fileID: 0}
+  BroodCount: 0
+  BroodCooldown: 0
   LevelBonuses:
   - Label: "\uC815\uC870\uC900"
     Stat1: 3

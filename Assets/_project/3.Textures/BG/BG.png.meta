@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 4e85c2a574c96f040bc8db89ea5663d7
+guid: b380bfdba32d5d04980b43807ac4ee4c
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -6174533968522163773
-    second: Gemini_Generated_Image_ucoscuucoscuucos_0
+      213: 8655391296293917914
+    second: BG100_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -72,7 +72,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 1024
+    maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Gemini_Generated_Image_ucoscuucoscuucos_0
+      name: BG100_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 2724
-        height: 1536
+        width: 2560
+        height: 1440
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3c947a8d116af4aa0800000000000000
-      internalID: -6174533968522163773
+      spriteID: ad45b9796802e1870800000000000000
+      internalID: 8655391296293917914
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Gemini_Generated_Image_ucoscuucoscuucos_0: -6174533968522163773
+      BG100_0: 8655391296293917914
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

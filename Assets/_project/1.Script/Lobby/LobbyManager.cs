@@ -90,11 +90,36 @@ public class LobbyManager : Singleton<LobbyManager>
             return;
         }
 
+        // 설치 후 첫 실행 — 소환사 선택을 건너뛰고 곧장 1스테이지로 (원작과 같은 흐름)
+        //   고를 것이 무엇인지도 모르는 사람에게 선택 화면부터 보여 주지 않는다.
+        //   조작은 인게임 튜토리얼(SummonBattleTutorial)이 가르친다.
+        // ⚠ ConsumeFirstLaunch 는 소비형이다 — 런이 끝나 여기로 돌아와도 다시 타지 않는다.
+        if (UserDataManager.Instance.ConsumeFirstLaunch() && CanAutoStartFirstRun())
+        {
+            Debug.Log($"[LobbyManager] 최초 실행 — '{FirstRunSummonerId}' 로 1스테이지에 바로 진입합니다.");
+            RunLaunch.Request(FirstRunSummonerId);
+            EnterSummonRun();
+            return;
+        }
+
         SetFlow(LobbyFlow.Idle);
 
         // 로비 화면은 MainPanel(소환사 선택) 하나뿐이다 — 원작 탭(NavBar)은 걷어냈다.
         FindAnyObjectByType<MainPanelUI>(FindObjectsInactive.Include).gameObject.SetActive(true);
     }
+
+    /// <summary>
+    /// 최초 실행에서 자동으로 고르는 소환사 — 견습 소환사(기본 해금 · 슬라임).
+    /// ⚠ 이름이 아니라 ID 다 (SummonerCreator 로스터의 Id). 튜토리얼 문구가 슬라임을 전제한다.
+    /// </summary>
+    const string FirstRunSummonerId = "novice";
+
+    /// <summary>
+    /// ⚠ 세이브가 이미 있으면 절대 타지 않는 경로다 — 한 번 더 거른다.
+    /// 환생 기록이 있으면 첫 실행이 아니다 (PlayerPrefs 일부만 지워진 경우).
+    /// </summary>
+    static bool CanAutoStartFirstRun()
+        => UserDataManager.Instance.Get<ReincarnationData>().TotalCount == 0;
 
     // ── 공개 API ─────────────────────────────────────────────
 

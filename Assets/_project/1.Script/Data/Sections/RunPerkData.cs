@@ -206,6 +206,14 @@ public class RunPerkData : ISaveSection
     static RunPerk ShadowedByPerk(SummonerPerk perk) => perk switch
     {
         SummonerPerk.CheapAffinity => RunPerk.CheapAffinity,
+
+        // ⚠ 이름도 축도 대상도 같다 — 곱해서 붙는다 (2026-09-18)
+        //   개성 '심연 공명'(리치)은 MonsterStatComposer ⓪ 에서 친화 배율에 PerkValue(1.6)를
+        //   **한 번 더** 곱하고, 특성 '심연 공명'은 AffinityMultFor 가 그 배율 자체를
+        //   1.2 → 1.6 으로 갈아 끼운다. 둘을 함께 쥐면 1.6 × 1.6 = ×2.56 —
+        //   기본(×1.2)의 2.1배다. 둘 다 "친화 종족 소환력" 하나만 본다.
+        SummonerPerk.DeepChannel   => RunPerk.DeepChannel,
+
         _                          => RunPerk.None,
     };
 

@@ -174,7 +174,12 @@ public class TopBarUI : MonoBehaviour
             for (int i = 0; i < _bossSkillButtons.Length; i++)
             {
                 int slot = i;
-                _bossSkillButtons[i]?.onClick.AddListener(() => ShowBossSkillTooltip(slot));
+                if (_bossSkillButtons[i] == null) continue;
+                // PC 는 올려서, 모바일은 눌러서 연다 (TooltipInput)
+                _bossSkillButtons[i].onClick.AddListener(() => { if (!TooltipInput.HoverMode) ShowBossSkillTooltip(slot); });
+                TooltipInput.HookHover(_bossSkillButtons[i].gameObject,
+                                       () => ShowBossSkillTooltip(slot),
+                                       () => _bossSkillTooltip?.Close());
             }
         }
 
@@ -255,7 +260,7 @@ public class TopBarUI : MonoBehaviour
 
         // 스테이지 번호 + 적 정리 진행도. 웨이브 표기는 없앴다.
         if (_waveText != null)
-            _waveText.text = $"스테이지 {ctx.StageNumber}";
+            _waveText.text = LocalizationManager.Instance.Format("스테이지 {0}", ctx.StageNumber);
         if (_waveProgressFill != null) _waveProgressFill.fillAmount = progress;
         if (_waveTimerText    != null) _waveTimerText.text          = FormatTime(_waveElapsed);
     }
@@ -283,7 +288,7 @@ public class TopBarUI : MonoBehaviour
         float ratio = Mathf.Clamp01(cur / maxHp);
 
         if (_bossHpFill != null) _bossHpFill.fillAmount = ratio;
-        if (_bossHpText != null) _bossHpText.text       = $"보스   {Mathf.CeilToInt(cur):N0} / {Mathf.RoundToInt(maxHp):N0}";
+        if (_bossHpText != null) _bossHpText.text       = LocalizationManager.Instance.Format("보스   {0:N0} / {1:N0}", Mathf.CeilToInt(cur), Mathf.RoundToInt(maxHp));
 
         RefreshBossEnrage(boss);
         RefreshBossSkills(boss);
@@ -314,7 +319,7 @@ public class TopBarUI : MonoBehaviour
 
         _bossEnrageText.gameObject.SetActive(stacks > 0);
         if (stacks > 0)
-            _bossEnrageText.text = $"광폭화 × {stacks}";
+            _bossEnrageText.text = LocalizationManager.Instance.Format("광폭화 × {0}", stacks);
     }
 
     // ── 보스 스킬 설명 툴팁 ───────────────────────────────────
@@ -419,7 +424,7 @@ public class TopBarUI : MonoBehaviour
     void RefreshKillCount()
     {
         if (_killCountText != null)
-            _killCountText.text = $"처치 {_killCount}";
+            _killCountText.text = LocalizationManager.Instance.Format("처치 {0}", _killCount);
     }
 
     // ── 이벤트 ─────────────────────────────────────────────────
@@ -532,7 +537,7 @@ public class TopBarUI : MonoBehaviour
 
         string desc = string.IsNullOrEmpty(relicName)
             ? SpeedLockDesc
-            : $"유물 전승도에서 '{relicName}' 을(를) 찍은 뒤 시도해 주세요.";
+            : LocalizationManager.Instance.Format("유물 전승도에서 '{0}' 을(를) 찍은 뒤 시도해 주세요.", relicName);
 
         _speedLockTooltip.ShowAnchored(
             _speedButton.transform as RectTransform, SpeedLockTitle, desc, "");

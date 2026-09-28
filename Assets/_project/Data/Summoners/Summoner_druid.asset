@@ -41,16 +41,17 @@ MonoBehaviour:
   SkillUsesPerStage: 1
   SignatureSummonSpecies: {fileID: 11400000, guid: f65663af889c3b841871c86e865c03eb, type: 2}
   SignatureSummonCount: 2
-  ListOrder: 8
+  ListOrder: 4
   Unlocks:
-  - Kind: 4
-    Value: 5
-    SpeciesIds: []
-    Traits: 64
+  - Kind: 1
+    Value: 0
+    SpeciesIds:
+    - forest_troll
+    Traits: 0
   StarterMonsters:
-  - {fileID: 11400000, guid: f65663af889c3b841871c86e865c03eb, type: 2}
   - {fileID: 11400000, guid: bafb509cc44832742b7b54e01531076a, type: 2}
-  - {fileID: 11400000, guid: 23a07e7c40c8f7347b213eceac0a8f4a, type: 2}
+  - {fileID: 11400000, guid: 40bcfe19d65c5ab4aabe43f5a9b8e668, type: 2}
+  - {fileID: 11400000, guid: f65663af889c3b841871c86e865c03eb, type: 2}
   StarterSkills: []
   Affinities:
   - SpeciesId: 

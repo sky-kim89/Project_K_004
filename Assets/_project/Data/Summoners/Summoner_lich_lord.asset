@@ -43,17 +43,18 @@ MonoBehaviour:
   SkillUsesPerStage: 1
   SignatureSummonSpecies: {fileID: 0}
   SignatureSummonCount: 1
-  ListOrder: 10
+  ListOrder: 11
   Unlocks:
   - Kind: 1
     Value: 0
     SpeciesIds:
-    - archlich
+    - skeleton_mage
+    - plague_zombie
     Traits: 0
   StarterMonsters:
-  - {fileID: 11400000, guid: b828576fbc378234499d743bf81bfa6b, type: 2}
-  - {fileID: 11400000, guid: 24a58f9b46e1b004f897ff6337fbc171, type: 2}
   - {fileID: 11400000, guid: 6681437f350796e46a78d04f257abea7, type: 2}
+  - {fileID: 11400000, guid: 24a58f9b46e1b004f897ff6337fbc171, type: 2}
+  - {fileID: 11400000, guid: b9e7a55fd618a424a93b28d4b64e2ffb, type: 2}
   StarterSkills: []
   Affinities:
   - SpeciesId: skeleton

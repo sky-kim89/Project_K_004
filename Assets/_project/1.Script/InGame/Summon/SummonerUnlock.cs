@@ -42,6 +42,16 @@ public enum SummonerUnlockKind
 
     /// <summary>Traits 를 가진 종족을 Value 종 이상 등록했다.</summary>
     TraitCount = 4,
+
+    /// <summary>
+    /// 진화체(1차·2차)를 Value 종 이상 등록했다 — 어느 계보든 상관없다 (2026-09-15).
+    ///
+    /// ■ 왜 필요한가 (사용자 지적)
+    ///   첫 런은 견습의 친화 종족(슬라임)을 먼저 키운다. 진화는 무작위라 슬라임이
+    ///   힐·독·강철 중 무엇이 될지 모른다 — 특정 1차를 요구하는 조건으로는
+    ///   "첫 진화 = 다음 소환사" 가 보장되지 않았다. 이 조건은 무엇으로 진화했든 센다.
+    /// </summary>
+    UpgradeCount = 5,
 }
 
 [Serializable]
@@ -111,6 +121,9 @@ public static class SummonerUnlockRule
             case SummonerUnlockKind.TraitCount:
                 return CountTrait(cond.Traits, codex) >= cond.Value;
 
+            case SummonerUnlockKind.UpgradeCount:
+                return CountUpgrades(codex) >= cond.Value;
+
             default:
                 return true;
         }
@@ -148,24 +161,37 @@ public static class SummonerUnlockRule
         switch (cond.Kind)
         {
             case SummonerUnlockKind.BestStage:
-                return $"스테이지 {cond.Value} 도달   ({reinc?.BestStage ?? 0} / {cond.Value})";
+                return LocalizationManager.Instance.Format(
+                    "스테이지 {0} 도달   ({1} / {0})", cond.Value, reinc?.BestStage ?? 0);
 
             case SummonerUnlockKind.CodexCount:
-                return $"도감 {cond.Value}종 등록   ({codex?.UnlockedCount ?? 0} / {cond.Value})";
+                return LocalizationManager.Instance.Format(
+                    "도감 {0}종 등록   ({1} / {0})", cond.Value, codex?.UnlockedCount ?? 0);
 
             case SummonerUnlockKind.SpeciesUnlocked:
             {
                 int have = codex != null ? CountUnlocked(cond.SpeciesIds, codex) : 0;
-                return $"{NamesOf(cond.SpeciesIds)} 도감 등록   ({have} / {Length(cond.SpeciesIds)})";
+                return LocalizationManager.Instance.Format(
+                    "{0} 도감 등록   ({1} / {2})",
+                    NamesOf(cond.SpeciesIds), have, Length(cond.SpeciesIds));
             }
 
             case SummonerUnlockKind.SpeciesGrade:
-                return $"{NamesOf(cond.SpeciesIds)} 품질 {GradeName(cond.Value)} 이상";
+                return LocalizationManager.Instance.Format(
+                    "{0} 품질 {1} 이상", NamesOf(cond.SpeciesIds), GradeName(cond.Value));
 
             case SummonerUnlockKind.TraitCount:
             {
                 int have = codex != null ? CountTrait(cond.Traits, codex) : 0;
-                return $"{TraitName(cond.Traits)} {cond.Value}종 등록   ({have} / {cond.Value})";
+                return LocalizationManager.Instance.Format(
+                    "{0} {1}종 등록   ({2} / {1})", TraitName(cond.Traits), cond.Value, have);
+            }
+
+            case SummonerUnlockKind.UpgradeCount:
+            {
+                int have = codex != null ? CountUpgrades(codex) : 0;
+                return LocalizationManager.Instance.Format(
+                    "아무 몬스터나 진화시켜 도감에 {0}종 등록   ({1} / {0})", cond.Value, have);
             }
 
             default:
@@ -204,6 +230,21 @@ public static class SummonerUnlockRule
 
             n++;
         }
+
+        return n;
+    }
+
+    /// <summary>등록한 진화체(1차·2차) 수. 뿌리 종족은 세지 않는다.</summary>
+    static int CountUpgrades(MonsterCodexData codex)
+    {
+        CardCatalog catalog = CardCatalog.Current;
+        if (catalog == null) return 0;
+
+        int n = 0;
+
+        foreach (MonsterSpeciesData species in catalog.Monsters)
+            if (species != null && species.UpgradeOf != null && codex.IsUnlocked(species.Id))
+                n++;
 
         return n;
     }

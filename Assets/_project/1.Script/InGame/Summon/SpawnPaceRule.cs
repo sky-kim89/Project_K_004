@@ -118,6 +118,49 @@ public static class SpawnPaceRule
     public static float StatMultiplierFor(MonsterSpeciesData species)
         => 1f + StatBonuses[TierOf(species)];
 
+    // ── 초조(Rush) — 판이 길어지면 줄이 빨라진다 (사용자 지시, 2026-09-15) ──
+    //
+    //  ■ 적 광폭화와 **같은 시계**를 쓴다
+    //    보스는 판이 열리고 60초마다 한 스택씩 세진다(HeroTierSetup.EnrageCooldown).
+    //    아군도 같은 순간에 한 단계씩 빨라진다 — 간격이 절반이 된다.
+    //    두 사건이 같은 시각에 일어나야 "판이 길어지면 서로 몰아친다" 가
+    //    화면에서 한 사건으로 읽힌다. 시각이 어긋나면 그냥 둘 다 이유 없이 변한다.
+    //
+    //  ■ 왜 필요한가 — 대기열이 길면 판이 끝나지 않는다
+    //    라인 복귀로 대기열은 판마다 불어나는데 배출 간격은 종족이 정한 고정값이다.
+    //    후반에는 줄을 다 뱉기 전에 판이 늘어져, 광폭화한 보스에게 몰살당하는 동안
+    //    성문 뒤에 남은 물량이 한 마리씩 걸어 나온다. 교착을 끝내는 장치가
+    //    적 쪽에만 있으면 그 시계는 플레이어에게만 불리하게 돈다.
+    //
+    //  ⚠ 단계 상한이 있다 (MaxRushSteps)
+    //    간격이 0 으로 수렴하면 한 프레임에 대기열 전체가 쏟아진다.
+    //    1/32 면 가장 느린 트롤(1.50초)도 0.047초 — 사실상 프레임당 한 마리라
+    //    그 위로는 더 빨라지지도 않으면서 숫자만 발산한다.
+    //
+    //  ⚠ 종족 간 순서는 끝까지 유지된다 — 곱하는 배율이라 트롤은 언제나 슬라임보다 느리다.
+    //    특성 배율(RunPerkRule.DrainMultiplierFor)과 같은 규칙이다.
+
+    /// <summary>한 단계가 오르는 간격(초). 적 광폭화와 같은 시계다.</summary>
+    public static float RushStepSeconds => HeroTierSetup.EnrageCooldown;
+
+    /// <summary>단계 상한. 1/32 위로는 프레임이 벽이라 올려도 의미가 없다.</summary>
+    public const int MaxRushSteps = 5;
+
+    /// <summary>판이 열린 뒤 흐른 시간이 만든 가속 단계 (0 ~ MaxRushSteps).</summary>
+    public static int RushStepsAt(float secondsSinceStageStart)
+        => secondsSinceStageStart < RushStepSeconds
+               ? 0
+               : Mathf.Min(MaxRushSteps, (int)(secondsSinceStageStart / RushStepSeconds));
+
+    /// <summary>
+    /// 배출 간격에 <b>곱할</b> 가속 배율 (1 → 1/2 → 1/4 … 1/32).
+    ///
+    /// ⚠ 초를 돌려주지 않는다 — 종족별 간격 축을 덮어쓰지 않기 위해서다
+    ///   (RunPerkRule.DrainMultiplierFor 와 같은 이유).
+    /// </summary>
+    public static float RushMultiplierAt(float secondsSinceStageStart)
+        => 1f / (1 << RushStepsAt(secondsSinceStageStart));
+
     /// <summary>
     /// 한 줄 설명 — "소환 0.75초".
     ///
@@ -132,5 +175,45 @@ public static class SpawnPaceRule
     ///   여기에 적어 두면 밸런스를 고친 날부터 화면만 옛말을 한다.
     /// </summary>
     public static string DescribeFor(MonsterSpeciesData species)
-        => $"{Intervals[TierOf(species)]:0.00}초";   // 행 이름이 이미 '소환 간격' 이다 (사용자 지시, 2026-09-12)
+        => LocalizationManager.Instance.Format("{0:0.00}초", Intervals[TierOf(species)]);   // 행 이름이 이미 '소환 간격' 이다 (사용자 지시, 2026-09-12)
+}
+
+// ============================================================
+//  SpeedHpRule.cs
+//  빠른 종족의 체력 보너스 (사용자 지시, 2026-09-15).
+//
+//  ■ 왜 필요한가
+//    이동속도는 이 게임에서 강함이 아니다 — 적이 성으로 걸어오므로 먼저 닿아도
+//    얻는 것이 없고, 무리보다 앞서 혼자 적진에 들어가 **점사**를 받는다.
+//    게다가 빠른 종족은 한 마리당 DPS 가 높아, 하나가 쓰러질 때마다 잃는 딜이 크다.
+//    슬라임은 반대다 — 좁은 간격 · 높은 체력 · 낮은 개체 DPS 로 피해가 흩어지고
+//    한 마리를 잃어도 손실이 적다. 같은 전투력 지수여도 체감 격차가 컸다.
+//
+//  ■ 체력에만 준다
+//    약점이 "먼저 도착해 녹는다" 이므로 버티는 쪽을 채운다. 공격력을 올리면
+//    한 마리가 죽을 때 잃는 딜이 더 커져 문제가 깊어진다.
+//
+//  ⚠ 작게 둔다 — 속도는 여전히 종족의 성격이지 보상받는 축이 아니다.
+//    BaseSpeed 이하는 0, 늑대(4.2)가 +20% 남짓, 상한 MaxBonus.
+//
+//  ⚠ SO 원본 이동속도로 판정한다 — 레벨·장비로 빨라져도 보너스는 그대로다
+//    (SpawnPaceRule.PowerOf 와 같은 규율 — 되먹임 고리를 만들지 않는다).
+//
+//  ⚠ 곱하는 곳은 둘뿐이다 — MonsterStatComposer ②(전투) · MonsterDetailPopup(도감).
+// ============================================================
+
+public static class SpeedHpRule
+{
+    /// <summary>이 이동속도부터 보너스가 붙기 시작한다.</summary>
+    public const float BaseSpeed = 2.5f;
+
+    /// <summary>이동속도 1 당 체력 보너스.</summary>
+    public const float PerSpeed = 0.12f;
+
+    /// <summary>보너스 상한.</summary>
+    public const float MaxBonus = 0.25f;
+
+    /// <summary>그 종족의 체력 배율 (1 = 보너스 없음).</summary>
+    public static float HpMultiplierFor(MonsterSpeciesData species)
+        => 1f + Mathf.Clamp((species.MoveSpeed - BaseSpeed) * PerSpeed, 0f, MaxBonus);
 }

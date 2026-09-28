@@ -155,6 +155,11 @@ public static class MonsterLibraryCreator
         // 강철 슬라임 — 회청
         new PaletteVariant { Monster = "Slug", Suffix = "Steel", From = SlugGreen,
             To = new[] { C(122, 158, 206), C(160, 190, 232), C( 82, 108, 150), C(216, 230, 250) } },
+
+        // ⚠ 슬라임 킹은 **노란 시트를 함께 쓴다** (사용자 확정, 2026-09-15)
+        //   한때 자주(Royal)로 따로 구웠다. 슬라임의 왕은 노랑이라는 것이 확정이라
+        //   변형을 걷어냈다 — 굽지 않는 변형을 남겨 두면 아무도 안 쓰는 시트가
+        //   빌드에 실린다. 되살리려면 여기 한 줄만 다시 넣으면 된다.
         // ── 범위 색상 이동 (2026-09-11) — 뿌리 종족은 원본 그대로, 진화체만 굽는다 ──
         //   범위는 시트 분석으로 잡았다: 늑대 털 = 색상 ~200 · 채도 0.05~0.18 (회청)
         //   멧돼지 몸 = 색상 11~17 · 채도 0.5~0.87 · 트롤 피부 = 색상 20~21 · 채도 0.56~0.73.
@@ -174,6 +179,47 @@ public static class MonsterLibraryCreator
         new PaletteVariant { Monster = "Troll", Suffix = "Forest",
             Shift = new HueShift { HueMin = 17, HueMax = 24, SatMin = 0.5f, SatMax = 0.8f,
                                    Hue = 100, SatMul = 0.85f, SatAdd = 0f, ValMul = 1f } },
+
+        // ── 두 번째 1차 (사용자 지시, 2026-09-15) ────────────────
+        //  같은 뿌리의 첫 1차와 **다른 색상 쪽**으로 민다 (서리=청 · 화염=주황 · 숲=초록).
+
+        // 핏빛 늑대 — 회색 털을 검붉게
+        new PaletteVariant { Monster = "Wolf", Suffix = "Blood",
+            Shift = new HueShift { HueMin = 190, HueMax = 215, SatMin = 0.03f, SatMax = 0.25f,
+                                   Hue = 8, SatMul = 2.4f, SatAdd = 0.2f, ValMul = 0.82f } },
+
+        // 철갑 멧돼지 — 갈색을 쇳빛 청회색으로
+        new PaletteVariant { Monster = "Hog", Suffix = "Iron",
+            Shift = new HueShift { HueMin = 8, HueMax = 20, SatMin = 0.45f, SatMax = 1f,
+                                   Hue = 210, SatMul = 0.3f, SatAdd = 0f, ValMul = 0.95f } },
+
+        // 늪 트롤 — 갈색 피부를 탁한 청록으로
+        new PaletteVariant { Monster = "Troll", Suffix = "Swamp",
+            Shift = new HueShift { HueMin = 17, HueMax = 24, SatMin = 0.5f, SatMax = 0.8f,
+                                   Hue = 165, SatMul = 0.55f, SatAdd = 0f, ValMul = 0.78f } },
+
+        // ── 2차 업그레이드 (사용자 지시, 2026-09-15) ──────────────
+        //  ⚠ 1차와 **반대쪽으로** 민다 — 한 계보에 뿌리·1차·2차 셋이 서므로
+        //    1차가 이미 쓴 방향으로 더 밀면 둘이 같은 색으로 수렴한다.
+        //    서리 늑대가 밝은 청색이면 알파는 **어둡게**, 화염 멧돼지가 밝은 주황이면
+        //    워 보어는 **검붉게**, 숲의 트롤이 초록이면 고대 트롤은 **돌회색**이다.
+        //  ⚠ 채도를 끌어내려 어둡게 잡는다 — 2차는 덩치가 가장 크므로
+        //    밝고 진한 색까지 주면 화면에서 혼자 튄다. 크기가 이미 말하고 있다.
+
+        // 알파 울프 — 회색 털을 검은 은빛으로 (채도를 죽이고 어둡게)
+        new PaletteVariant { Monster = "Wolf", Suffix = "Alpha",
+            Shift = new HueShift { HueMin = 190, HueMax = 215, SatMin = 0.03f, SatMax = 0.25f,
+                                   Hue = 205, SatMul = 0.6f, SatAdd = 0f, ValMul = 0.62f } },
+
+        // 워 보어 — 갈색을 검붉게 (화염 멧돼지의 밝은 주황과 정반대)
+        new PaletteVariant { Monster = "Hog", Suffix = "War",
+            Shift = new HueShift { HueMin = 8, HueMax = 20, SatMin = 0.45f, SatMax = 1f,
+                                   Hue = 356, SatMul = 1.15f, SatAdd = 0.05f, ValMul = 0.68f } },
+
+        // 고대 트롤 — 갈색 피부를 돌회색으로 (채도를 거의 걷어낸다)
+        new PaletteVariant { Monster = "Troll", Suffix = "Ancient",
+            Shift = new HueShift { HueMin = 17, HueMax = 24, SatMin = 0.5f, SatMax = 0.8f,
+                                   Hue = 28, SatMul = 0.22f, SatAdd = 0f, ValMul = 0.88f } },
     };
 
     /// <summary>한 픽셀을 변형 규칙대로 바꾼다. 바꿨으면 true.</summary>

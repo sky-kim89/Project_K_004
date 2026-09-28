@@ -485,6 +485,17 @@ Creator 들이 각자 복사해 쓰던 `Make*/Create*/Add*` 헬퍼의 본문은 
 > UIScale.BtnFor(fontSize)          // 라벨이 안 눌리는 최소 버튼 높이 (×1.7)
 > ```
 > 폰트 상수를 올릴 때 이 값을 쓰는 칸은 자동으로 따라 커진다.
+>
+> **⚠ 한자·가나는 이 1.25배 가정을 넘는다** (사용자 지적, 2026-09-16)
+> `Line()` 의 계수는 **라틴·한글 기준**이다. 한자·가나는 글자 상자를 꽉 채워 더 높아서,
+> 같은 칸에서 라틴·한글만 멀쩡하고 CJK 만 잘린다. CJK 가 뜰 수 있는 칸은 **한 단계 위**를 준다
+> (`FontSm` 이면 `RowSm`(43)이 아니라 `RowMd`(53)).
+> - ⚠ **증상이 "잘림" 이 아니라 "빈칸" 이다** — 그래서 폰트에 글자가 없는 것으로 읽힌다.
+>   실제로 일시정지 언어 드롭다운에서 이걸 폰트 문제로 오진해 폴백 폰트를 두 번 갈아엎었다.
+>   같은 화면의 캡션 줄은 칸이 넉넉해 멀쩡히 나와서 더 헷갈렸다 — **한 화면에서 어떤 줄만
+>   비어 있으면 폰트보다 칸 높이를 먼저 볼 것.**
+> - ⚠ 라벨 RectTransform 만 위아래로 늘려 때우지 말 것 — 칸 밖으로 넘쳐 이웃 줄과 겹친다.
+>   넓혀야 하는 것은 칸이다 (`EditorUIBuilder.LabeledDropdown` 의 `itemH` 참고).
 
 > **⚠ 규칙 6 — 팝업 높이는 `UIScale.PopupMaxH`(1000) 를 넘기지 않는다**
 > 로비 캔버스 세로가 1080 뿐이라 그 이상은 위아래가 잘린다.
@@ -621,7 +632,7 @@ UI=0, Unit=1, Effect=2, Projectile=3
   - ⚠ 눈금 3줄은 초상화 옆(머리)에 있다
 - **시그니처 스킬은 이름·그림이 소환사마다 다르다** (사용자 지시, 2026-09-11) — 정본 `SignatureSkillDisplay` (SummonerSkillRule.cs 끝)
   - '권속 소환' 은 여덟 소환사가 나눠 쓴다 → 그림 = **부르는 종족의 초상화**, 이름 = `SummonerData.SignatureName`
-    (로스터 `SkillName` — 슬라임 떼 · 강철 친위대 · 고블린 약탈대 · 트롤 풀어놓기 · 오크 전사 소집 · 멧돼지 돌격 · 늑대 무리)
+    (로스터 `SkillName` — 슬라임 떼 · 치유의 친위대(힐 슬라임) · 고블린 약탈대 · 트롤 풀어놓기 · 오크 전사 소집 · 멧돼지 돌격 · 늑대 무리)
   - 나머지 스킬(비석·메테오·사형 선고…)은 SO 이름·그림 그대로
   - ⚠ **줄을 더 적어 설명하지 않는다** (사용자 지적 — "쓸모없는 UI 추가하지 마"). 한때 스킬 줄 아래
     "[초상] 슬라임 [마릿수] 3 · 탭한 자리에" + 설명을 붙였다가 걷어냈다 — 메테오처럼 소환이 아닌 스킬은 적을 것이 없다
@@ -733,6 +744,18 @@ UI=0, Unit=1, Effect=2, Projectile=3
     낼 돈인지 매번 다시 읽어야 한다 (옛 `"900 (보유 12,400)"` 한 줄이 그랬다)
     ⚠ 누르면 `UIJuice.GradeUp` 이 터진다 — 자리는 **초상화 테두리**다
     (이 창에서 등급색이 실제로 바뀌는 물건이고 다시 만들어지지 않아 좌표를 믿을 수 있다)
+  - **권속 소환은 패시브 목록의 한 줄이다** (사용자 지시, 2026-09-15) — `MonsterDetailPopup.AddBroodRow`.
+    실제로는 스킬(`SummonBrood`)이지만 고유 스킬 칸이 희귀 스킬로 빠듯해 선천 패시브 바로 뒤에 선다.
+    그림 = 권속 종족 초상화 · 마릿수는 줄 오른쪽 위 배지(UI 규칙 7) · 쿨다운은 `MonsterSpeciesData.BroodBaseCooldown`(전투와 같은 값)
+  - **뿌리마다 1차가 둘 이상이다** (사용자 지시, 2026-09-15) — 하나뿐이던 다섯에 갈래를 더했다:
+    구울(좀비·굶주림) · 핏빛 늑대(늑대·급소 찌르기) · 오크 도살자(오크·처형) · 철갑 멧돼지(멧돼지·성벽) · 늪 트롤(트롤·맹독 피부).
+    각 2차의 `AlsoUpgradeOf` 에 붙였다. ⚠ 시너지 표식은 **비어 있다** — 시너지 종류를 늘리는 결정 뒤에 채운다.
+    비인간형 셋의 시트는 `MonsterLibraryCreator` 의 `_Blood`·`_Iron`·`_Swamp` 변형이다
+  - ⚠ **2차 업그레이드는 한 마리 고정이다** (사용자 지시, 2026-09-15) — `VerifyTierTwo` 가 `Count != 1` 을 에러로 잡는다.
+    옛 두 마리 몫을 체력·공격력에 역할대로 나눠 담았다(벽은 체력, 딜러는 공격)
+  - ⚠ **종족 소개는 글에 맞춰 칸이 늘고 아래를 민다** (사용자 지적, 2026-09-15) — 두 줄 고정이라 세 줄로 접힌 소개가
+    첫 패시브 칸을 덮었다. `FitDescription` 이 네 줄까지 늘리고(넘으면 글 축소), 늘어난 만큼 줄 칸이 스킬 상자를
+    최소 높이 밑으로 밀면 아이콘 모드로 넘긴다 (`RowsFit`)
   - ⚠ **패시브가 줄 칸(6)보다 많으면 아이콘 모드**다 (사용자 지시, 2026-09-10) —
     줄을 끄고 격자(`_passiveGrid`, 72px · 18칸)에 그림만, 설명은 올리거나 누르면 툴팁(`InfoIconUI`).
     사용자는 8 을 원했지만 8줄 = 752px 로 칸(727)을 넘어 **스킬 칸이 없어도** 깨진다 — 그래서 6.
@@ -761,6 +784,8 @@ UI=0, Unit=1, Effect=2, Projectile=3
   - 등급이 오르면 `OnUpgraded` 콜백으로 도감이 격자를 다시 그린다
     (팝업이 도감을 직접 부르지 않는다 — 다른 화면에서도 열 수 있어야 한다)
   - 목록 조립은 `InGame/Codex/CodexCatalog.cs` 의 `CodexCategory.Monster` 분기
+  - ⚠ **몬스터 칸 순서는 고정이다** (사용자 지시, 2026-09-15) — 기본 → 1차 → 2차(`TierOf`), 같은 단계는 `CardCatalog` 순.
+    이름(번역마다 바뀐다)·품질(개선마다 자리가 옮겨진다)·해금으로 정렬하지 말 것
   - ⚠ `CodexCategory` 는 **뒤에만** 추가한다 — 탭 버튼 배열이 enum 순서를 그대로 쓴다
   - ⚠ 미해금 종족에 `GetGrade` 를 부르지 말 것 (예외가 난다). `IsUnlocked` 가 먼저다
 
@@ -771,8 +796,8 @@ UI=0, Unit=1, Effect=2, Projectile=3
 > (아래 '몬스터 장비 레벨업·강화').
 - **정의**: `InGame/MonsterGear/MonsterGearData.cs` (SO) + `MonsterGearDatabase`(Resources)
   - `MonsterGearBody` = 인간형 / 비인간형 · `MonsterGearPart` = 갑옷·투구·방패·망토·등짐 / 가죽·덩치·장식
-  - ⚠ **부위는 한 몬스터에 하나뿐이다.** 같은 부위를 또 끼우면 먼저 낀 것이 벗겨진다 —
-    없으면 "장착했는데 겉모습이 하나도 안 변하는" 장비가 생긴다
+  - ⚠ **부위는 겹쳐 낄 수 있다** (사용자 확정, 2026-09-15) — 투구 둘도 함께 끼고 능력치는 전부 받는다.
+    겉모습은 그 부위의 **앞 칸 장비**가 정한다 (`MonsterGearRule.BuildVisual` 의 `First`). 옛 "부위당 하나" 규칙은 폐기
 - **규칙 정본**: `InGame/MonsterGear/MonsterGearRule.cs`
   | 무엇 | 값 |
   |---|---|
@@ -939,6 +964,8 @@ UI=0, Unit=1, Effect=2, Projectile=3
 - **세이브**: `Data/Sections/CodexData.cs` — 순수한 기록이다
 - **목록 조립**: `InGame/Codex/CodexCatalog.cs` (`Build(category)`)
 - **UI**: `UI/Popup/CodexPopup.cs` (+ `Editor/CodexPopupCreator.cs`)
+  - ⚠ **초상화는 정사각형 캔버스 + 발밑 바닥 정렬이다** (사용자 지적, 2026-09-15) — `MonsterPortraitProvider.CropAndTrim`.
+    가운데 정렬이던 때는 납작한 종족(슬라임)이 칸 가운데에 떠 도감의 발밑 높이가 제각각이었다. 칸도 정사각형 + preserveAspect 로 둘 것
   - **칸은 초상화다** — `MonsterPortraitProvider.Get` 을 직접 부른다. 계보 아이콘
     (`LineageIcon`)을 쓰면 슬라임 계열 넷이 전부 같은 그림이 된다
   - 칸 하나가 [초상화 140] [이름] [품질] [마나·마릿수 배지] [시너지 표식 3] 을 함께 그린다.
@@ -980,6 +1007,14 @@ UI=0, Unit=1, Effect=2, Projectile=3
   트리를 갈아 끼웠을 때 실제로 **46개 중 29개가 빈칸**이었다. `GetDescription` 으로는
   못 잰다 — 빈 글자도 색 태그로 감싸 돌려주므로 언제나 "비어 있지 않다".
   판정은 `RelicNodeDef.HasEffectText` 다
+- ⚠ **노드 이름은 화면과 진단이 갈린다** (2026-09-16)
+  - `RelicNodeDef.DisplayName` = 표에서 **`Relic.<Id>` 기호 키**로 찾은 이름. **화면은 전부 이쪽이다** —
+    `RelicTreePopup` 의 카드·툴팁 제목·선행 줄, `RelicTreeApplier.NextNodeNameFor`(잠긴 기능 안내)
+  - `RelicNodeDef.Name` = **한국어 원문 그대로**. `Verify()` 의 예외와 `RelicTreeAudit` 의 목록이 쓴다 —
+    거기까지 기호 키로 바꾸면 에러가 `'Relic.N_Claw' 의 Target 이…` 로 읽혀 진단이 쓸모없어진다
+  - ⚠ **왜 기호 키인가** — 노드 이름이 `절약`·`인내`·`질주`·`안목` 처럼 **짧고 흔한 낱말**이다.
+    한국어 키로 넣으면 `LocalizeText` 의 부분 치환이 **다른 문구 속 같은 글자까지 조용히 바꾼다**
+  - ⚠ 노드를 추가하면 표에 `Relic.<Id>` 줄도 넣을 것 — 없으면 화면에 키가 그대로 뜨고 **에러는 안 난다**
 - ⚠ **`RelicTreeCatalog.Ensure()` 끝의 `Verify()` 가 둘을 검사해 터뜨린다**
   ① 스탯 노드가 `Unit_Monster` 가 아니면(= 적까지 강화되면) ② 설명 줄이 없으면.
   조용한 실패를 시끄러운 실패로 바꾼 것이니 끄지 말 것
@@ -1019,7 +1054,7 @@ UI=0, Unit=1, Effect=2, Projectile=3
   |---|---|---|---|
   | `N_EndlessSwarm` 끝없는 무리 | **카드당 마릿수 +1** | 마왕의 군세 | **200** |
   | `N_LastDrop` 마지막 한 방울 | **모든 종족 소환 비용 −1** | 무한의 그릇 | **200** |
-  | `N_PlagueLore` 역병의 지혜 | 중독·화상·역병 피해 +15%/lv (Lv4) | 야성의 기억 | 50 |
+  | `N_PlagueLore` 역병의 지혜 | 중독·화상·역병 피해 +15%/lv (Lv4) | 치유의 기억 | 50 |
 - **값은 티어가 아니라 세기가 정한다** — `Sys(..., cost: N)` 로 티어 밖에서 매긴다
   | 노드 | 이전 → 지금 |
   |---|---|
@@ -1071,14 +1106,14 @@ UI=0, Unit=1, Effect=2, Projectile=3
 | 특성 | 효과 | 훅 |
 |---|---|---|
 | 피의 계약 32 | 마나가 모자라면 모자란 만큼 마왕성 체력으로 (1 은 남긴다) | `RunPerkRule.TryPayWithBlood` ← `SummonController.UseMonsterCard` · 카드 바 `SummonDeckUI` 가 같은 `CanPayWithBlood` |
-| 뒤집힌 과부하 33 | 과부하 1단계당 그 카드 몬스터 공/체 +12% | `RunPerkRule.DrainStatMult` |
+| 뒤집힌 과부하 33 | 이번 판 과부하 1단계당 **해당 몬스터 전부** 공/체 +12% — 대기열에서 나오는 순간의 단계로 굳는다. 낸 개체를 따로 기억하지 않는다 (사용자 확정, 2026-09-16). ⚠ 과부하는 카드 ID 로 센다 — 슬라임과 슬라임 킹은 따로 쌓인다. 권속·분열체·시그니처 소환은 이 배율을 안 받는다 | `RunPerkRule.DrainStatMult` |
 | 봉인된 칸 34 | 빈 칸 하나 삭제, 전 몬스터 공/체 +20% | `RunPerkData.Add` → `SummonDeckData.RemoveEmptySlot` · `MonsterStatComposer` ⑥ |
 | 기다림의 미학 35 | 판이 열린 뒤 1초당 공/체 +4% (최대 +40%) | `DrainStatMult` (판 시작 시각 `RunPerkRule.NoteStageStart`) |
 | 유리 성채 36 | 얻는 순간 마왕성 최대 −40%, 소환력 ×1.5 | `RunCoreData.ScaleMax` · `RunPerkRule.SummonPowerMult` |
-| 저주받은 금화 37 | 런 골드 +60%, 판을 넘길 때마다 마왕성 −3 | `RunGoldRule.Grant` · `RunBootstrap.AdvanceStage`(`Pay` — 1 아래로 안 간다) |
+| 저주받은 금화 37 | 런 골드 **+100%** (2026-09-16 에 +60% 에서 올림 — 사용자 지시), 판을 넘길 때마다 마왕성 −3 | `RunGoldRule.Grant` · `RunBootstrap.AdvanceStage`(`Pay` — 1 아래로 안 간다) |
 | 쌍둥이 라인 38 | 옆 라인에도 절반(내림)이 선다, 비용 +2 | `SummonController.UseMonsterCard` · `RunPerkRule.TwinLaneOf` · `ManaCostDelta` |
-| 한 우물 39 | 덱의 몬스터가 전부 공유하는 표식 카운트 +2 (몬스터 2장 이상) | `MonsterSynergyRule.SingleWellTag` → `CountOf` |
-| 매복 40 | 판 시작 5초 배출 정지, 라인마다 처음 5마리 공/체 +60% | `SummonController.DrainLane`(`AmbushHoldRemaining`) · `DrainStatMult` |
+| 한 우물 39 | **필드·대기열에 한 가지 몬스터(몬스터 ID 하나)만 있으면 그 몬스터의 표식 전부** 카운트 +2 — ⚠ 설명에 '종족' 을 쓰지 말 것(계보 전체로 읽힌다. 슬라임과 힐 슬라임은 둘이다) (사용자 지시, 2026-09-16 — 옛 규칙 "덱 전부가 공유하는 표식 하나" 는 진화로 표식이 바뀌어 거의 안 켜졌다) | `MonsterSynergyRule.Recount` 가 `_singleSpeciesTags` 기록 → `SingleWellTags` → `CountOf`. ⚠ **스킬 소환(권속·시그니처·분열체)은 판정에서 뺀다** — 카드 몬스터만 따로 세는 `_aliveCard`(`MonsterLineReturner` 의 returnable) + 대기열로 판정. 시너지 카운트도 같은 집계를 쓴다. 하단 카드 시너지 표식에 **금빛 테두리** (`SummonCardUI.SetWellOutline`) |
+| 매복 40 | 판 시작 **3초** 배출 정지 (2026-09-16 에 5초에서 줄임), 라인마다 처음 5마리 공/체 +60% | `SummonController.DrainLane`(`AmbushHoldRemaining`) · `DrainStatMult` |
 
 - ⚠ **배출 순간에 굳는 배율은 `RunPerkRule.DrainStatMult` 한 곳**이다 — `SummonController.SpawnOne` 이 계산해
   `MonsterSpawner.SpawnFromCard(drainMult)` → `MonsterStatComposer.Compose(drainMult)` ⑥ 으로 넘긴다. 카드 몬스터만 받는다
@@ -1157,6 +1192,20 @@ UI=0, Unit=1, Effect=2, Projectile=3
 - 순서는 `InGame.unity` 의 `BattleScrollManager._bgByTier` 배열이 정한다 (코드는 뒤집지 않는다)
 - ⚠ 마지막 등급(불지옥)은 열 것이 없어 연출도 없다 · 치트의 `RecordClear` 는 기록만 올린다
 
+### 로비 배경 데모 (사용자 지시, 2026-09-22) — `Lobby/LobbyDemoBattle.cs`
+- MainPanel 뒤에서 **고른 소환사의 `StarterMonsters`** 가 `MonsterSpawner.SpawnFree`(generation 1)로 서서 오른쪽으로 걷고,
+  오른쪽 끝에 닿으면 풀에 돌아간다. 소환사를 바꾸면 걷던 개체를 돌려보내고 새 덱으로 다시 흩어 놓는다
+- 여닫기: `MainPanelUI.OnEnable/Select` → `Show(summoner)` · `OnDisable` → `Hide()`.
+  판은 `BattleArena.Open(Demo)` + `PresentMode.ArenaBehindUI`, 닫기는 `BattleArena.Close()` 하나다 (Close 가 `Halt()` 를 부른다)
+  - ⚠ **Returning 중에 켜진다** (런이 끝나면 로비 캔버스가 먼저 켜진다) — `Run` 이 `LobbyFlow.Idle` 까지 기다린다.
+    그래서 Close 는 **데모 판을 닫을 때만** `LobbyDemoBattle.Halt` 를 부른다
+  - ⚠ **용사는 세우지 않는다** — 용사가 죽으면 런 골드가 들어온다(`UnitDeathDespawnSystem`)
+- **판을 닫으면 세우는 곳부터 멈춘다** (`BattleArena.Close` ⓪, 2026-09-22 버그) — `SummonController.Halt`(배출·풀 채우기) ·
+  `HeroSpawner.Halt` · 데모. 전투 중 '즉시 환생' 하면 배출 코루틴이 남아, 판을 치운 **뒤에** 나온 몬스터가 로비 뒤에 남고 풀에 안 돌아갔다.
+  함께 고친 것: `SummonController` 가 `OnDefeat` 에 배출을 멈춘다 · `Surrender` 가 `IsWaveRunning` 을 내린다 ·
+  `SummonerRuntimeBridge.Current` 는 **풀에 돌아갈 때(OnDisable)** 비운다 (예전엔 파괴 때만 — 판을 닫아도 '서 있는 소환사' 가 남았다)
+  - ⚠ 새로 스폰 코루틴을 만들면 `BattleArena.Close` ⓪ 에 멈추는 줄을 넣을 것
+
 ### 일시정지 창 (PausePopup)
 - **'즉시 환생하기' 는 `LobbyManager.IsInRun` 이 정한다** (사용자 지적, 2026-09-10)
   - ⚠ `Flow == LobbyFlow.Battle` 로 판정하지 말 것 — 이 게임의 런은 **`SummonRun`** 으로
@@ -1165,12 +1214,154 @@ UI=0, Unit=1, Effect=2, Projectile=3
   - ⚠ 판정을 화면마다 적지 말 것. `LobbyFlow` 에 값을 늘리면 `IsInRun` 을 함께 볼 것
 - 버튼이 감춰지면 패널 높이도 `_surrenderRowH` 만큼 줄어든다 (Creator 가 넘겨 준 값)
 
+### 로컬라이징 (원작 패치 이식, 2026-09-16)
+- **번역 정본**: `Assets/Resources/Localization/LocalizationTable.txt` — 탭 구분 11열(Key·한국어·영어 + 8개 언어).
+  루트의 `validate_localization.py` 로 검증한다(열 수·중복 키·서식 자리·TMP 태그·줄바꿈).
+- **읽는 곳**: `LocalizationManager` — `Get(키)` · `LocalizeText(문장)` · `Format` · `SetLanguageIndex`.
+  언어는 `PlayerPrefs`(`ProjectK.Language`)에 남고, 첫 실행은 기기 언어를 따른다
+- **자동 번역**: `Localization/LocalizedText.cs` — TMP 마다 붙어 언어 변경·런타임 대입을 번역한다.
+  `EditorUIBuilder.TMP/Btn` 이 구울 때 붙이고, `PopupBase.Awake` 의 `EnsureIn` 과 씬 로드 훅이 옛 프리팹을 보완한다
+- **언어 선택**: 일시정지 팝업의 '언 어' 드롭다운 (`EditorUIBuilder.LabeledDropdown`).
+  - ⚠ **언어 이름은 원어 고정이다** (사용자 지적, 2026-09-16) — 드롭다운 안의 `LocalizedText` 를 전부 끈다.
+    안 끄면 "日本語" 가 지금 언어로 되번역돼, 영어를 고른 순간 목록이 전부 영어가 된다. 제 나라 말을 찾을 수가 없다
+  - ⚠ **드롭다운 표기는 번역 대상이 아니라 고정 상수다** (사용자 지시, 2026-09-16) —
+    정본 `LocalizationManager.SupportedLanguageNames` (열 줄 하드코딩). 표(LocalizationTable)를 **안 지난다**
+    - 그래서 `Instance`(표 로딩)도 `SetLanguage` 도 필요 없다. 지금 언어가 무엇이든 이 열 줄은 그대로다
+    - ⚠ 예전엔 이 프로퍼티 안에서 `EnsureFor(일본어·중국어·프랑스어)` 를 불러 **기기 폰트를 런타임에 등록**했다.
+      드롭다운이 유독 잘 깨진 원인이 그것이다 — 본문은 고른 언어 **하나**만 그리면 되지만
+      드롭다운은 한국어 상태에서도 日本語·简体中文 을 **동시에** 그려야 해서, 기기 폰트 넷이 전부 맞아야 했다
+    - ⚠ 순서는 `LanguageOrder` 와 한 묶음이다 (드롭다운 인덱스 = 그 배열의 자리). 길이가 어긋나면 생성자가 에러를 낸다
+  - ⚠ **가나·한자는 미리 구운 에셋이 그린다** (사용자 지시, 2026-09-16) —
+    `아이콘·텍스처 > 언어 선택 폰트` (`Localization/Editor/LanguagePickerFontCreator.cs`)
+    → `Assets/_project/6.Fonts/LanguagePickerFont.asset`, 굽고 나서 **`LiberationSans SDF` 폴백표 맨 앞에 자동 등록**
+    - 한글이 `TDS_RPG_2 SDF` 로 그려지는 것과 **같은 길**이다 — 런타임 코드가 아예 관여하지 않아
+      런타임 폰트 생성·파괴가 만드는 `MissingReferenceException` 부류가 구조적으로 없다
+    - ⚠ **구울 글자를 손으로 적지 않는다** — `SupportedLanguageNames` 에서 뽑아 기본 폰트가
+      **실제로 못 그리는 것만** 남긴다(`HasCharacter(searchFallbacks: true, tryAddCharacter: false)`).
+      라틴은 기본 폰트(Latin-1 안의 ñ·é·ê·ç 포함), 한글은 TDS_RPG_2 가 이미 갖고 있어 **실제로 굽는 것은 가나·한자 9자뿐**이다
+    - ⚠ **언어를 추가하면 이 도구를 다시 돌릴 것.** 안 돌리면 그 줄만 □ 로 뜬다 (`Verify` 가 굽는 순간 글자를 대고 에러)
+    - ⚠ 두 번째 실행부터는 제 에셋을 폴백표에서 **먼저 뗀 뒤** 판정한다 — 안 떼면 "이미 그릴 수 있다" 가 되어 한 글자도 안 굽는다
+    - ⚠ Resources 밖에 둔다 — `LiberationSans SDF` 가 참조하므로 그 의존으로 빌드에 따라 들어간다
+  ⚠ 드롭다운 루트에 `RaisedBtn` 을 쓰지 말 것 — Button 과 TMP_Dropdown 이 겹친다
+- **폰트**: `Assets/_project/6.Fonts/Source/NotoSansCJKsc-Regular.otf` (16MB) — **굽는 재료일 뿐, 빌드에 안 실린다**
+  - ⚠ **Resources 밖으로 옮겼다** (사용자 지시, 2026-09-16 — "안 쓰면 제거해").
+    `Resources/` 안의 것은 **아무도 안 써도 통째로 빌드에 실린다** — 16MB 가 그렇게 실려 있었다.
+    지우지는 않았다(git 에 없는 파일이라 지우면 되돌릴 수 없고, 언어를 추가할 때 다시 구울 원본이 필요하다)
+  - ⚠ 함께 **코드째 사라진 것**: `LocalizationFontFallback.BundledFont` · `UsableBundledFont` · `_bundledFont` ·
+    `PickerGlyphs`. 옛 이름으로 검색해 안 나오면 여기다
+  - 지금 CJK 를 그리는 길은 둘뿐이다
+    | 무엇 | 누가 그리나 |
+    |---|---|
+    | 언어 선택 드롭다운의 가나·한자 | 미리 구운 `LanguagePickerFont` (기본 폰트 폴백표) — 런타임 코드 없음 |
+    | 본문 전체 (일본어·중국어를 골랐을 때) | **기기 폰트** (`EnsureFor` 가 찾아 폴백에 등록) |
+  - ⚠ 기기에 그 폰트가 없으면 `EnsureFont` 가 **경고를 찍는다.** 예전엔 번들 폰트를 만들어
+    `available = true` 로 덮었는데, 번들이 빠진 지금 그러면 "폰트가 있다" 는 거짓말만 남고 화면엔 □ 가 뜬다
+    (Windows·macOS·iOS·Android 는 CJK 기본 탑재라 실제로 닿을 일은 드물다)
+  - ⚠ **런타임 폰트는 파괴되면 폴백 목록에서 걷어내야 한다** (2026-09-16)
+    `HideFlags.DontSave` 라 플레이 모드를 나갈 때 파괴되는데 `TMP_Settings.fallbackFontAssets` 와 정적 캐시는 남는다.
+    그대로 두면 TMP 가 사라진 아틀라스를 읽어 `MissingReferenceException: m_AtlasTextures ...` 가 난다.
+    정본 `LocalizationFontFallback.PruneDestroyed` — 목록을 청소하고 '확인함' 표시를 풀어 다시 등록하게 한다.
+    ⚠ 폴백에 넣는 곳은 `RegisterFallback` 하나다. `fallbackFontAssets.Add` 를 직접 부르지 말 것
+    ⚠ **청소는 씬이 열리기 전에** 한다 — `PruneBeforeSceneLoad`(`RuntimeInitializeOnLoadMethod`).
+      매니저가 만들어질 때 청소해서는 늦다: 스플래시 첫 글자가 먼저 그려지며 터진다.
+      디스크의 TMP Settings.asset 은 폴백이 비어 있어도, **로드된 에셋 인스턴스**에는 지난 플레이의 항목이 남는다
+    ⚠ 에디터에서는 플레이를 나갈 때 우리가 넣은 항목을 되돌린다 (`OnPlayModeChanged`) — 파괴될 참조를 설정에 남기지 않는다
+- ⚠ **표에 없는 한국어 문구는 번역되지 않고 그대로 나온다.** UI 에 뜨는 문구를 추가하면 표에도 한 줄 넣을 것
+- ⚠ **수치가 든 설명에 보간 문자열(`$"…{값}…"`)을 쓰지 말 것** (2026-09-16, 실제로 당한 뒤 세운 규칙)
+  보간은 **실행 시점에 이미 숫자로 바뀌어 있다.** 표의 키는 코드에 적힌 그대로의 문자열이므로
+  `"공격력 +{Pct(Rule.X)}"` 같은 키는 런타임 문자열과 **영원히 일치하지 않는다** —
+  표에는 줄이 멀쩡히 있는데 화면에는 한국어로 나온다. **에러도 경고도 안 난다.**
+  - 정본은 `LocalizationManager.Format(키, 인자)` 다 — 키로 줄을 찾아 **번역문에** 인자를 끼운다.
+    언어가 바뀌어도 숫자와 자리가 함께 따라간다. 네 파일이 `static string F(...)` 도우미로 부른다
+    (`RunPerk` · `SpeciesPassive` · `RunEvent` · `MonsterSynergyRule`)
+  - ⚠ **한 문장을 `+` 로 쪼개지 말 것** — 조각은 언어마다 어순이 달라 옮길 수가 없다. 줄바꿈은 인자 쪽에서 한다
+  - ⚠ 다만 **조건부로 이어 붙는 조각**(`line += …`)은 합치지 않는다. 티어에 따라 붙었다 말았다 하므로
+    한 문장으로 묶으면 없는 효과를 말하게 된다 — 조각마다 제 줄을 갖고, 앞의 `" · "` 까지가 키의 일부다
+  - 판별은 기계적이다: 살아 있는 키는 `{` 뒤가 **숫자**(`{0}`·`{1:0.#}`), 죽은 키는 아니다
+- **콘텐츠 문구는 2026-09-16 에 전부 넣었다** — 표 1,540 → **2,487줄**.
+  끝난 파일: `MonsterCodexCreator` 234 · `MonsterGearCreator` 114 · `SpeciesPassive` 114 · `RunEvent` 110 ·
+  `RunPerk` 81 · `MonsterSynergyRule` 64 · `SummonerCreator` 47 · `ActiveSkillCreator` 44 · `HeroNameRule` 55 ·
+  `RelicTreeTypes` 35 · `SummonerPerk` 12 · `MonsterGearOption` 11 · `RelicTreeCatalog` 51(`Relic.*` 기호 키)
+  - ⚠ 그중 **119줄이 죽은 보간식 키**였다 (위 규칙). 지우고 네 파일을 `Format()` 으로 고쳐
+    **온전한 문장 104줄**로 다시 넣었다 — 조각이 합쳐지며 줄 수가 줄었다
+  - **`Format()` 으로 고친 파일은 일곱이다** — 위 넷(`RunPerk`·`SpeciesPassive`·`RunEvent`·`MonsterSynergyRule`)과
+    `RelicTreeTypes`·`SummonerPerk`·`MonsterGearOption`. 살아 있는 `{0}` 줄 70 → **221**
+    - ⚠ `RelicTreeTypes` 의 10줄은 **원본 표에 이미 있던 것**이 그대로 살아났다 — 원본이 처음부터
+      `{0}` 방식으로 적어 뒀는데 아무도 `Format()` 을 부르지 않아 잠들어 있었다. 이 변환이 맞다는 증거다
+    - ⚠ 한글이 없는 줄(`{label} {sign}{v}%`)은 번역할 것이 없어 그대로 뒀다 — 라벨은 이미 `Get` 으로 들어온다
+  - ⚠ **검증은 기억이 아니라 측정으로 한다** — 코드의 `F("…")` 키를 전부 뽑아 표에 있는지 대조한다.
+    2026-09-16 기준 **166키 전부 찾아짐 · 죽은 줄 0**. 눈으로 훑다가 `GoldAbility` 넷과
+    `RunEvent` 결과 문장 14개를 실제로 빠뜨렸다 — grep 이 아니었으면 그대로 남았다
+  - **UI 화면 문구도 넣었다** (2026-09-17) — 표 **2,697줄**. 보간 문구 약 90곳을 `LocalizationManager.Instance.Format` 으로
+    바꿨다(`TopBarUI`·`MonsterDetailPopup`·`ShopPopup`·`RunNodeFlow`·`ManaRegenRule` 등). 코드의 `Format` 키 **263개 전부 표에 있음**
+  - ⚠ **아직 안 넣은 것** — ① **두 글자 이하 낱말**(`진화`·`융합`·`뒤로`·`제단`·`갑옷`·`증식`·`패기` 등) —
+    부분 치환 오염 때문에 기호 키로 돌려야 한다(유물 노드 `Relic.*` 처럼) ② Creator 자리표시(`수집 84 / 120` 등 — 런타임에 덮인다)
+    ③ 인스펙터 `[Header]`·툴팁 · 콘솔 로그(번역 대상 아님)
+  - **튜토리얼 문구는 2026-09-18 에 넣었다** (표 2,695줄) — 한국어가 이 게임에 맞게 고쳐진 뒤에야 옮겼다.
+    시나리오 5개 · 도움말 6개의 말풍선 전부 + `건너뛰기`·`화면을 누르면 계속`·`표시된 곳을 누르세요`
+    - **원작 튜토리얼 96줄은 함께 지웠다** — 장수·어빌리티·용병·분해·웨이브를 설명하는 죽은 줄이었다.
+      지우기 전에 `.cs`·`.prefab`·`.unity`·`.asset` 전체를 대조해 참조 0건을 확인했다
+    - ⚠ **번역 훅을 따로 만들지 않았다** — TMP 에 자동으로 붙는 `LocalizedText` 가 말풍선 글을 옮긴다.
+      다만 **칸은 `TutorialOverlay.LayoutBubble` 이 번역문으로 잰다**(`Localized`) — 한국어 길이로 재면
+      1.5~2배로 늘어난 번역문이 넘쳐 자동 축소에 걸려 글자만 잘게 쪼그라든다
+    - ⚠ 문구를 고치면 **표의 그 줄도 함께 고칠 것.** 키는 코드에 적힌 한국어 그대로이므로
+      한 글자만 달라져도 조용히 한국어로 돌아간다 (에러가 안 난다)
+  - ⚠ **시너지 이름 `숲`·`동`·`은`·`금` 은 일부러 뺐다** — 한 글자 키는 부분 치환으로 다른 문구를 오염시킨다
+    (`금` → `황금`·`금화`, `동` → `이동`·`동족`). 넣으려면 기호 키로 돌릴 것
+- ⚠ **짧고 흔한 조각은 한국어 키로 넣지 말 것 — 기호 키를 쓴다** (사용자 확정, 2026-09-16)
+  `LocalizeText` 는 완전 일치가 없으면 표를 **긴 것부터 부분 치환**한다. 그래서 `강철`·`성벽`·`기사` 처럼
+  게임 어휘와 겹치는 조각을 한국어 키로 넣으면 **다른 문구 속 같은 글자까지 조용히 바뀐다.**
+  - 정본 사례 `HeroNameRule` — 수식어 16 · 이름 24 · 칭호 12 · 접두어 3 을 전부 `Hero.*` 기호 키로 바꿨다.
+  - ⚠ **기호 키만으로는 치환을 못 피한다** (2026-09-17 정정) — 부분 치환 풀(`_replaceRows`)은 키가 아니라
+    **한국어 칸 전부**로 만든다. 그래서 `LoadTable` 이 `Hero.*`·`Relic.*` 줄을 풀에서 **따로 뺀다.**
+    고유명사 기호 키 계열을 새로 만들면 그 접두사도 거기에 넣을 것 (`MaxHp`·`Job_*` 같은 옛 기호 키는 아직 풀에 있다)
+- ⚠ **`Format` 결과는 `LocalizedText` 가 다시 번역한다 — `_formatted` 가 없으면 부서진다** (2026-09-17 버그)
+  TMP 마다 붙은 `LocalizedText` 는 번역문을 원문으로 되돌린 뒤(`SourceForRendered`) `LocalizeText` 로 다시 번역한다.
+  숫자가 끼워진 원문은 표에 없어 부분 치환만 탔고, `Format` 의 온전한 번역을 `처치마다 Attack +12% (최대 5회)` 처럼
+  **한글 섞인 문장으로 덮어썼다** — 시뮬레이션상 `Format` 키 258개 중 236개. 지금은 `Format` 이 원문 → (줄, 인자)를
+  기억하고 `LocalizeText` 가 `TryReformat` 으로 **지금 언어로 다시 Format** 한다(언어 변경에도 맞다).
+  ⚠ 이 경로를 우회하는 새 번역 함수를 만들지 말 것 — 반드시 `Format`/`Get` 을 지날 것
+  ⚠ **번역된 조각을 `$"…"` 로 이어 붙이지 말 것** — 용사 이름이 그래서 한국어로 남았다(2026-09-17).
+    `HeroNameRule` 은 `Format("Hero.Format.Full"/"Short"/"Prefixed", …)` 로 조립한다(띄어쓰기·어순은 표가 정한다)
+- **번역문 넘침은 `LocalizedText.ApplyFit` 이 맞춘다** (사용자 지적, 2026-09-17) — 번역된 글이 들어간 동안만
+  자동 축소(여러 줄 칸 0.6배·최소 18 / 한 줄 칸 0.35배·최소 12)를 켜고, 한 줄 높이 칸은 줄바꿈을 끈다. 한국어로 돌아오면 원래 설정 그대로다.
+  ⚠ 한 줄 칸 바닥이 낮은 이유 — 18 이던 때 72px 배지의 한 단어가 "Afinid..." 로 잘렸다 (친화·전황 등급)
+  ⚠ **툴팁 폭은 `InfoTooltipUI.ApplyLanguageWidth` 가 언어별로 넓힌다** — 구운 폭 × `LocalizationManager.TextWidthScale`
+    (한·중·일 1 · 라틴 1.4, 상한 900). 모든 툴팁(`TooltipLayer` 포함)이 이 한 곳을 지난다. Creator 폭을 언어 때문에 늘리지 말 것
+  ⚠ UI 규칙 4(FontSm 하한)는 한국어 기준이라 번역문은 그보다 작아질 수 있다 — 너무 작으면 칸을 넓힐 것.
+  ⚠ `ContentSizeFitter` 가 붙은 글은 건드리지 않는다
+- **MainPanel 사이드 '설정'** (사용자 지시, 2026-09-17) — 옛 '기타' 잠금 칸 자리. `PausePopup` 을 그대로 연다(소리·언어)
+  - ⚠ **표에 없는 키는 `Get` 이 키 문자열을 그대로 돌려준다** — 화면에 `Hero.Epithet.01` 이 뜨고 에러는 안 난다.
+    키를 바꾸면 표의 `Hero.*` 줄도 함께 고칠 것
+  - 기존 기호 키 99개(`MaxHp`·`Job_Knight`·`Language.*`)와 같은 방식이다
+
 ### 튜토리얼
 - **총괄·노출 시점**: `Tutorial/TutorialManager.cs` — 트리거는 전부 여기 (각 UI 에서 부르지 않는다)
 - **시나리오**: `Tutorial/Scenarios/*.cs`, 스텝 정의는 `Tutorial/TutorialStep.cs`
 - **화면**: `Tutorial/TutorialOverlay.cs` (sortingOrder 1000)
 - **⚠ 강제 튜토리얼은 팝업 위에서 시작하지 않는다** — `TutorialScenario.StagePopup` 참고
 - **기록**: `Data/Sections/TutorialData.cs` (환생으로 초기화하지 않는다)
+- **이 게임용으로 다시 켰다** (사용자 지시, 2026-09-17) — `TutorialManager.Enabled = true`
+  | 강제 | 언제 | 트리거 |
+  |---|---|---|
+  | `SummonBattle`(10) | 1스테이지 대기 — HUD·카드 고르기→라인 탭→[시작] → 전투 중 시그니처 스킬 직접 쓰기·전투 UI | `StageLoopDirector.OnStageReady(1)` |
+  | `FirstReward`(11) | 1스테이지 클리어 — 카드 3택·갈림길 | `BattleManager.OnVictory` (스테이지 1) |
+  | `FirstRelic`(6) → `FirstCodex`(12) | 첫 환생 뒤 메인 화면, 보상 상자 등 팝업이 다 닫힌 뒤 | `MainPanelUI.OnShown` (환생 1회 이상) |
+  - **2스테이지부터는 강제 안내가 없다** (사용자 지시)
+  - **첫 실행은 소환사 선택 없이 곧장 1스테이지다** — `LobbyManager.SelectInitialPanel` 의 `ConsumeFirstLaunch` 분기,
+    소환사 = `FirstRunSummonerId`("novice", 견습). ⚠ `FirstCodex` 가 슬라임을 전제한다
+  - ⚠ `FirstCodex` 는 첫 품질 개선(770)에 **모자란 영구 골드만 한 번 채운다** — 시작 골드 500 이라 첫 런을 일찍 끝내면 못 누른다
+  - ⚠ 라인 탭은 월드 입력이다 — `LaneGuide/Band_3`(raycast 꺼짐)을 구멍으로 뚫어 탭이 전장에 닿게 한다
+  - `TutorialScenario.Resumable` — 게임 상태를 따라가는 시나리오(인게임·보상)는 앱 재시작 시 처음부터다
+- **도움말(i 버튼)**: 유물 · 도감 · 난이도 · **몬스터 상세 · 카드 3택 · 전황** (`HelpTutorials.cs`)
+  - ⚠ i 버튼은 Creator 가 굽는다 — 시나리오만 등록하면 버튼이 없다. 굽기: `팝업 > RelicTree` · `몬스터 상세` · `▶ 런 팝업` · `전황` → `[Load Popup Prefabs]`
+    - ⚠ **"i 버튼이 안 보인다" 는 대개 Creator 가 아니라 프리팹이 옛것이다** (사용자 지적, 2026-09-18)
+      실제로 `Codex` 만 다시 구워져 있어 나머지 다섯(유물·몬스터 상세·카드 3택·전황·난이도)에 버튼이 통째로 없었다.
+      **에러가 안 난다** — 코드에는 `InfoBtn` 한 줄이 멀쩡히 있다. 프리팹을 grep 해 `m_Name: InfoBtn` 이 있는지 볼 것
+  - ⚠ **닫기와 i 는 같은 크기·같은 세로 자리여야 한다** (사용자 지적, 2026-09-18)
+    `InfoBtn` 은 정사각형 하나(`size`)로 서는데 도감 닫기만 88×78 · y+4 라 머리 줄이 삐뚤어 보였다.
+    나란히 서는 두 버튼은 **Creator 안에서 한 상수를 함께 쓴다** (`CodexPopupCreator.CloseSize`)
+  - ⚠ 장비 상세는 머리(착용 초상화·지갑)에 i 버튼 자리가 없어 뺐다 (여유 16px)
 
 ### 성장 연출 (레벨업·강화 이펙트)
 - `UI/Juice/UIJuice.cs` (프리셋) + `UI/Juice/UIJuiceLayer.cs` (실행)
@@ -1182,6 +1373,54 @@ UI=0, Unit=1, Effect=2, Projectile=3
 - **기존 섹션**: `Data/Sections/` 하위 파일들
 - **저장 트리거**: `UserDataManager.Instance.RequestSave()`
 
+### 밸런스 점검 (2026-09-16, 사용자 요청 — "업그레이드하면 너무 쉽다 · 지금도 쉽다")
+- 적 전체 배율 `GeneralStatRoller.GlobalScale` — 1.0 으로 올렸다가 **0.88 로 되돌렸다** (사용자 지시, 같은 날 — 초반이 세졌다).
+  ⚠ 스테이지 1 부터 곱해지는 값이다. 후반만 올리려면 가속을 본다
+- 고정 성장 가속 `LevelGrowthAccel` 0.02 → 0.03 → **0.05** (에셋 + `UnitJobRoller` 폴백 — 초반 등급 상한을 넣은 대신 후반을 올렸다)
+- **후반 복리** `GameplayConfig.LateGrowthFromLevel`(10) · `LateGrowthRate`(0.07) — 적 체력·공격력 × 1.07^(레벨−10) (사용자 지적 — "30스테이지가 10스테이지의 2배뿐")
+  기사 체력 10→30스테이지 약 ×8, 공격 약 ×10. ⚠ 고정 성장까지 더한 뒤 곱한다(`UnitJobRoller.Roll`). 병사 수·방어율·속도엔 안 건다
+- 품질 계수 `GradeMultPerTier` 는 에셋 값 **0.15 가 정본이다** (사용자 확정, 2026-09-16) — 문서·코드 폴백의 '+10%' 가 옛 값이다. 되돌리지 말 것
+- 영구 성장(품질·유물 공 +62%/체 +92%·장비)에는 적 쪽 대응이 난이도 하나뿐이다. 더 벌어지면 유물 스탯 노드·2차 권속 쿨다운부터 볼 것
+
+### 초반 용사 등급 상한 (사용자 지시, 2026-09-16)
+- 레벨(= 스테이지) 1~9 용사의 태생 등급은 **고급(Uncommon)까지** — 정본 `UnitJobRoller.GetBirthGrade(이름, 레벨)`
+- 이름 시드가 5스테이지 장수 둘(`Hero_S5_0/1`)을 영웅으로 굴려, 기사가 병사 14명을 스탯 99% 로 끌고 왔다 (견습 첫 런 벽)
+- ⚠ 레벨을 아는 곳은 반드시 2인자판을 쓴다 — 전투(`HeroSpawner`·`GeneralRuntimeBridge`)와 화면(전황·`UnitEntry.Grade`)이 같아야 한다.
+  1인자판은 레벨이 없는 곳(초상화 합성·희귀 스킬 로그)만 쓴다 — 초반 영웅 장수의 초상화 외형만 필드와 다를 수 있다
+
+### 유물 '치유의 기억' — 재생·회복량 (사용자 지시, 2026-09-16, 옛 '야성의 기억')
+- 정본 `SpeciesPassiveRuntime.PassivePower` (레벨당 +10%). 옛 설명은 "종족 패시브 효과" 인데 재생 둘에만 걸려 있었다
+- 거는 곳: 재생·트롤의 피·치유의 잔재·생명의 씨앗·광합성(소환 때 비율에 굽는다)·힐 슬라임 치유 스킬(`ActiveSlimeMend`)·
+  원작 회복 패시브 셋(흡혈 타격·긴급 회복·처치 회복 — `HealPowerFor`). 생명 흡수·흡혈귀는 그 슬롯을 붙여서 저절로 따라온다
+- ⚠ 원작 회복 패시브는 **용사도 쓴다** — `HealPowerFor` 가 회복하는 쪽이 몬스터일 때만 배율을 준다
+- ⚠ 시너지 회복(재생 시너지·숲 사망 회복)은 안 건다 — 패시브가 아니다. enum ID 는 `N_FeralMemory` 그대로(세이브·아이콘)
+
+### ⚠ 성벽 앞에서 머리만 박는 용사 — 풀 재사용 때 `BreachedTag` 가 남았다 (2026-09-16 버그)
+- 성벽을 통과한 용사 엔티티는 `BreachedTag`+`DeadTag` 로 풀에 돌아간다. 재사용 초기화(`UnitRuntimeBridge`)가 `DeadTag` 만 떼서,
+  다음 판에 병사로 다시 선 엔티티가 처음부터 "이미 통과" 로 판정에서 빠졌다 — 성벽선(x −12.00 < 통과선 −11.85)에 서서 영영 안 거둬졌다
+- 지금은 같은 자리에서 `BreachedTag` 도 뗀다. ⚠ 엔티티에 태그를 새로 붙이면 이 초기화에도 떼는 줄을 넣을 것
+
+### 보스는 아군이 남아 있으면 성벽에 붙들린다 (사용자 지시, 2026-09-16)
+- 정본 `CoreBreachSystem` — 필드 몬스터(`MonsterLineReturner.AliveCount`)나 **배출 중인** 대기열(`SummonController.HasPendingSpawns`)이 있으면 보스를 거두지 않는다.
+  ⚠ 대기열 수로 세지 말 것 — 배출이 멈춘 라인의 몬스터까지 세어 필드가 빈 채 보스가 영원히 붙들렸다 (2026-09-16)
+- ⚠ 전투 중 대기열 복귀(숲 금 · 특성 '귀환')는 `SummonController.ReturnToLine` 을 쓴다 — 넣기만 하면 배출이 끝난 라인에서 다음 판까지 갇힌다
+  `ScreenClampJob` 이 성벽선에 물려 두어 그 자리에서 싸운다. 둘 다 비었을 때만 함락
+- 특성 '매복'(3초 배출 정지) + 보스판에서 돌진한 보스가 빈 전장을 지나 즉시 패배시키던 문제다. 보통 용사는 그대로 −1
+- **돌진은 성벽 1칸 앞에서 멈춘다** (사용자 지시, 2026-09-16) — `BossChargeRunner.WallStopMargin`. 착지점(관통 포함)이 성벽선을 넘으면 경로를 자른다.
+  ⚠ 통과 판정선(`WallX + 0.15`)보다 바깥이어야 한다 — 안쪽이면 돌진 착지만으로 함락된다
+
+### 패배 화면의 '이번 런' 칸 (사용자 요청, 2026-09-16)
+- `ReincarnationPopup` 오른쪽 칸 — 보유 특성 격자 + 덱 8칸(누르면 몬스터 상세 런 모드). 창 1240 → 1840
+- 특성 목록 정본은 `RunPerkBarUI.Collect` (HUD 줄과 공유 — 개성·특성·제단 표식)
+- 굽기: `프리팹 생성 > 팝업 > Reincarnation` → `PopupManager [Load Popup Prefabs]` (시너지 아이콘이 먼저 있어야 한다)
+
+### ⚠ 용사가 제 편을 죽이면 골드가 없다 (2026-09-15 버그)
+- 용사 스킬 '병사 희생'(제 병사에게 999,999 피해) · '자폭 병사'(스스로 터짐)의 사망이 **처치로 세어져**
+  골드와 동전 연출이 났다. 용사 스킬은 쿨다운 0 으로 서므로 스테이지가 열리자마자 화면 오른쪽에서 동전이 날아왔다
+- 지금은 `UnitDeathDespawnSystem.KilledByOwnSide` — 마지막 일격(`DamageResultElement.IsKill`)의 공격자가 **같은 진영**이면
+  골드·'강적의 정수'를 주지 않는다. 공격자가 이미 사라졌으면 확인할 수 없어 준다
+- ⚠ 적 수 집계(`OnUnitDead`)·처치 이벤트는 그대로다 — 막은 것은 **보상**뿐이다
+
 ### 골드 값은 **수입을 따라간다** (사용자 지적, 2026-09-10)
 > 정본은 `RunGoldRule.PriceUnit(stage)` / `Price(배수, stage)` 하나다.
 
@@ -1191,7 +1430,7 @@ UI=0, Unit=1, Effect=2, Projectile=3
   | 상점 카드 | ×2 | 80 | 660 |
   | 상점 특성 | ×2.5 | 100 | 825 |
   | **재고 교체(리롤)** | ×(0.75 + 0.75×굴린 횟수) | 30 | 250 → 495 → 745 |
-  | 마력의 정수 | ×(2 + 1.5×산 횟수) | 80 | 660 → 1,155 → 1,650 |
+  | 마력의 정수 | ×(2 + 0.75×산 횟수) — 2026-09-15 1.5 에서 반으로 | 80 | 660 → 907 → 1,155 |
   | 야영지 증축 | ×2.5 | 100 | 825 |
   | 강화소 각인·증식 | ×2 | 80 | 660 |
   | 이벤트 골드 갈래 | `GoldUnit` = 같은 단위 (×1~×4) | | |
@@ -1218,7 +1457,8 @@ UI=0, Unit=1, Effect=2, Projectile=3
     리롤로 되돌릴 수 있으면 브레이크가 통째로 풀린다
   - ⚠ 여는 쪽과 리롤이 **같은 함수**(`ShopPopup.RollStock`)를 쓴다. 갈라지면
     "리롤한 재고만 규칙이 다른" 상태가 된다
-  - 자리는 "몬스터" 줄 오른쪽 끝이다 — 지갑(오른쪽 위) 옆에 두지 말 것.
+  - 자리는 **카드 줄 오른쪽 옆, 카드 세로 가운데**다 (300×170 청록, 2026-09-15 — 라벨 줄 끝의 납작한 갈색 띠는 안 보였다).
+    살 카드가 없으면 빈 카드 줄 한가운데로 옮긴다. 지갑(오른쪽 위) 옆에 두지 말 것.
     지갑은 읽는 것이고 이건 누르는 것이라, 값을 확인하려다 재고를 갈아 치우게 된다
   - ⚠ **Creator 를 고쳤으니 다시 구워야 뜬다** —
     `프리팹 생성 > 팝업 > 상점` → `PopupManager [Load Popup Prefabs]`
@@ -1276,7 +1516,7 @@ UI=0, Unit=1, Effect=2, Projectile=3
 | 이벤트 최대 체력 보상 | 최대 마나 +(체력의 2/3) | `RunEventRule.ManaForCoreMax` |
 | 종족 패시브 마나 공명(130) | 최대 마나 1당 공·체 +0.2% — **비전 리치**(`arcane_lich`, 리치 진화) | `SpeciesPassiveRuntime.ApplyOne` |
 | 종족 패시브 마나 방출(131) | 죽을 때 마나 +1, 한 판 최대 5 — **마력 해골**(`mana_skeleton`, 스켈레톤 진화) | `SpeciesPassiveRuntime.OnDeath` |
-| 소환사 대마법사(`archmage`) | 최대 마나 10당 전군 공/체 +3% · 시그니처 **마나 폭발**(36, 남은 마나 절반을 태워 마나 1당 대상 최대 체력 2% · 보스 1% · 방어율 무시) | `MonsterStatComposer` ⑤-b · `ActiveManaBurst` |
+| 소환사 대마법사(`archmage`) | 최대 마나 10당 전군 공/체 +3% · 시그니처 **마나 폭발**(36, **화면 전체** · 대상 최대 체력 30% + 태운 마나(잔량 절반) 1당 1.5% · × 패기 · 보스 절반 · 방어율 무시 · 마나 0 이어도 기본 피해). **가장 늦게 연다** — 비전 리치 + 리치 킹 + 25 스테이지 | `MonsterStatComposer` ⑤-b · `ActiveManaBurst` |
 | 소환사 결정술사(`crystalmancer`) | 판 경계 남은 마나 20% → 최대 마나 (상한 100) · 소환력 ×0.6 | `SummonerPerkRuntime.SettleCrystal` |
 | 드루이드 개성 → 자연의 회복 | 판 경계 최대 마나의 10% 더 회복 (옛 '야성 질주' 교체) | `ManaRegenRule.RawFor`·`Describe` |
 | 오크 킹 개성 → 총동원 | 친화 카드 마릿수 +1 (옛 '전쟁 함성' 교체) | `RunPerkRule.SummonCountFor` |
@@ -1288,8 +1528,16 @@ UI=0, Unit=1, Effect=2, Projectile=3
   `프리팹 생성 > 로비 > MainPanel`(격자 3×5 로 늘었다)
 
 ### 소환사 시작 시너지 · 마왕성 체력 (사용자 지시, 2026-09-12)
-- **소환사마다 시작 시너지 컨셉이 하나다** — 시작 카드가 그 시너지의 동 문턱을 연다(언데드·숲 3장 · 나머지 2장).
-  정본은 `SummonerCreator` 로스터의 `Starters` 줄 주석. 일부는 진화체를 시작 카드로 준다(도감이 그 자리에서 열린다)
+- **소환사마다 시작 시너지 컨셉이 하나다** — 시작 카드가 그 시너지의 동 문턱을 연다(소속 7종 시너지 3장 · 6종 시너지 2장).
+  정본은 `SummonerCreator` 로스터의 `Starters` 줄 주석
+- ⚠ **진화체(1차·2차)를 시작 카드로 주면 해금 조건이 그 종족의 도감 등록을 요구해야 한다** (사용자 확정, 2026-09-15)
+  - 도감은 빈 채로 시작하고 기본 종족만 카드 보상으로 열린다. 조건 없이 진화체를 주면 런 시작(`RunBootstrap`)이
+    도감에 공짜로 올려 진화의 문이 우회된다. `SummonerCreator.VerifyStarterUnlocks` 가 굽는 순간 에러로 잡는다
+  - 2차로 시작해도 된다 (슬라임 킹 = 슬라임 · 힐 슬라임 · **슬라임 킹**)
+  - 로스터(= 선택 화면) 순서는 **해금이 쉬운 순**이다 — 기본 종족만 → 진화체 아무거나 1종 → 1차 하나 → 1차 둘 → 2차
+  - ⚠ **두 번째 소환사(군악대장)는 "진화체 아무거나 1종"(`SummonerUnlockKind.UpgradeCount`)으로 열린다** (사용자 지적, 2026-09-15)
+    — 첫 런은 견습의 슬라임을 키우는데 진화가 무작위라, 특정 1차를 요구하면 첫 진화가 아무 소환사도 안 열었다.
+    한두 런 안에 다음 소환사가 열려야 한다
 - **마왕성 체력 = 12 + 체력 × 9** (옛 30 + 6) — 체력 6 에서 66 으로 같고 양끝이 벌어진다(3 → 39 · 10 → 102).
   ⚠ 값이 **소환사 SO 에 직렬화**돼 있다 — `SummonerData` 기본값만 고치면 에셋은 옛 값을 쓴다
 - **군악대장(`bandmaster`)** — 15번째 소환사 (사용자 지시, 2026-09-12). 개성 **쌍둥이 소집**(`TwinCall`) =
@@ -1379,8 +1627,15 @@ UI=0, Unit=1, Effect=2, Projectile=3
     거기서 초를 돌려주면 특성을 켠 순간 모든 종족이 같은 속도가 된다
   - ⚠ 360° 표시의 분모는 `SummonController._laneInterval`(지금 기다리는 그 간격)이다.
     고정값으로 나누면 트롤 차례에 고리가 반만 돌고 슬라임 차례엔 되감긴다
+- **빠른 종족은 체력 보너스를 조금 받는다** (사용자 지시, 2026-09-15) — 정본 `SpeedHpRule`(SpawnPaceRule.cs 끝)
+  - 이동속도 2.5 초과분 1 당 체력 +12%, 상한 +25% (늑대 4.2 → +20%). **SO 원본 이속**으로 판정
+  - 이유: 먼저 닿아 점사를 받고, 개체 DPS 가 높아 한 마리 손실이 크다 (슬라임은 반대로 피해가 흩어진다)
+  - ⚠ 체력에만 준다 — 공격력을 올리면 한 마리가 죽을 때 잃는 딜이 더 커진다
+  - 곱하는 곳 둘: `MonsterStatComposer` ②(전투) · `MonsterDetailPopup` 체력 행(도감)
 - **줄 서는 순서 = 덱 순서** (사용자 확정, 2026-09-07) — 누른 순서가 아니다
   - 하단 카드 바를 **끌어 옮겨** 바꾼다 (`SummonCardUI` 드래그 → `SummonDeckUI` → `SummonDeckData.Move`)
+  - ⚠ `SummonCardUI.ShowCard/ShowEmpty` 는 선택 표시를 끈다 — `SummonDeckUI.RefreshCards` 끝에서 `_selectedSlot` 으로 다시 켠다
+    (2026-09-17 버그: 카드를 내면 덱 `Changed` 로 다시 그려져 선택이 풀린 것처럼 보였는데 실제 선택은 남아 있었다)
   - ⚠ 꺼낼 때 고르지 않고 **넣을 때 자리를 잡는다** (`SummonReservation.InsertIndex`) —
     꺼낼 때 고르면 화면의 대기열은 넣은 순서로 보여 보이는 줄과 나오는 줄이 갈린다
   - ⚠ 순서를 바꾸면 이미 선 줄도 다시 세운다 (`SummonReservation.Resort`)
@@ -1491,6 +1746,10 @@ UI=0, Unit=1, Effect=2, Projectile=3
   `ShopPopup.BuyCard` 가 `Acquire` 를 쓰므로 그냥 두면 위와 같은 사고가 난다
 - 화면: `StateText` = "진화" · `DescText` 는 **비운다**(설명과 결론이 같은 사각형이다)
 
+- ⚠ **카드 3택의 마나·마릿수·공격력·체력은 런 합성 값이다** (사용자 지시, 2026-09-15) — 몬스터 상세(런 모드)와
+  같은 `MonsterStatComposer.Compose`(도감 품질 · 덱 칸의 계승분)를 지난다. 레벨이 오르는 카드는 `지금 › 고른 뒤`.
+  예전엔 종족 원본 × 레벨 비율이라 시너지·특성·장비·레벨 표가 빠져 슬라임 킹이 체력 6000 으로 떴다.
+  소환사가 없을 때(런 밖)만 옛 종족 값으로 떨어진다
 - ⚠ **만렙 카드에는 초록 "+N" 을 적지 않는다** (사용자 지적, 2026-09-12)
   `CardSelectPopup.StatWithGain` 의 증가분은 레벨로 **이미 붙어 있는** 몫이지
   이번에 고르면 붙는 몫이 아니다. 만렙 카드를 고르면 레벨은 그대로고 진화·융합
@@ -1577,6 +1836,16 @@ UI=0, Unit=1, Effect=2, Projectile=3
   할인이 두 번 겹쳤다. 같은 축을 두 번 쥐여 주는 것은 선택지가 아니다
 - ⚠ 축이 같아도 **대상이 다르면** 겹쳐도 된다(개성=친화 종족, 특성=전 종족).
   막을 것은 같은 대상에 같은 값이 두 번 붙는 경우다
+- **표에 든 짝은 둘이다** — 친화 할인(견습) · **심연 공명(리치, 2026-09-18 추가)**
+  - 심연 공명은 이름·축·대상이 전부 같은데 **적용 지점이 둘로 갈려 있어** 안 보였다 —
+    개성은 `MonsterStatComposer` ⓪ 에서 친화 배율에 `PerkValue`(1.6)를 한 번 더 곱하고,
+    특성은 `RunPerkRule.AffinityMultFor` 가 배율 자체를 1.2 → 1.6 으로 갈아 끼운다.
+    둘을 함께 쥐면 `1.6 × 1.6 = ×2.56` 으로 기본(×1.2)의 2.1배가 됐다
+  - ⚠ **같은 효과가 두 enum 에 있으면 이 표를 먼저 볼 것** (`SummonerPerk` · `RunPerk`).
+    이름이 같다고 자동으로 걸러지지 않는다 — 이 표에 적어야 걸러진다
+- ⚠ 거르는 자리는 `CollectMissing` 하나다 — 3택·상점·이벤트·유물 '오래된 계약' 이
+  전부 `RunPerkPicker.Pick` 을 지나므로 여기만 막으면 된다. 새 획득 경로를 만들면 그 길을 탈 것
+- ⚠ **이미 둘 다 쥔 세이브는 그대로다** — 후보에서 빼는 것이지 가진 것을 뺏지 않는다
 
 ### ⚠ 카드의 마릿수는 실제 소환식과 같은 것을 쓴다 (2026-09-09)
 - `SummonCardUI.SummonCountOf` = `RunPerkRule.SummonCountFor + slot.ExtraSummons` —
@@ -1662,8 +1931,25 @@ UI=0, Unit=1, Effect=2, Projectile=3
     넘치면 `GridLayoutGroup` 이 조용히 다음 줄로 접는다 — 에러가 안 난다
   - ⚠ 세로 검산: 행동 200 + 16 + 카드 286 = 502 ≤ `BottomVeilH`(560).
     어둠 판 높이는 네 시설이 함께 쓰므로 못 늘린다
-- 칸 아래 한 줄은 **배지(마나·마릿수)와 글 중 하나**다. 화면마다 하나만 켠다
-  (`CardCell.ManaBadge`/`StateText`, 기본은 꺼짐)
+- 칸 아래 한 줄의 입주자는 **셋이고 하나만 켜진다** (`CardCell`, 기본은 전부 꺼짐)
+  | 화면 | 그 줄에 | 필드 |
+  |---|---|---|
+  | 강화소 | 마나·마릿수 배지 (무엇을 새겼나) | `ManaBadge`/`CountBadge` |
+  | 제단 | **시너지 표식 아이콘** (2026-09-18) | `TagRow`/`TagRoots` |
+  | 표식 없는 종족 | 글 "표식 없음" | `StateText` |
+- **제단의 표식은 아이콘이다** (사용자 요청, 2026-09-18) — 옛 `DescribeCell` 은 "숲 · 야수" 로 적었다
+  - 켜는 것은 `ShowsTagRow`(제단만 true) 하나, 그리는 것은 `CardPickPopupBase.FillTagRow` 하나다
+  - 아이콘에 올리거나(PC) 누르면(모바일) 동·은·금 효과가 툴팁으로 뜬다 — `SynergyChipUI` 를 그대로 쓴다
+  - 켜진 표식은 밝게·아직인 것은 흐리게 (`DimTag`). ⚠ 단계 색으로 물들이지 말 것 —
+    아이콘이 저마다 제 색을 갖고 있어 회색으로 덮으면 여덟 개가 다 같아 보인다
+  - ⚠ **칩을 직접 누르면 카드가 안 골라진다** — 칩이 클릭을 먹는다.
+    카드 3택(`RunPopupCreator.BuildSynergyChip`)이 이미 같은 모양이라 맞춰 뒀다.
+    PC 는 올리기만 해도 떠서 고르는 데 방해가 없다
+  - ⚠ `Setup(tag)` 를 **매번** 부른다 — 칸이 재사용되므로 빠뜨리면 옛 카드의 설명이 뜬다
+  - 폭 검산: `3 × 38 + 2 × 10 = 134 ≤ 188`. 아이콘 38 ≤ `RowSm`(43).
+    `VerifyTagRow` 가 굽는 순간 둘 다 잰다 — `HorizontalLayoutGroup` 은 넘쳐도 에러를 안 낸다
+  - ⚠ 아이콘 배열은 **강화소도 함께 받는다** (`_synergyIcons`) — 칸 굽기가 공유라
+    한쪽만 비워 두면 "제단만 되는" 갈림이 생긴다
 - **강화소는 다 새긴 카드를 목록에 올리지 않는다** (`RunNodeFlow.CollectForgeSlots`)
   - ⚠ 거르는 조건과 `ForgePopup` 이 버튼을 잠그는 조건이 **같아야 한다**.
     갈리면 "목록에는 있는데 아무것도 못 하는" 칸이 다시 생긴다
@@ -1672,7 +1958,14 @@ UI=0, Unit=1, Effect=2, Projectile=3
 ### 상점 (ShopPopup)
 - **정본**: 재고·값 `InGame/Summon/RunShopRule.cs` · 화면 `UI/Popup/ShopPopup.cs`
   · 굽기 `UI/Popup/Editor/ShopPopupCreator.cs` → `프리팹 생성 > 팝업 > 상점`
-- 파는 것 셋 — **카드 4** · **특성 2** · **마력의 정수**(최대 마나 +1)
+- 파는 것 — **카드 4** · **특성 2** · 상시 판매 넷(**마력의 정수** 최대 마나 +1 · **전쟁 자금** 공/체 +2% · **소집의 북** 배출 간격 ×0.95 · **마나 회복 포션**)
+  - 마나 회복 포션 (사용자 지시, 2026-09-16) — 지금 마나를 최대 마나의 30% 채운다(`RunShopRule.PotionAmount`, 채우는 곳은 `RunPerkRule.RestoreMana`).
+    **방문당 한 병** — 사면 "품절" 덮개(사용자 지시). 값 ×1.5 고정. 방문 수는 저장하지 않는다(재고 교체와 같은 규칙). 마나가 가득이면 잠근다(`Bind(blocked)`).
+    ⚠ 덮개 글자는 칸 공용("구입함")으로 구워져 있어 포션 칸만 런타임에 "품절" 로 갈아 끼운다(`ShopPopup.Refresh`)
+    ⚠ 상시 판매가 네 줄이 되어 한 줄 76px 이다 — 더 늘리면 구매 버튼(58+8)이 안 들어간다. 아이콘 `item_mana_potion`(`ItemIconGenerator`)
+  - 소집의 북 (사용자 지시, 2026-09-15) — 전쟁 자금과 같은 틀(값은 산 횟수만, 300 → 550 → …).
+    스택 `RunBoonData.DrumStacks` · 곱하는 곳 `RunPerkRule.DrainMultiplierFor` 하나(`RunShopRule.DrumIntervalMult`).
+    ⚠ 빼지 않고 곱한다 — 빼면 끝없이 샀을 때 간격이 0 이 된다. 아이콘 `item_war_drum`(`ItemIconGenerator`)
   - ⚠ 카드 후보는 **카드 3택과 같은 규칙**을 쓴다 (`CardRewardPicker.Pick(.., want)`).
     상점만 다른 규칙을 두면 "3택엔 안 나오는데 상점엔 나오는 카드" 가 생겨
     도감 해금이 무슨 뜻인지가 화면마다 갈린다
@@ -1718,7 +2011,23 @@ UI=0, Unit=1, Effect=2, Projectile=3
   고르면 창이 안 뜬 채 다음 판으로 넘어갔다 — 보상 한 번이 통째로 사라진다
 - `HasMaterial(deck, slot)` 이 재료 유무를 본다. `CanFuse` 와 **따로 쓰지 말 것**
 
+### ⚠ 몬스터 스탯 합성 중에는 레이어(Add)를 쓰지 않는다 (2026-09-15 버그)
+- `UnitStat.Set` 은 **기본 레이어만** 덮고 `Get` 은 **모든 레이어의 합**이다. `MonsterStatComposer` 는
+  ④ 이후 시너지·강화 카드·중첩·특성을 `Set(Get × 배율)` 로 곱하므로, 그 앞에 `Add` 레이어가 있으면
+  **곱할 때마다 그 레이어가 한 번씩 더 붙는다**
+- 실제로 카드 레벨 표(`MonsterLevelBonus`)가 `"cardlevel"` 레이어였다 — Lv4 슬라임 킹이 31,000 이어야 할 체력이
+  **58,000** 이었다(체력 % 칸이 셋인 종족일수록 심했다). 지금은 기본 레이어에 굽는다
+- ⚠ 합성 도중에 새 보정을 넣으면 `Set(Get × 배율)` 로 굽는다. 레이어는 **맨 마지막(장비 ⑦)만** 쓴다
+
+### 영웅 상세 (HeroDetailPopup)
+- 머리의 '지휘력 +1 › 용병 스탯' 안내는 **감춘다** (사용자 지시, 2026-09-15) — 이름 줄에 겹쳐 그려졌다.
+  런타임 `RefreshCommandHint` 가 끈다 (프리팹 재굽기 불필요)
+
 ### 전황 (BattleInfoPopup)
+- **2026-09-15 다시 짰다** (사용자 지적 "허접하다 · 글자가 겹친다") — 머리 띠 [전황][스테이지 칩][X] ·
+  좌우 패널(위 색 띠 파랑/빨강 · 머리에 라벨과 요약 "카드 N장" / "부대 N · 병사 N") · 가운데 VS 메달.
+  제목과 스테이지를 **다른 칸**으로 갈랐다(`_stageText`) — 한 줄에 이어 붙였더니 진형 라벨과 겹쳐 그려졌다.
+  자리는 전부 상수의 합이고 `Verify` 가 패널 넘침을 잰다
 - **정본**: 화면 `UI/Popup/BattleInfoPopup.cs` · 굽기 `Editor/BattleInfoPopupCreator.cs`
   → `프리팹 생성 > 팝업 > 전황` · 버튼 `InGame/UI/BattleInfoButtonUI.cs` (상단바 오른쪽)
 - 가운데를 기준으로 **왼쪽 아군(4열×2줄) · 오른쪽 적군(라인 5줄)**
@@ -1737,6 +2046,8 @@ UI=0, Unit=1, Effect=2, Projectile=3
   돌려준다. 원작 방식대로 몇 프레임에 걸쳐 합성되므로 처음 여는 창에서는 늘 null 이다.
   `GeneralPortraitProvider.Request(name, stillWanted, onReady)` 를 쓸 것
   (몬스터는 `MonsterPortraitProvider.Get` 이 그 자리에서 합성한다 — 종족이 열 종 남짓이라)
+- ⚠ **용사 초상화는 등급을 함께 넘긴다** (2026-09-16) — `GeneralPortraitProvider.Request(이름, 등급, …)`, 캐시 열쇠 = 이름#등급.
+  외형이 (이름·직업·등급)으로 굴러 나온다. 장수는 `GetBirthGrade(이름, 레벨)`(초반 상한), 병사만 오는 부대는 `SoldierRuntimeBridge.SoldierGradeOf`(장수 −1) — 이름만 넘기면 필드와 다른 옷을 입는다
 - ⚠ 용사 표시 이름은 `HeroNameRule` 이 만든다. **시드 이름("Hero_S6_0")을 화면에 내지 말 것** —
   그건 직업·외형·패시브를 정하는 씨앗이라 바꾸면 그 판의 적이 통째로 달라진다
 
@@ -1774,12 +2085,13 @@ UI=0, Unit=1, Effect=2, Projectile=3
   런타임에서는 `_evolveUI` 가 null 이라 만렙 카드를 골라도 아무 일이 없다
 
 ### 소환사 평타 — 대상 최대 체력 비례
-- 정본 `InGame/Summon/SummonerStrikeRule.cs` — 잡병 **25%** · 엘리트 **5%** · 보스 **1%**
+- 정본 `InGame/Summon/SummonerStrikeRule.cs` — 잡병 **25%** · 엘리트 **15%** · 보스 **5%**
+  (사용자 지시, 2026-09-16 — 옛 5% · 1% 의 ×3 · ×5)
 - ⚠ **공격력 수치를 대신한다** (사용자 확정, 2026-09-07) — 더하지 않는다.
   패기×2 = 8~16 짜리 평타는 체력 수천짜리 후반 용사에게 없는 것과 같았다
 - ⚠ 방어율을 지나지 않는다 (`UnitHitSystem` — 특성 '파쇄'와 같은 자리·같은 규칙)
 - ⚠ **평타(`HitType.Normal`)에만** 걸린다 — 시그니처 스킬까지 비율이면 횟수 제한의 값이 폭발한다
-- 격을 가르는 세 숫자가 "소환사가 다 한다" 를 막는다 — 공속 0.8 기준 잡병 5초·보스 125초
+- 격을 가르는 세 숫자가 "소환사가 다 한다" 를 막는다 — 공속 0.8 기준 잡병 5초·보스 25초
 - 스폰 때 `SummonerStrikeComponent` 로 엔티티에 굽는다 (`SummonerRuntimeBridge`) —
   ⚠ Burst 잡에서 소환사를 조회할 수 없다 (`RendComponent` 와 같은 이유)
 
@@ -1794,7 +2106,7 @@ UI=0, Unit=1, Effect=2, Projectile=3
 | **패기** | ① 몬스터 평타 **넉백 배율** ② **과부하 저항** ③ **소환사 평타 비율 배율** | `InGame/Summon/SummonerVigorRule.cs` |
 
 - ③ 은 2026-09-11 추가 (사용자 지시) — `StrikeMultFor` = 1 + (패기−5)×0.12 (하한 0.5).
-  잡병 25%·엘리트 5%·보스 1% 에 **같이** 곱한다(격 사이 비는 유지). 곱하는 곳은 `SummonerStrikeRule.Build(summoner)` 하나
+  잡병 25%·엘리트 15%·보스 5% 에 **같이** 곱한다(격 사이 비는 유지). 곱하는 곳은 `SummonerStrikeRule.Build(summoner)` 하나
 - **스탯 배분을 넓혔다** (2026-09-11) — 합계 19 는 그대로, 폭을 2~10 으로. 정본 `SummonerCreator` 로스터
 - **개성 교체** (2026-09-11) — 슬라임 킹 `SlimeSpit`(13, 친화 N마리 중 1마리 원거리) ·
   스컬 킹 `BoneLegion`(14, 친화 카드 마릿수 +2 — `RunPerkRule.SummonCountFor` 에서 더한다) ·
@@ -1911,8 +2223,26 @@ UI=0, Unit=1, Effect=2, Projectile=3
     `DescribeSpecies` 는 이제 특징 분류 한 줄만 돌려준다
 
 ### 몬스터 시너지 (덱 조합)
-- **정본**: `InGame/Summon/MonsterSynergyRule.cs` — 표식 8종·문턱·**모든 수치**가 여기 하나에 있다
-  - 문턱 규칙: **금 = 계열 완주**. 소속 7종(언데드·숲)=3/5/7, 6종(나머지)=2/4/6
+- **정본**: `InGame/Summon/MonsterSynergyRule.cs` — 표식 13종·문턱·**모든 수치**가 여기 하나에 있다
+  - **2026-09-15 추가 5종 + 재분배** (사용자 확정) — 사냥(치명타) · 사격(원거리) · 무리(뭉치기) · 선봉(첫 공격) · 왕권(2차 전용)
+    | 시너지 | 동 | 은 | 금 | 금 능력 |
+    |---|---|---|---|---|
+    | 사냥 | 치확 +15%p · 치피 +20%p | +25%p · +40%p · 체력 50% 이하 적 치확 +15%p | +40%p · +70%p | 치명타가 방어율 무시 (`VitalStrikeTag`) |
+    | 사격 | 원거리 공 +12% | +22% · 사거리 +15% | +30% · 사거리 +15% | 투사체 하나 더 (**같은 대상**, 피해 25%) |
+    | 무리 | 같은 종족 곁(반경 3, 동료 3) 받는 피해 −10% | −18% · 공 +5% · 무리 사망마다 주변 공 +3%(최대 15%) | −20% · 공 +10% | 무리 카드 마릿수 +1 (`RunPerkRule.SummonCountFor`) |
+    | 선봉 | 첫 공격 +50% · 이후 3초 받는 피해 −20% | +100% · 4초 −30% · 첫 공격 넉백 | +200% · 5초 −45% | 첫 공격이 주변 적 1초 기절 |
+    | 왕권 | 권속 쿨 −20% | −35% · 권속 공·체 +30% | −50% · +60% | 권속 +1 |
+    - ⚠ **표식 규칙**: 기본·1차 = 일반 2개 · 2차 = 일반 2개 + 왕권. 일반 시너지마다 6~7종 — `MonsterCodexCreator.VerifySynergyTags` 가 굽는 순간 본다.
+      정본은 `MonsterCodexCreator` 로스터의 `Tags` 줄 (옛 에셋 값은 이제 전부 덮인다)
+    - ⚠ **AllTags 는 뒤에만 붙인다** — `RunBoonData` 제단 몫이 그 자리(인덱스)로 저장된다
+    - 선봉·무리는 공격 잡이 할 수 없는 일(상태효과·범위)이라 `MonsterSynergyRuntime.Tick` 이 한다 (`SummonController.Update` 가 부른다).
+      선봉은 공격 잡이 `VanguardComponent.State = 1` 로 표시만 하고, 받는 피해 감소·무리 버프는 **방어율 가산**으로 건다
+    - 새 컴포넌트 넷(`HuntCrit`·`ExtraProjectile`·`Vanguard`·`Swarm`)은 `ApplyOnSpawn` 이 **먼저 떼고** 붙인다 (풀 재사용)
+    - HUD 시너지 칩 68 → 45px · 간격 3 · 글자 FontSm — 14칸(중첩 1 + 13)이 전장 안에 들어가야 한다
+    - 굽는 순서: `아이콘·텍스처 > 시너지 아이콘` → `데이터 생성 > 몬스터 도감` → `카드 목록` → `UI > 인게임 HUD` ·
+      `프리팹 생성 > 팝업 > ▶ 런 팝업`·`Codex`·`몬스터 상세` → `[Load Popup Prefabs]`
+  - 문턱 규칙: **금 = 계열 완주**. 문턱은 **도감의 실제 소속 수**가 정한다(`MonsterSynergyRule.MemberCount`) —
+    7종 이상 = 3/5/7 · 그 아래 = 2/4/6 · 왕권만 1/2/3. 예전엔 "언데드·숲 = 7종" 을 코드에 박아 두어 재분배하자 어긋났다
   - **금은 숫자가 아니라 규칙을 바꾼다** — 여덟 시너지 전부에 금 전용 능력이 하나씩 있다.
     목록의 정본은 `MonsterSynergyRule.GoldAbility` 다 (툴팁도 거기서 뽑아 **별도 줄**로 그린다).
     숲=죽어도 라인 복귀 · 언데드=부활체가 한 번 더 부활 · 야수=넉백 면역 ·
@@ -1945,7 +2275,7 @@ UI=0, Unit=1, Effect=2, Projectile=3
   (사용자 확정, 2026-09-09. 옛 규칙은 "한 번 내면 런 내내 유지" 였다)
   - 정본은 `MonsterSynergyRule.Recount` — `_alive`(필드) + 대기열을 합쳐 센다
   - 필드 집계는 `MonsterLineReturner.Setup`(+1) / `OnDisable`(−1) **한 쌍**이 소유한다.
-    모든 몬스터가 그 컴포넌트를 달고 나오므로 분열체·스킬 소환도 빠지지 않는다
+    ⚠ **카드 몬스터(대기열로 돌아갈 자격이 있는 개체)만 센다** — 권속·시그니처·분열체 같은 스킬 소환은 시너지를 받기만 하고 카운트에 넣지 않는다 (사용자 지시, 2026-09-16. 한때 전부 세어 덱에 없는 몬스터를 스킬로 부르면 카운트가 올랐다)
   - ⚠ **전멸하면 카운트에서 빠진다** — 화면의 숫자가 전장과 무관해지는 것을 막는다
   - ⚠ 매 프레임 세지 않는다. **0↔1 을 넘는 순간에만** 다시 센다 (교전 중 깜빡임 방지)
   - ⚠ 이어하기가 저절로 맞는다 — 대기열은 저장되므로 같은 값이 나온다.
@@ -1989,6 +2319,14 @@ UI=0, Unit=1, Effect=2, Projectile=3
 
 ### 소환사 시그니처 스킬 (무료 · 횟수 제한)
 - **정본**: `InGame/Summon/SummonerSkillRule.cs` — 남은 횟수·발동을 한 곳이 소유한다
+- ⚠ **피해는 대상 최대 체력 비례 × 패기 배율이다** (사용자 지시, 2026-09-15) — 정본 `SignatureDamageRule` (SummonerSkillRule.cs 끝)
+  - 예전엔 소환사 공격력(패기 × 2 = 4~20) × 배율이라 후반에 메테오가 20 을 때렸다
+  - 비율(패기 곱하기 전): 메테오 30% · 비석 5%/개 · 사형 선고 20%(35% 이하 처형은 그대로) · 독성 지대 1.5%/0.5초 ·
+    피의 대가 태운 체력 1당 1% · 마나 폭발은 위 표. 패기 배율 = `SummonerVigorRule.StrikeMultFor`(평타와 같은 값)
+  - 방어율 무시 · 보스 절반. 러너들은 `SignatureDamageRule.Hit` 하나를 지난다
+  - ⚠ **시전자가 소환사일 때만** (`SummonerStrikeComponent`) — 같은 스킬을 쓰는 용사 보스·2차 몬스터는 옛 공식 그대로다
+  - ⚠ 스킬 설명(`ActiveSkillCreator`)은 용사·몬스터와 공유라 옛 공식 문구가 남아 있다 (마나 폭발만 소환사 전용이라 고쳤다)
+- 고블린 두목 개성 '약탈'(`Plunder`) = **런 골드 × PerkValue(1.5)** (`RunGoldRule.Grant`, 2026-09-15) — 옛 효과(스테이지 마나 회복 ×)는 걷었다
   - ⚠ **마나를 내지 않는다.** 세기는 오직 **횟수**로 조절한다 —
     마나를 매기면 "스킬을 아끼려 소환을 줄이는" 상태가 생겨 두 자원이 서로를 잡아먹는다
   - 스테이지당(`SkillUsesPerStage`)은 **저장하지 않는다**(앱 재시작이 리필이 된다).
@@ -2109,6 +2447,7 @@ UI=0, Unit=1, Effect=2, Projectile=3
   (인간형은 같은 `EnemyRace`, 비인간형은 같은 라이브러리). 힐·독·강철 슬라임이
   라인에 서면 한 마리로 보였다. 뿌리는 흰색, 진화체 13종에 옅은 색을 준다
   - 인간형도 물들인다 — `ApplyHumanoid` 이 `ApplyEnemy` **뒤에** `Tint` 를 건다
+  - ⚠ 힐 슬라임의 몸 비율(1.20, 0.84)은 **걷어냈다** (사용자 지적, 2026-09-16 — 인게임에서 납작) — 분홍 시트가 이미 색으로 가른다
     (Rebuild 는 같은 `SpriteRenderer` 에 라이브러리만 갈아 끼우므로 정점 색이 살아남는다)
   - 비인간형은 **장비 색조와 곱한다** (`gear.Tint * species.BodyTint`) — 종족 색은
     "무엇인가", 장비 색은 "무엇을 입었나" 다. 덮어쓰면 한 축이 죽는다.
@@ -2490,8 +2829,8 @@ UI=0, Unit=1, Effect=2, Projectile=3
 > 수를 늘리는 대신 개체를 세운다. 적이 세다고 느껴지면 스탯보다 **수**를 먼저 본다.
 > ⚠ 후반 경사는 `LevelFlat*PerLevel` 로 만든다. `*Range` 를 키우면 초반이 같이 무너진다.
 > ⚠ **고정 성장은 선형이 아니다** (사용자 확정, 2026-09-10) —
-> `GameplayConfig.LevelGrowthAccel`(0.02)이 `체력·공격력` 가산을
-> `n × (1 + 0.02n)` 으로 가속시킨다(`UnitJobRoller`). 적의 **수**는
+> `GameplayConfig.LevelGrowthAccel`(**0.05**, 2026-09-16 에 0.02 → 0.03 → 0.05 — 초반 등급 상한의 대가로 후반을 올림)이 `체력·공격력` 가산을
+> `n × (1 + 0.05n)` 으로 가속시킨다(`UnitJobRoller`). 적의 **수**는
 > `MaxSquads`(5) = 라인 수라 10스테이지에서 상한에 닿고, 그 뒤 적이 세지는
 > 길이 이것뿐인데 선형이면 곱으로 크는 아군(라인 복귀 물량 × 시너지 × 패시브)과
 > 반드시 갈린다 — 실제로 40스테이지가 넘도록 런이 안 끝났다.
@@ -2633,7 +2972,11 @@ UI=0, Unit=1, Effect=2, Projectile=3
   - ⚠ **은(Silver) 색을 하늘빛으로 바꿨다** — 회색이라 '꺼짐'(푸른 회색)과 색조가 같아,
     4종을 모아 은에 닿아도 "색이 안 바뀐다" 로 보였다. 네 색은 한 묶음이다
   - ⚠ **툴팁에 고정(pin)은 없다** (사용자 지적) — 올리면 뜨고 벗어나면 닫힌다.
-    누르는 것은 터치용 문일 뿐 결과가 같다. 마나 칸(`ManaRegenHoverUI`)도 같은 규칙이다
+    마나 칸(`ManaRegenHoverUI`)도 같은 규칙이다
+  - ⚠ **PC 는 올려서만, 모바일은 눌러서만 연다** (사용자 지시, 2026-09-17) — 정본 `UI/Common/TooltipInput.HoverMode`
+    (`!Application.isMobilePlatform`). 버튼 클릭으로만 열던 칸(`TraitIconUI`·`SkillIconUI`·보스 스킬·용사 등급·도감 특성)은
+    `TooltipInput.HookHover` 로 올림을 붙이고 클릭은 `!HoverMode` 로 막는다. 새 툴팁도 이 둘을 지날 것
+    (상단 특성 줄이 클릭으로만 열려 올려도 안 떴다). PC 에서는 올린 칸을 눌러도 닫히지 않는다(`InfoTooltipUI.PointerOverOwner`)
   - **다음 판 회복 예고**: 마나 칸 아래 `다음 판 +18`, 올리면 내역이 툴팁으로 펴진다
     - 정본은 `InGame/Summon/ManaRegenRule.cs` — **실제 지급(`AdvanceStage`)과 같은 함수**다.
       ⚠ 화면이 따로 계산하면 반드시 갈린다. 새 보정은 여기에만 넣을 것
@@ -2641,6 +2984,8 @@ UI=0, Unit=1, Effect=2, Projectile=3
         보너스가 `RawFor` 에만 있어서, 툴팁 내역의 합계가 실제 회복량보다 작았다.
         보정을 넣으면 **두 함수 모두** 같은 자리·같은 순서로 넣을 것
     - ⚠ 잔량의 10%가 회복량에 들어가므로 소환할 때마다 이 숫자가 줄어든다 — 의도된 것이다
+    - ⚠ **회복량 전체를 적는다 — 그릇(Max)에서 자르지 않는다** (사용자 지시, 2026-09-17) — 35/40 에서 +5 로만 떠
+      회복량을 읽을 수 없었다. 자르는 것은 지급(`SummonManaData.RegenForStage`)뿐이다. 0 이어도 보인다
   - ⚠ **마나 칸에는 숫자뿐이다** (사용자 지적) — 라벨("소환 마나")과 진행 막대를 걷어냈다.
     셋이 같은 값을 세 번 말했다. `SummonDeckUI._manaFill` 필드도 **지웠다** —
     ⚠ 막대를 다시 넣지 말 것: 마나는 실시간이 아니라 스테이지 경계에서만 움직인다

@@ -46,6 +46,7 @@ MonoBehaviour:
   StarterMonsters:
   - {fileID: 11400000, guid: bafb509cc44832742b7b54e01531076a, type: 2}
   - {fileID: 11400000, guid: c6f38b1551096184884361b93853cc23, type: 2}
+  - {fileID: 11400000, guid: 23a07e7c40c8f7347b213eceac0a8f4a, type: 2}
   StarterSkills: []
   Affinities:
   - SpeciesId: slime

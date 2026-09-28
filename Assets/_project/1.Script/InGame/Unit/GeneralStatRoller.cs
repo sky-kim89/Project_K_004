@@ -32,6 +32,9 @@ public static class GeneralStatRoller
     /// ⚠ 엘리트판의 추가 10% 는 여기가 아니다 (HeroDeployment 의 엘리트 배율).
     ///   여기서 함께 올리면 일반 판까지 두 번 오른다.
     /// </summary>
+    /// ■ 2026-09-16 에 1.0 으로 올렸다가 **0.88 로 되돌렸다** (사용자 지시 — 초반이 세졌다)
+    ///   이 값은 스테이지 1 부터 곱해진다. 초반을 건드리지 않고 후반만 올리려면
+    ///   GameplayConfig.LevelGrowthAccel(지금 0.03)을 본다.
     public const float GlobalScale = 0.88f;
 
     /// <summary>지금 곱해지는 값 = 전체 배율 × (1 + 난이도 광포).</summary>

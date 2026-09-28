@@ -57,6 +57,9 @@ public class MainPanelUI : MonoBehaviour
     [SerializeField] Button _relicBtn;
     [SerializeField] Button _codexBtn;
 
+    [Tooltip("설정 — 일시정지 창을 그대로 연다 (소리·언어). 로비에서는 '즉시 환생하기' 행이 저절로 접힌다.")]
+    [SerializeField] Button _settingsBtn;
+
     int _selected;
     readonly List<SummonerData> _candidates = new(12);
 
@@ -78,6 +81,8 @@ public class MainPanelUI : MonoBehaviour
 
     void Awake()
     {
+        SetupLocalizedTitle();
+
         _selectBtn.onClick.AddListener(ShowDifficulty);
         _backBtn.onClick.AddListener(ShowInfo);
         _startBtn.onClick.AddListener(OnStartPressed);
@@ -91,6 +96,30 @@ public class MainPanelUI : MonoBehaviour
 
         _codexBtn.onClick.AddListener(() =>
             PopupManager.Instance.Open<CodexPopup>(PopupType.Codex));
+
+        // ⚠ 설정 창을 따로 만들지 않았다 (사용자 지시, 2026-09-17 — 옛 '기타' 잠금 칸 자리)
+        //   PausePopup 이 이미 소리·언어를 갖고, 로비에서 열리면 전투 전용 행을 접는다
+        //   (LobbyManager.IsInRun). 같은 설정을 두 창에 두면 한쪽만 고쳐진다.
+        _settingsBtn.onClick.AddListener(() =>
+        {
+            if (PopupManager.Instance.IsOpen(PopupType.Pause)) return;
+            PopupManager.Instance.Open(PopupType.Pause);
+        });
+    }
+
+    void SetupLocalizedTitle()
+    {
+        Transform title = transform.Find("SideColumn/TitleArea");
+        if (title == null) return;
+
+        foreach (Transform child in title)
+            child.gameObject.SetActive(false);
+
+        var localized = title.GetComponent<LocalizedTitleSprite>() ??
+                        title.gameObject.AddComponent<LocalizedTitleSprite>();
+        localized.Configure(
+            Resources.Load<Sprite>("Title/title_logo_ko"),
+            Resources.Load<Sprite>("Title/title_logo_en"));
     }
 
     void OnEnable()
@@ -105,6 +134,9 @@ public class MainPanelUI : MonoBehaviour
         {
             RefreshList();
             ShowInfo();
+
+            // 배경 데모 — 고른 소환사의 시작 덱이 진군한다 (Select 가 바꿔 끼운다)
+            LobbyDemoBattle.Ensure().Show(Chosen);
         }
 
         // 화면을 다 세운 뒤에 알린다 — 튜토리얼이 곧바로 버튼을 누르게 한다.
@@ -114,6 +146,7 @@ public class MainPanelUI : MonoBehaviour
     void OnDisable()
     {
         SceneDirector.Instance?.RequestArenaBackdrop(false);
+        LobbyDemoBattle.Instance?.Hide();
 
         OnHidden?.Invoke();
     }
@@ -173,6 +206,7 @@ public class MainPanelUI : MonoBehaviour
             _listCards[i].SetSelected(i == _selected);
 
         ShowInfo();
+        LobbyDemoBattle.Ensure().Show(Chosen);
     }
 
     void RefreshAll()
@@ -211,7 +245,7 @@ public class MainPanelUI : MonoBehaviour
         _infoPhase.SetActive(false);
         _difficultyPhase.SetActive(true);
 
-        _chosenText.text = $"{Chosen.DisplayName}  —  출정 준비";
+        _chosenText.text = LocalizationManager.Instance.Format("{0}  —  출정 준비", Chosen.DisplayName);
     }
 
     // ── 게임 시작 ─────────────────────────────────────────────

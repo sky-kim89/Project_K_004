@@ -44,17 +44,18 @@ MonoBehaviour:
   SkillUsesPerStage: 2
   SignatureSummonSpecies: {fileID: 0}
   SignatureSummonCount: 1
-  ListOrder: 4
+  ListOrder: 10
   Unlocks:
   - Kind: 1
     Value: 0
     SpeciesIds:
-    - zombie
     - plague_zombie
+    - poison_slime
     Traits: 0
   StarterMonsters:
   - {fileID: 11400000, guid: b828576fbc378234499d743bf81bfa6b, type: 2}
   - {fileID: 11400000, guid: b9e7a55fd618a424a93b28d4b64e2ffb, type: 2}
+  - {fileID: 11400000, guid: 72845b9061b2cb74d90d7ab33bef9cb9, type: 2}
   StarterSkills: []
   Affinities:
   - SpeciesId: zombie

@@ -312,3 +312,68 @@ public static class SignatureSkillDisplay
         return key != null ? SpriteManager.Instance.Get(key) : null;
     }
 }
+
+// ============================================================
+//  SignatureDamageRule — 소환사 시그니처 스킬의 피해 (사용자 지시, 2026-09-15)
+//
+//  ■ 대상 최대 체력 비례 × 패기 배율
+//    예전엔 소환사 공격력(패기 × 2 = 4~20) × 배율이었다. 용사 체력은 스테이지를 따라
+//    수천까지 오르는데 그 값은 그대로라, 후반에는 메테오가 20 을 때렸다.
+//    소환사 평타(SummonerStrikeRule)·마나 폭발과 같은 생각으로 맞췄다 —
+//    몇 스테이지에서 쓰든 같은 무게이고, **패기가 높을수록 세다** (StrikeMultFor 와 같은 배율).
+//
+//  ■ 방어율을 지나지 않는다 — 비율 피해가 방어율에 깎이면 방패병에게만 유독 약해진다.
+//  ■ 보스는 절반 — 무한 보스까지 스킬 몇 번으로 지우지 않게 (마나 폭발과 같은 값).
+//
+//  ⚠ 시전자가 **소환사일 때만**이다 (SummonerStrikeComponent)
+//    메테오·사형 선고·피의 대가는 용사 보스·2차 몬스터도 쓴다. 그들은 예전 공식 그대로다 —
+//    적 보스가 플레이어 몬스터의 최대 체력을 %로 깎으면 판이 통째로 뒤집힌다.
+// ============================================================
+
+public static class SignatureDamageRule
+{
+    public const float BossMult = 0.5f;
+
+    // ── 스킬별 비율 (패기 배율 곱하기 전) ──
+    public const float MeteorRatio        = 0.30f;    // 반경 3.5 · 스테이지 1회
+    public const float GravestoneRatio    = 0.05f;    // 비석 1개 (12개가 흩어져 떨어진다)
+    public const float DeathSentenceRatio = 0.20f;    // 처형되지 않은 적 (35% 이하 처형은 그대로)
+    public const float PoisonTickRatio    = 0.015f;   // 0.5초마다 · 6초 = 18%
+    public const float BloodPerHp         = 0.01f;    // 태운 체력 1당
+
+    public static bool IsSummoner(Unity.Entities.EntityManager em, Unity.Entities.Entity caster)
+        => em.Exists(caster) && em.HasComponent<BattleGame.Units.SummonerStrikeComponent>(caster);
+
+    /// <summary>패기 배율 — 소환사 평타와 같은 값. 소환사가 아니면 1.</summary>
+    public static float VigorMult(Unity.Entities.EntityManager em, Unity.Entities.Entity caster)
+        => IsSummoner(em, caster) ? SummonerVigorRule.StrikeMultFor(SummonerRuntimeBridge.Current.Data) : 1f;
+
+    /// <summary>소환사면 기준 비율 × 패기 배율, 아니면 0 (= 예전 공식을 쓴다).</summary>
+    public static float RatioFor(Unity.Entities.EntityManager em, Unity.Entities.Entity caster, float baseRatio)
+        => IsSummoner(em, caster) ? baseRatio * VigorMult(em, caster) : 0f;
+
+    /// <summary>비율을 그 대상의 최대 체력에 맞춘 피해로. 보스는 BossMult.</summary>
+    public static float DamageFor(Unity.Entities.EntityManager em, Unity.Entities.Entity target, float ratio)
+    {
+        if (ratio <= 0f || !em.HasComponent<BattleGame.Units.StatComponent>(target)) return 0f;
+
+        float maxHp = em.GetComponentData<BattleGame.Units.StatComponent>(target).Final[StatType.MaxHp];
+        float mult  = em.HasComponent<BattleGame.Units.BossComponent>(target) ? BossMult : 1f;
+        return maxHp * ratio * mult;
+    }
+
+    /// <summary>
+    /// 한 대상에 넣는다 — 비율이 있으면 최대 체력 비례(방어율 무시), 없으면 고정 피해.
+    /// ⚠ 러너들이 전부 이 함수를 지난다. 공식을 러너마다 다시 쓰지 말 것.
+    /// </summary>
+    public static void Hit(Unity.Entities.EntityManager em, Unity.Entities.Entity target,
+                           float flatDamage, float ratio, Unity.Mathematics.float3 dir,
+                           float knock, Unity.Entities.Entity attacker)
+    {
+        if (ratio > 0f)
+            SkillCrowdControl.DealDamage(em, target, DamageFor(em, target, ratio), dir, knock, attacker,
+                                         defensePierce: 1f);
+        else
+            SkillCrowdControl.DealDamage(em, target, flatDamage, dir, knock, attacker);
+    }
+}

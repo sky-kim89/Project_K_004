@@ -28,10 +28,9 @@ using UnityEngine;
 //    비인간형은 레이어가 없어 색·덩치·장식으로 표현한다.
 //    ⚠ 자산 제약이지 설계 선택이 아니다 — MonsterAppearanceBridge 머리 주석 참고.
 //
-//  ■ 부위(Part)는 한 몬스터에 하나뿐이다
-//    같은 부위를 또 끼우면 먼저 낀 것이 벗겨진다 (MonsterGearInventory.TryEquip).
-//    이 규칙이 없으면 "장착했는데 겉모습이 하나도 안 변하는" 장비가 생긴다 —
-//    같은 부위 둘 중 하나는 반드시 가려지기 때문이다.
+//  ■ 부위(Part)는 겹쳐 낄 수 있다 (사용자 확정, 2026-09-15)
+//    투구 둘도 함께 낀다 — 능력치는 전부 받고, 겉모습은 앞 칸 장비가 정한다
+//    (MonsterGearRule.BuildVisual). 옛 "같은 부위는 하나뿐" 규칙은 폐기했다.
 //
 //  ■ 스탯은 **절대값**이다 (사용자 확정, 2026-09-06)
 //    ⚠ 그래서 수치를 종족 기본 스탯 범위(HP 55~260 · 공격력 5~25)에 맞춰
@@ -47,7 +46,7 @@ public enum MonsterGearBody
 }
 
 /// <summary>
-/// 장비가 차지하는 부위. 한 몬스터에 같은 부위는 하나뿐이다.
+/// 장비가 차지하는 부위. 같은 부위를 겹쳐 끼면 앞 칸 것이 겉모습을 정한다.
 ///
 /// ⚠ 앞 다섯은 CharacterBuilder 슬롯 이름과 1:1 이다
 ///   MonsterGearRule 이 이 값으로 UnitAppearanceData 의 어느 칸을 덮을지 고른다.
@@ -98,7 +97,7 @@ public class MonsterGearData : ScriptableObject
     [Header("장착 조건")]
     public MonsterGearBody Body = MonsterGearBody.Humanoid;
 
-    [Tooltip("차지하는 부위. 한 몬스터에 같은 부위는 하나뿐이다.")]
+    [Tooltip("차지하는 부위. 겹쳐 낄 수 있고, 겉모습은 앞 칸 장비가 정한다.")]
     public MonsterGearPart Part = MonsterGearPart.Armor;
 
     [Header("능력치")]

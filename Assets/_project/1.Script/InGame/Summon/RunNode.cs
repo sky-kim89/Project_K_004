@@ -175,13 +175,17 @@ public static class RunNodeRule
         // ⚠ 규칙을 적는다 — 이벤트만 골드가 아니라 **마왕성 체력**으로 산다.
         //   그것이 갈림길에서 이벤트를 고르는 이유이므로 카드에 적혀야 한다.
         RunNodeKind.Event => "무엇이 일어날지 모른다. 값은 마왕성 체력으로 치른다",
-        RunNodeKind.Camp  => $"마왕성 수리(무료) 또는 증축 {CampMaxCost(stageNumber)} G",
+        RunNodeKind.Camp  => LocalizationManager.Instance.Format(
+                                 "마왕성 수리(무료) 또는 증축 {0} G", CampMaxCost(stageNumber)),
         RunNodeKind.Altar => "카드 하나를 제물로 바쳐 시너지 카운트를 남긴다",
-        RunNodeKind.Forge => $"골드 {ForgeCost(stageNumber)} 로 카드 하나를 강화한다",
+        RunNodeKind.Forge => LocalizationManager.Instance.Format(
+                                 "골드 {0} 로 카드 하나를 강화한다", ForgeCost(stageNumber)),
 
         RunNodeKind.NormalBattle => "평범한 용사 부대. 잡은 만큼 골드가 들어온다",
         RunNodeKind.EliteBattle  =>
-            $"엘리트 용사가 섞이고 부대가 한 줄 는다. 대신 특성 1택 + 처치 골드 ×{RunGoldRule.EliteKillMultiplier}",
+            LocalizationManager.Instance.Format(
+                "엘리트 용사가 섞이고 부대가 한 줄 는다. 대신 특성 1택 + 처치 골드 ×{0}",
+                RunGoldRule.EliteKillMultiplier),
 
         _ => "",
     };

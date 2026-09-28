@@ -41,21 +41,16 @@ MonoBehaviour:
   SkillUsesPerStage: 1
   SignatureSummonSpecies: {fileID: 11400000, guid: d1e650dc06e1f5c4b953d488f9763b4b, type: 2}
   SignatureSummonCount: 1
-  ListOrder: 6
+  ListOrder: 5
   Unlocks:
   - Kind: 1
     Value: 0
     SpeciesIds:
-    - troll
-    - hog
-    Traits: 0
-  - Kind: 0
-    Value: 8
-    SpeciesIds: []
+    - swamp_troll
     Traits: 0
   StarterMonsters:
   - {fileID: 11400000, guid: d1e650dc06e1f5c4b953d488f9763b4b, type: 2}
-  - {fileID: 11400000, guid: bafb509cc44832742b7b54e01531076a, type: 2}
+  - {fileID: 11400000, guid: ec6d4521217662f4f93fefe5bbf469a7, type: 2}
   StarterSkills: []
   Affinities:
   - SpeciesId: troll

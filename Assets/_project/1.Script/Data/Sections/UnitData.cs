@@ -82,6 +82,6 @@ public class UnitEntry
     public string UnitName;   // 이름 시드 — 직업·외형·패시브가 여기서 나온다 (PoolKey 로도 쓴다)
     public int    Level = 1;
 
-    /// <summary>등급은 이름 시드가 정한다 (UnitJobRoller).</summary>
-    public UnitGrade Grade => UnitJobRoller.GetBirthGrade(UnitName);
+    /// <summary>등급은 이름 시드가 정한다 — 초반 상한까지 (UnitJobRoller.GetBirthGrade(이름, 레벨)).</summary>
+    public UnitGrade Grade => UnitJobRoller.GetBirthGrade(UnitName, Level);
 }

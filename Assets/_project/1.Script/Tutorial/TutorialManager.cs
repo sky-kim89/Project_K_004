@@ -97,17 +97,25 @@ public class TutorialManager : Singleton<TutorialManager>
     {
         if (Instance != this) return;
         BattleManager.OnDefeat       += HandleDefeat;
+        BattleManager.OnVictory      += HandleVictory;
+        StageLoopDirector.OnStageReady += HandleStageReady;
         MainPanelUI.OnShown          += HandleMainPanelShown;
         MainPanelUI.OnHidden         += HandleMainPanelHidden;
 
         // ⚠ 매니저가 화면보다 늦게 생길 수 있다 (AutoCreate 는 씬 로드 뒤에 돈다)
         //   이미 떠 있는 메인 화면은 OnShown 을 놓친 뒤다. 지금 상태를 직접 본다.
         if (FindAnyObjectByType<MainPanelUI>() != null) HandleMainPanelShown();
+
+        // 같은 이유 — 이미 대기 중인 스테이지는 OnStageReady 를 놓친 뒤다.
+        var director = StageLoopDirector.Instance;
+        if (director != null && director.IsStageReady) HandleStageReady(director.StageNumber);
     }
 
     void OnDisable()
     {
         BattleManager.OnDefeat       -= HandleDefeat;
+        BattleManager.OnVictory      -= HandleVictory;
+        StageLoopDirector.OnStageReady -= HandleStageReady;
         MainPanelUI.OnShown          -= HandleMainPanelShown;
         MainPanelUI.OnHidden         -= HandleMainPanelHidden;
 
@@ -132,6 +140,33 @@ public class TutorialManager : Singleton<TutorialManager>
     void HandleDefeat() => Abort();
 
     /// <summary>
+    /// 스테이지 대기 — <b>1스테이지에서만</b> 인게임 안내를 건다.
+    ///
+    /// ⚠ 1스테이지 뒤로는 강제 안내를 하지 않는다 (사용자 지시, 2026-09-17)
+    ///   첫 실행은 LobbyManager 가 곧장 1스테이지로 넣는다. 첫 판에 져서 환생했으면
+    ///   다음 런의 1스테이지에서 이어 본다 (완료 기록이 없으므로).
+    /// </summary>
+    void HandleStageReady(int stage)
+    {
+        if (stage != 1) return;
+        Enqueue(TutorialId.SummonBattle);
+    }
+
+    /// <summary>
+    /// 1스테이지 클리어 — 카드 3택과 갈림길을 짚는다.
+    ///
+    /// ⚠ 인게임 안내를 끝까지 본 사람에게만 건다
+    ///   인게임 안내가 판 도중에 끊겼거나(패배) 아직 도는 중이면 순서가 뒤집힌다.
+    ///   큐는 앞엣것이 끝나야 뒤엣것을 꺼내므로, 도는 중이면 뒤에 붙는다.
+    /// </summary>
+    void HandleVictory()
+    {
+        var director = StageLoopDirector.Instance;
+        if (director == null || director.StageNumber != 1) return;
+        Enqueue(TutorialId.FirstReward);
+    }
+
+    /// <summary>
     /// 메인 화면(장수 선택) 진입 — 첫 환생을 마친 사람에게만 유물을 안내한다.
     ///
     /// ⚠ 환생을 한 번도 안 했으면 띄우지 않는다
@@ -144,7 +179,10 @@ public class TutorialManager : Singleton<TutorialManager>
     {
         var reinc = UserDataManager.Instance?.Get<ReincarnationData>();
         if (reinc == null || reinc.TotalCount < 1) return;
-        Enqueue(TutorialId.FirstRelic);
+
+        // 유물 → 도감(슬라임 품질 개선) 순서. 둘 다 보상 상자·해금 연출 같은
+        // 팝업이 전부 닫힌 뒤에 시작한다 (CanStartNow).
+        Enqueue(TutorialId.FirstRelic, TutorialId.FirstCodex);
     }
 
     /// <summary>
@@ -158,7 +196,11 @@ public class TutorialManager : Singleton<TutorialManager>
     ///   재생 중인 것은 건드리지 않는다 — 튜토리얼이 스스로 팝업을 열어
     ///   패널이 잠시 꺼지는 경우가 있어, 여기서 끊으면 제 튜토리얼이 죽는다.
     /// </summary>
-    void HandleMainPanelHidden() => CancelQueued(TutorialId.FirstRelic);
+    void HandleMainPanelHidden()
+    {
+        CancelQueued(TutorialId.FirstRelic);
+        CancelQueued(TutorialId.FirstCodex);
+    }
 
     // ── 예약 큐 ──────────────────────────────────────────────
     //
@@ -262,13 +304,19 @@ public class TutorialManager : Singleton<TutorialManager>
     /// </summary>
     void RegisterDefaults()
     {
-        // 강제 진행 — 첫 환생 뒤 메인 화면의 유물 안내 하나뿐이다
+        // 강제 진행 — 첫 실행 1스테이지(인게임 → 보상) · 첫 환생 뒤 메인 화면(유물 → 도감)
+        Register(new SummonBattleTutorial());
+        Register(new FirstRewardTutorial());
         Register(new FirstRelicTutorial());
+        Register(new FirstCodexTutorial());
 
         // 도움말 (팝업 헤더의 i 버튼) — 강제로 뜨지 않는다
         Register(new RelicHelpTutorial());
         Register(new CodexHelpTutorial());
         Register(new DifficultyHelpTutorial());
+        Register(new MonsterDetailHelpTutorial());
+        Register(new CardSelectHelpTutorial());
+        Register(new BattleInfoHelpTutorial());
     }
 
     public void Register(TutorialScenario scenario)
@@ -293,13 +341,9 @@ public class TutorialManager : Singleton<TutorialManager>
     /// </summary>
     /// <summary>
     /// 튜토리얼 전역 스위치. false 면 강제 진행·재생이 전부 막힌다.
-    ///
-    /// ⚠ 지금은 꺼 둔다
-    ///   원작 튜토리얼은 로비·장수 배치·용병처럼 이 게임에 없는 화면을 가리킨다.
-    ///   그대로 두면 존재하지 않는 UI 를 찾다가 진행이 막힌다.
-    ///   이 게임용 시나리오를 새로 쓸 때 다시 켠다.
+    /// 이 게임용 시나리오로 갈아 끼운 뒤 다시 켰다 (2026-09-17).
     /// </summary>
-    public static bool Enabled = false;
+    public static bool Enabled = true;
 
     public bool TryPlay(TutorialId id)
     {
@@ -311,7 +355,7 @@ public class TutorialManager : Singleton<TutorialManager>
         if (!_scenarios.TryGetValue(id, out var scenario)) return false;
 
         // 이어 보기 — 앱이 끊긴 지점부터. 처음이면 0.
-        int start = data.IsResuming(id) ? data.InProgressStep : 0;
+        int start = data.IsResuming(id) && scenario.Resumable ? data.InProgressStep : 0;
         StartScenario(scenario, start);
         return true;
     }

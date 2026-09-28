@@ -73,7 +73,18 @@ public class BattleArena : Singleton<BattleArena>
         if (_kind == ArenaKind.None) return;
 
         Debug.Log($"[BattleArena] 닫힘 — {_kind}");
+        ArenaKind closing = _kind;
         _kind = ArenaKind.None;
+
+        // ⓪ 새로 세우는 곳을 먼저 막는다 — 몬스터 배출 · 용사 편성 · 로비 데모
+        //   치운 **뒤에** 나온 개체는 아무도 거두지 않는다. 전투 도중 '즉시 환생' 하면
+        //   배출 코루틴이 남아 로비 뒤에 몬스터가 계속 섰다 (2026-09-22).
+        SummonController.Instance?.Halt();
+        foreach (var spawner in FindObjectsByType<HeroSpawner>(FindObjectsSortMode.None))
+            spawner.Halt();
+        //   ⚠ 데모는 **데모 판을 닫을 때만** 멈춘다 — 실전을 닫는 순간(Returning)은
+        //     로비가 막 켜지며 데모가 다음 판을 기다리기 시작한 때다. 여기서 끊으면 배경이 빈다.
+        if (closing == ArenaKind.Demo) LobbyDemoBattle.Instance?.Halt();
 
         // ① 유닛 — 이미 검증된 경로를 그대로 쓴다 (풀 반납 + 엔티티 파괴)
         BattleManager.Instance?.DespawnAllUnits();
@@ -88,6 +99,7 @@ public class BattleArena : Singleton<BattleArena>
 
         // ④ 통계 — 데모에서 쌓인 수치가 실전 결과창에 섞이면 안 된다
         BattleStatsTracker.Instance?.Reset();
+        CardStatsTracker.Instance?.Reset();   // 데모 몬스터의 엔티티 → 카드 매핑도 남기지 않는다
 
         VerifyClean();
     }

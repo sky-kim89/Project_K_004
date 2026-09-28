@@ -102,6 +102,29 @@ public class CodexPopup : PopupBase
 
     protected override void OnAfterOpen() => SelectTab(_tab);
 
+    // ── 튜토리얼 창구 (FirstCodexTutorial) ──────────────────
+
+    /// <summary>몬스터 탭으로 연다 — 지난번에 보던 탭이 남아 있을 수 있다.</summary>
+    public void SelectMonsterTab() => SelectTab(CodexCategory.Monster);
+
+    /// <summary>
+    /// 그 종족이 지금 화면에 깔린 칸. 스크롤 밖이면 null.
+    /// ⚠ 칸은 재사용된다 — 이름이 아니라 마지막으로 묶인 항목으로 찾는다.
+    /// </summary>
+    public RectTransform CellOf(string speciesId)
+    {
+        foreach (var pair in _boundCells)
+        {
+            if (pair.Key == null || !pair.Key.activeInHierarchy) continue;
+            if (pair.Value < 0 || pair.Value >= _entries.Count) continue;
+            if (_entries[pair.Value].Species?.Id != speciesId) continue;
+            return pair.Key.transform as RectTransform;
+        }
+        return null;
+    }
+
+    readonly Dictionary<GameObject, int> _boundCells = new();
+
     protected override void OnAfterClose() => CloseTooltip();
 
     // ── 탭 ───────────────────────────────────────────────────
@@ -148,7 +171,8 @@ public class CodexPopup : PopupBase
         var (owned, total) = CodexCatalog.TotalProgress();
 
         if (_progressTmp != null)
-            _progressTmp.text = $"수집 <color=#{StatBonusColors.Codex}>{owned}</color> / {total}";
+            _progressTmp.text = LocalizationManager.Instance.Format("수집 <color=#{0}>{1}</color> / {2}",
+                                                                   StatBonusColors.Codex, owned, total);
 
         RefreshGold();
     }
@@ -188,6 +212,7 @@ public class CodexPopup : PopupBase
         if (index < 0 || index >= _entries.Count) return;
 
         var entry = _entries[index];
+        _boundCells[cell] = index;
 
         Paint(cell, entry);
 
@@ -201,6 +226,12 @@ public class CodexPopup : PopupBase
 
         var owner = cell.GetComponent<RectTransform>();
         btn.onClick.AddListener(() => OnCellClicked(entry, owner));
+
+        // 특성 칸은 툴팁이다 — PC 는 올려서 연다 (몬스터·장비 칸은 누르면 상세 창이라 올림이 없다)
+        bool tooltipCell = entry.Species == null && entry.Gear == null;
+        TooltipInput.HookHover(cell,
+            tooltipCell ? () => ShowTraitTooltip(entry, owner) : null,
+            tooltipCell ? CloseTooltip : null);
     }
 
     void Paint(GameObject cell, CodexEntry entry)
@@ -232,6 +263,14 @@ public class CodexPopup : PopupBase
 
         if (nameTr != null && nameTr.TryGetComponent<TextMeshProUGUI>(out var tmp))
         {
+            // ⚠ 이름 칸 높이는 칸 종류가 정한다 (사용자 지적, 2026-09-17 — 번역된 특성 이름이 칸 밖으로 샜다)
+            //   몬스터 칸은 이름 아래에 품질 줄·배지·시너지 표식이 붙어 한 줄뿐이다.
+            //   특성·장비처럼 아래가 빈 칸은 **두 줄**을 쓴다 — 긴 이름을 줄이지 않고 감는다.
+            //   ⚠ 글을 넣기 전에 높이를 바꾼다 — LocalizedText 가 칸 높이로 한 줄/두 줄을 판단한다.
+            bool roomy = entry.Species == null && string.IsNullOrEmpty(entry.SubLabel);
+            var  nrt   = tmp.rectTransform;
+            nrt.sizeDelta = new Vector2(nrt.sizeDelta.x, UIScale.Line(UIScale.FontSm) * (roomy ? 2f : 1f));
+
             tmp.text  = entry.Owned ? entry.Name : "?";
             tmp.color = entry.Owned ? OwnedTextC : LockedTextC;
         }
@@ -336,6 +375,12 @@ public class CodexPopup : PopupBase
         //   Show 는 툴팁을 누른 칸의 자식으로 옮긴다. 그러면 격자를 다시 그릴 때
         //   칸과 함께 툴팁까지 파괴돼 그 뒤로는 영영 뜨지 않는다.
         //   ShowAnchored 는 부모를 건드리지 않고 위치만 맞춘다.
+        //   PC 는 올려서 이미 떠 있다 (TooltipInput) — 누를 때는 모바일만 연다
+        if (!TooltipInput.HoverMode) ShowTraitTooltip(entry, owner);
+    }
+
+    void ShowTraitTooltip(CodexEntry entry, RectTransform owner)
+    {
         if (_tooltip != null)
             _tooltip.ShowAnchored(owner, entry.Name, entry.Desc, entry.StatLine);
     }

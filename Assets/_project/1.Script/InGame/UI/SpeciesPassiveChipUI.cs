@@ -11,10 +11,9 @@ using UnityEngine.EventSystems;
 //    한눈에 갈리게는 해도 "자폭이 얼마나 아픈가" 까지는 못 한다.
 //    그 설명이 닿을 곳이 필요하다.
 //
-//  ■ 눌러도 뜨고 올려도 뜬다
+//  ■ PC 는 올려서, 모바일은 눌러서 뜬다 (TooltipInput, 2026-09-17)
 //    마우스는 올리면 바로 보이는 편이 빠르고, 터치는 올릴 수가 없어 눌러야
-//    한다. 둘 다 받는다. 고정을 두는 이유는 툴팁을 읽는 동안 마우스가 칩을
-//    벗어나기 때문이다 — 고정이 없으면 읽으려고 다가가는 순간 사라진다.
+//    한다. 고정은 모바일에서 같은 칩을 다시 눌러 닫는 토글이다.
 //
 //  ■ ⚠ 고정은 SynergyChipUI 와 따로 논다
 //    툴팁 판때기(TooltipLayer)는 한 장이라 화면에는 하나만 뜬다. 하지만
@@ -54,10 +53,15 @@ public class SpeciesPassiveChipUI : MonoBehaviour,
     //   "고정된 칩이 있으면 아무것도 안 한다" 로 두면, 고정한 뒤 다른 곳을
     //   눌러 InfoTooltipUI 가 스스로 닫혔을 때 _pinned 만 남아 어느 칩에
     //   올려도 반응이 없는 막다른 상태가 된다 (SynergyChipUI 와 같은 이유).
-    public void OnPointerEnter(PointerEventData _) => Open();
+    //   PC 는 올려서, 모바일은 눌러서 연다 (TooltipInput, 2026-09-17) — 고정은 모바일의 탭 토글이다
+    public void OnPointerEnter(PointerEventData _)
+    {
+        if (TooltipInput.HoverMode) Open();
+    }
 
     public void OnPointerExit(PointerEventData _)
     {
+        if (!TooltipInput.HoverMode) return;
         if (_pinned == this) return;              // 고정된 칩에서 나가도 남는다
 
         if (_pinned != null) _pinned.Open();
@@ -66,6 +70,7 @@ public class SpeciesPassiveChipUI : MonoBehaviour,
 
     public void OnPointerClick(PointerEventData _)
     {
+        if (TooltipInput.HoverMode) return;
         if (_pinned == this) { Unpin(); return; }
 
         _pinned = this;

@@ -630,15 +630,62 @@ public static class ActiveSkillCreator
             id          : ActiveSkillId.ManaBurst,
             fileName    : "Active_ManaBurst",
             skillName   : "마나 폭발",
-            description : "남은 마나의 절반을 태워, 탭한 자리 주변의 적 전부에게 " +
-                          "태운 마나 1당 최대 체력의 2% 피해를 준다 (방어율 무시 · 보스는 절반).",
+            description : "화면 전체의 적에게 최대 체력의 30% 피해를 주고, 남은 마나의 절반을 태워 " +
+                          "태운 마나 1당 1.5% 를 더한다 (패기 배율 · 방어율 무시 · 보스는 절반).",
             cooldown    : 8f,
             effectValue : 1f,
-            radius      : 4f,
+            radius      : 0f,      // 화면 전체 — 반경을 쓰지 않는다 (2026-09-15)
             duration    : 0f,
             jobs        : new UnitJob[0]);
-        manaBurst.TargetEffectKey = "FX_Meteor_Explosion";
+        manaBurst.TargetEffectKey   = "FX_Meteor_Explosion";
+        // ⚠ 수치를 여기서 박는다 — 옛 에셋에 직렬화된 값(마나 1당 2%)이 남지 않게
+        manaBurst.BurnRatio         = 0.5f;
+        manaBurst.BaseMaxHpRatio    = 0.30f;
+        manaBurst.MaxHpRatioPerMana = 0.015f;
         EditorUtility.SetDirty(manaBurst);
+
+        // ── ㊲ 권속 소환 (2차 업그레이드 고유 · 몬스터 전용, 2026-09-15) ──
+        //  ■ 무엇을 몇 마리 부르는지는 **종족**이 들고 있다
+        //    MonsterSpeciesData.BroodSpecies / BroodCount / BroodCooldown.
+        //    그래서 SO 의 쿨다운은 종족이 안 적었을 때 쓰는 기본값일 뿐이다
+        //    (MonsterRuntimeBridge.BuildBroodSlot 가 종족 값을 우선한다).
+        //  ⚠ 설명에 마릿수를 적지 않는다 — 종족마다 다르다.
+        //    도감은 종족 값을 읽어 제 숫자를 적는다.
+        //  ⚠ 용사 추첨에서는 IsMonsterOnly() 가 거른다 (ActiveSkillRoller).
+        var summonBrood = Make<ActiveSummonBrood>(db,
+            id          : ActiveSkillId.SummonBrood,
+            fileName    : "Active_SummonBrood",
+            skillName   : "권속 소환",
+            description : "제 발밑에 하위 종족을 불러낸다. 마나를 쓰지 않는다.\n" +
+                          "불러낸 권속은 시너지 카운트를 올리지 않고, 판이 끝나면 사라진다.",
+            cooldown    : 14f,
+            effectValue : 1f,
+            radius      : 0f,
+            duration    : 0f,
+            jobs        : new UnitJob[0]);
+        EditorUtility.SetDirty(summonBrood);
+
+        // ── ㊳ 화염 오라 (화염 멧돼지 고유 · 몬스터 전용, 2026-09-15) ──
+        //  ⚠ 쿨다운·지속은 **마릿수와 한 묶음**이다 (ActiveFlameAura 파일 머리 참고)
+        //    한 장에 넷이 나오는 종족이라, 동시 장판 수 = 4 × 지속 / 쿨다운 을 먼저 본다.
+        //    지금 값이면 평균 1.3개로 용사 법사가 까는 것과 같은 수준이다.
+        //  ⚠ effectValue 는 **틱당** 공격력 배율이다. 0.30 × 지속 4초 / 틱 0.75초
+        //    ≈ 공격력 1.6배가 4초에 걸쳐 들어간다 — 평타 두 대쯤이라 곁다리가 아니고
+        //    한 방 스킬도 아니다. 물량에 겹칠수록 값이 오르는 자리다.
+        var flameAura = Make<ActiveFlameAura>(db,
+            id          : ActiveSkillId.FlameAura,
+            fileName    : "Active_FlameAura",
+            skillName   : "화염 오라",
+            description : "몸 주위에 불길이 번져 따라다닌다. 범위 안의 적에게 " +
+                          "0.75초마다 공격력 30% 피해를 준다 (4초).",
+            cooldown    : 12f,
+            effectValue : 0.30f,
+            radius      : 2.2f,
+            duration    : 4f,
+            jobs        : new UnitJob[0]);
+        flameAura.TickInterval  = 0.75f;
+        flameAura.BaseEffectKey = "FX_Flame_Zone";
+        EditorUtility.SetDirty(flameAura);
 
         // ── ㉛ 돌진 (우두머리 전용 패턴) ─────────────────────
         //  예전엔 BossPatternSystem + BossComponent 필드로 돌던 행동이었다.

@@ -42,17 +42,18 @@ MonoBehaviour:
   SkillUsesPerStage: 1
   SignatureSummonSpecies: {fileID: 0}
   SignatureSummonCount: 1
-  ListOrder: 3
+  ListOrder: 8
   Unlocks:
-  - Kind: 2
-    Value: 2
+  - Kind: 1
+    Value: 0
     SpeciesIds:
-    - skeleton
+    - skeleton_guard
+    - mana_skeleton
     Traits: 0
   StarterMonsters:
   - {fileID: 11400000, guid: c6f38b1551096184884361b93853cc23, type: 2}
-  - {fileID: 11400000, guid: 24a58f9b46e1b004f897ff6337fbc171, type: 2}
-  - {fileID: 11400000, guid: 6681437f350796e46a78d04f257abea7, type: 2}
+  - {fileID: 11400000, guid: 9972811eb9d972c419792fb577405704, type: 2}
+  - {fileID: 11400000, guid: daec436cfffe8fc4c94ae9010847830f, type: 2}
   StarterSkills: []
   Affinities:
   - SpeciesId: skeleton

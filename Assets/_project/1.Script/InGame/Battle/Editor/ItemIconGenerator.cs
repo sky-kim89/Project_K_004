@@ -59,6 +59,8 @@ public static class ItemIconGenerator
         // ⚠ 상점 상시 판매 (2026-09-13) — RunShopRule.WarFundIconKey
         //   정수와 같은 폴더에 둔다 (아이템 아틀라스가 이미 물고 있다).
         Save("item_war_fund.png",             DrawWarFund);
+        Save("item_war_drum.png",             DrawWarDrum);   // RunShopRule.DrumIconKey (2026-09-15)
+        Save("item_mana_potion.png",          DrawManaPotion); // RunShopRule.PotionIconKey (2026-09-16)
         Save("item_gem.png",                  DrawGem);
         Save("item_energy.png",               DrawEnergy);
         Save("item_stamina.png",              DrawStamina);
@@ -808,6 +810,70 @@ public static class ItemIconGenerator
 
         // 광택
         p.FillCircleAlpha(19, 25, 4, HA("FFFFFF", 60));
+    }
+
+
+    // ── War Drum (소집의 북) ─────────────────────────────
+    //
+    //  배출 간격을 줄이는 상시 판매품. 전쟁 자금(붉은 자루)·정수(보라 결정)와
+    //  바탕색부터 갈린다 — 초록 바탕 · 가죽 북 · 엇갈린 북채.
+    static void DrawWarDrum(P p)
+    {
+        p.BgGrad(H("0A1C10"), H("163C22"));
+        p.RoundedBorder(10, 2, H("3A9A58"));
+
+        // 북통 — 옆면
+        p.FillRect(11, 22, 26, 16, H("7A3A1C"));
+        p.FillRect(11, 22, 12, 16, H("9A5028"));   // 왼쪽 위 광원
+
+        // 테 — 금색 띠 둘
+        p.FillRect(11, 22, 26, 3, H("C8920A"));
+        p.FillRect(11, 35, 26, 3, H("A87808"));
+
+        // 가죽 면 — 위쪽 타원
+        for (int y = 16; y <= 24; y++)
+        {
+            int half = 13 - Mathf.Abs(20 - y) * 13 / 5;
+            if (half <= 0) continue;
+            p.FillRect(24 - half, y, half * 2, 1, H("E8D6A8"));
+        }
+
+        // 북채 둘 — 엇갈려 위로
+        for (int i = 0; i < 12; i++)
+        {
+            p.FillRect(12 + i, 4 + i, 2, 2, H("D8B070"));
+            p.FillRect(34 - i, 4 + i, 2, 2, H("C09858"));
+        }
+        p.FillCircle(12, 4, 3, H("F0E0C0"));
+        p.FillCircle(36, 4, 3, H("F0E0C0"));
+
+        // 광택
+        p.FillCircleAlpha(18, 19, 3, HA("FFFFFF", 70));
+    }
+
+    // 마나 회복 포션 — 둥근 물약병. 정수(결정)와 모양이 달라야 한다: 이건 "채우는 것", 정수는 "그릇을 키우는 것".
+    static void DrawManaPotion(P p)
+    {
+        p.BgGrad(H("120A22"), H("2A1648"));
+        p.RoundedBorder(10, 2, H("8A5AD8"));
+
+        // 병 몸통 — 둥근 플라스크
+        p.FillCircle(24, 30, 12, H("C8C0E0"));      // 유리 테두리
+        p.FillCircle(24, 30, 10, H("3A2A8A"));      // 빈 윗부분
+        for (int y = 30; y <= 40; y++)             // 아래 2/3 에 담긴 마나
+        {
+            int half = Mathf.RoundToInt(Mathf.Sqrt(Mathf.Max(0f, 100f - (y - 30) * (y - 30))));
+            if (half > 0) p.FillRect(24 - half, y, half * 2, 1, H("4A9CFF"));
+        }
+        p.FillRect(15, 29, 18, 2, H("9ACCFF"));     // 수면
+
+        // 병목 + 코르크
+        p.FillRect(20, 12, 8, 8, H("C8C0E0"));
+        p.FillRect(21, 13, 6, 7, H("5A4AA0"));
+        p.FillRect(19, 8, 10, 5, H("A87848"));
+
+        // 광택
+        p.FillCircleAlpha(19, 25, 3, HA("FFFFFF", 90));
     }
 
 }

@@ -25,7 +25,8 @@ public class PassiveVampiricStrike : PassiveSkillData
         var em = ctx.EntityManager;
         if (!em.HasBuffer<HealEventBufferElement>(ctx.GeneralEntity)) return;
 
-        float heal = ctx.DamageDealt * VampireRatio;
+        // 유물 '치유의 기억' — 몬스터만 받는다 (용사도 이 패시브를 쓴다)
+        float heal = ctx.DamageDealt * VampireRatio * SpeciesPassiveRuntime.HealPowerFor(em, ctx.GeneralEntity);
         em.GetBuffer<HealEventBufferElement>(ctx.GeneralEntity).Add(
             new HealEventBufferElement { Amount = heal, SourceEntity = ctx.GeneralEntity });
     }

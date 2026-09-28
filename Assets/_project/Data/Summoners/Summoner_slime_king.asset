@@ -39,20 +39,22 @@ MonoBehaviour:
   ManaRegenHoldRatio: 0.1
   DeckSlots: 4
   SignatureSkill: 34
-  SignatureName: "\uAC15\uCCA0 \uCE5C\uC704\uB300"
+  SignatureName: "\uCE58\uC720\uC758 \uCE5C\uC704\uB300"
   SkillUsesPerStage: 1
-  SignatureSummonSpecies: {fileID: 11400000, guid: 1281ecdcdbd2c25498e530fba32844c0, type: 2}
+  SignatureSummonSpecies: {fileID: 11400000, guid: 455d099fbe9c35b43889835afb65035b, type: 2}
   SignatureSummonCount: 2
-  ListOrder: 1
+  ListOrder: 13
   Unlocks:
-  - Kind: 0
-    Value: 5
-    SpeciesIds: []
+  - Kind: 1
+    Value: 0
+    SpeciesIds:
+    - heal_slime
+    - king_slime
     Traits: 0
   StarterMonsters:
   - {fileID: 11400000, guid: bafb509cc44832742b7b54e01531076a, type: 2}
   - {fileID: 11400000, guid: 455d099fbe9c35b43889835afb65035b, type: 2}
-  - {fileID: 11400000, guid: 72845b9061b2cb74d90d7ab33bef9cb9, type: 2}
+  - {fileID: 11400000, guid: 4f43b6484003887459b0ffd230144bbf, type: 2}
   StarterSkills: []
   Affinities:
   - SpeciesId: slime

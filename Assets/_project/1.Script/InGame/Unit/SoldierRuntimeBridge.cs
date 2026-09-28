@@ -30,17 +30,19 @@ public class SoldierRuntimeBridge : UnitRuntimeBridge
         _job            = generalJob;
         _stat           = ScaleFromGeneral(generalStat, statScaleRatio);
 
-        // 병사 등급 = 장군 등급 - 1 (Normal 하한)
-        // Normal  → Normal / Uncommon → Normal / Rare → Uncommon / Unique → Rare / Epic → Unique
-        UnitGrade soldierGrade = generalGrade > UnitGrade.Normal
-            ? (UnitGrade)((int)generalGrade - 1)
-            : UnitGrade.Normal;
-
         // 외형: 장군 이름 시드 사용 → 같은 장군 소속 병사는 동일 외형
-        GetComponent<UnitAppearanceBridge>()?.ApplyAlly(generalName, generalJob, soldierGrade);
+        GetComponent<UnitAppearanceBridge>()?.ApplyAlly(generalName, generalJob, SoldierGradeOf(generalGrade));
 
         SpawnEntity();
     }
+
+    /// <summary>
+    /// 병사 등급 = 장군 등급 − 1 (Normal 하한). 병사 외형이 이 등급으로 굴러 나온다.
+    /// Normal → Normal / Uncommon → Normal / Rare → Uncommon / Unique → Rare / Epic → Unique
+    /// ⚠ 전황 창이 병사만 오는 부대의 초상화를 이 등급으로 그린다 — 규칙은 여기 한 곳이다.
+    /// </summary>
+    public static UnitGrade SoldierGradeOf(UnitGrade generalGrade)
+        => generalGrade > UnitGrade.Normal ? (UnitGrade)((int)generalGrade - 1) : UnitGrade.Normal;
 
     // ── UnitRuntimeBridge 구현 ───────────────────────────────
 

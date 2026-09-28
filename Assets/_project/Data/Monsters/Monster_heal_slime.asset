@@ -19,25 +19,25 @@ MonoBehaviour:
   NonHumanoidLibrary: {fileID: 11400000, guid: 35ee7de5a2e014b4a98e4732e158a713, type: 2}
   BodyTint: {r: 1, g: 1, b: 1, a: 1}
   BodyScale: 1
-  BodyStretch: {x: 1.2, y: 0.84}
+  BodyStretch: {x: 1, y: 1}
   Mark: 2
   PoolKey: Monster
   LineageIcon: {fileID: 21300000, guid: 6c9ebfea264a477489bf8d21f7081ec3, type: 3}
   ManaCost: 7
   SummonCount: 6
-  AttackKind: 0
-  Projectile: 0
-  ProjectileSpeed: 0
-  Traits: 69
+  AttackKind: 1
+  Projectile: 1
+  ProjectileSpeed: 9
+  Traits: 85
   Tags: 130
   Description: "\uC8FC\uAE30\uC801\uC73C\uB85C \uC8FC\uBCC0\uC758 \uB2E4\uCE5C \uC544\uAD70\uC744
-    \uCE58\uC720\uD558\uACE0, \uC8FD\uC744 \uB54C\uB3C4 \uD68C\uBCF5\uC744 \uB0A8\uAE34\uB2E4.\n\uB54C\uB9AC\uB294
-    \uD798\uC740 \uC57D\uD558\uC9C0\uB9CC \uC9C8\uAE30\uB2E4 \u2014 \uBB3C\uB7C9
-    \uC55E\uC904\uC5D0 \uC11E\uC5B4 \uB450\uBA74 \uC904 \uC804\uCCB4\uAC00 \uC624\uB798
-    \uBC84\uD2F4\uB2E4."
+    \uCE58\uC720\uD558\uACE0, \uC8FD\uC744 \uB54C\uB3C4 \uD68C\uBCF5\uC744 \uB0A8\uAE34\uB2E4.\n\uC55E\uC904
+    \uBC14\uB85C \uB4A4\uC5D0\uC11C \uC810\uC561\uC744 \uBC49\uB294\uB2E4 \u2014
+    \uB9DE\uC9C0 \uC54A\uACE0 \uC904 \uC804\uCCB4\uB97C \uC624\uB798 \uBC84\uD2F0\uAC8C
+    \uD55C\uB2E4."
   MaxHp: 300
   Attack: 8
-  AttackRange: 1
+  AttackRange: 3.4
   AttackSpeed: 0.8
   MoveSpeed: 1.6
   Defense: 0.08
@@ -46,9 +46,15 @@ MonoBehaviour:
   SummonPowerToHp: 1.5
   SummonPowerToAttack: 0.4
   UpgradeOf: {fileID: 11400000, guid: bafb509cc44832742b7b54e01531076a, type: 2}
+  AlsoUpgradeOf: []
   SpeciesTrait: 20
+  ExtraTraits: 
+  BlockedInherit: 
   ActiveSkill: 35
   Passives: 
+  BroodSpecies: {fileID: 0}
+  BroodCount: 0
+  BroodCooldown: 0
   LevelBonuses:
   - Label: "\uCE58\uC720 \uC810\uC561"
     Stat1: 0

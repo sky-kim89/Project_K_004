@@ -38,6 +38,7 @@ SpriteAtlas:
     cachedData: {fileID: 0}
     packedSpriteRenderDataKeys:
     - af59f210162833a4790fb7296eb5f2c8: 21300000
+    - 883dc701417fe434c94bddb78bd5051d: 21300000
     - 3f6619719c4dcb3478e8c977f914d9e6: 21300000
     - 9947a873958ac0d4da69a14fed748919: 21300000
     - 8d9186a55f25e50459890a2cad678543: 21300000
@@ -47,13 +48,16 @@ SpriteAtlas:
     - 846b759a2081b664d8ad830c2ca66737: 21300000
     - ed632c9a6b599d140b862b33a2b03989: 21300000
     - d3f3845b44fd3ab478fe2b1e207ee6cb: 21300000
+    - 4edbc27c5eff3a54dad3264e2db093be: 21300000
     - 278570bc1a09d7d49af9e13567c58ae2: 21300000
     - 884f5a5f0a2c67b42a31fcb3c51cf2f5: 21300000
     - 75ebe36f8dfc39f40b4275b5d27bc4c5: 21300000
+    - bb6114bff8da8c64ca5d4d538531d081: 21300000
     - b83136df5724c9b41acd4b14e80de0df: 21300000
   m_MasterAtlas: {fileID: 0}
   m_PackedSprites:
   - {fileID: 21300000, guid: af59f210162833a4790fb7296eb5f2c8, type: 3}
+  - {fileID: 21300000, guid: 883dc701417fe434c94bddb78bd5051d, type: 3}
   - {fileID: 21300000, guid: 3f6619719c4dcb3478e8c977f914d9e6, type: 3}
   - {fileID: 21300000, guid: 9947a873958ac0d4da69a14fed748919, type: 3}
   - {fileID: 21300000, guid: 8d9186a55f25e50459890a2cad678543, type: 3}
@@ -63,12 +67,15 @@ SpriteAtlas:
   - {fileID: 21300000, guid: 846b759a2081b664d8ad830c2ca66737, type: 3}
   - {fileID: 21300000, guid: ed632c9a6b599d140b862b33a2b03989, type: 3}
   - {fileID: 21300000, guid: d3f3845b44fd3ab478fe2b1e207ee6cb, type: 3}
+  - {fileID: 21300000, guid: 4edbc27c5eff3a54dad3264e2db093be, type: 3}
   - {fileID: 21300000, guid: 278570bc1a09d7d49af9e13567c58ae2, type: 3}
   - {fileID: 21300000, guid: 884f5a5f0a2c67b42a31fcb3c51cf2f5, type: 3}
   - {fileID: 21300000, guid: 75ebe36f8dfc39f40b4275b5d27bc4c5, type: 3}
+  - {fileID: 21300000, guid: bb6114bff8da8c64ca5d4d538531d081, type: 3}
   - {fileID: 21300000, guid: b83136df5724c9b41acd4b14e80de0df, type: 3}
   m_PackedSpriteNamesToIndex:
   - item_mana_essence
+  - item_war_drum
   - item_equipbox
   - item_reincarnation_point
   - item_equip_upgrade_stone
@@ -78,9 +85,11 @@ SpriteAtlas:
   - item_expbook
   - item_energy
   - item_general_upgrade_stone
+  - item_mana_potion
   - item_honor
   - item_gold
   - item_gem
+  - item_war_fund
   - item_stamina
   m_RenderDataMap: {}
   m_Tag: Atlas_Items

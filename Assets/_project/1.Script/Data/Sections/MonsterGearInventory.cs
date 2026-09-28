@@ -26,9 +26,10 @@ using UnityEngine;
 //    부르든 전부 같은 장비를 걸치고 나온다 — 개체마다 다르면 라인에 선
 //    같은 종족이 제각각 보여 무엇이 장비 효과인지 읽을 수 없다.
 //
-//  ■ 부위는 하나뿐이다
-//    같은 부위를 또 끼우면 먼저 낀 것이 벗겨진다 (TryEquip).
-//    이 규칙이 없으면 장착했는데 겉모습이 하나도 안 변하는 장비가 생긴다.
+//  ■ 부위는 겹쳐 낄 수 있다 (사용자 확정, 2026-09-15)
+//    투구 둘·갑옷 셋처럼 같은 부위를 칸이 허락하는 만큼 함께 낀다 — 능력치는 전부 받는다.
+//    겉모습은 그 부위의 **앞 칸 장비**가 정한다 (MonsterGearRule.BuildVisual).
+//    ⚠ 예전 규칙("같은 부위를 또 끼우면 먼저 낀 것이 벗겨진다")은 폐기했다.
 //
 //  ⚠ 칸 수는 여기서 정하지 않는다 — MonsterGearRule.SlotsOf 가 정본이다
 //    품질이 오르면 칸이 늘고, 이 섹션은 그때 이미 들고 있던 목록을 그대로 쓴다.
@@ -186,16 +187,13 @@ public class MonsterGearInventory : ISaveSection
         if (!gear.Fits(species))             return Blocked.WrongBody;
         if (IsEquippedOn(species.Id, gear.Id)) return Blocked.AlreadyWorn;
 
-        // 같은 부위를 밀어내는 교체는 칸을 새로 먹지 않는다.
-        if (SamePartIndex(species.Id, gear.Part) >= 0) return Blocked.None;
-
         return EquippedOn(species.Id).Count < MonsterGearRule.SlotsOf(species.Id)
              ? Blocked.None
              : Blocked.NoSlot;
     }
 
     /// <summary>
-    /// 장착한다. 같은 부위를 이미 끼고 있으면 <b>그것을 벗기고</b> 자리를 차지한다.
+    /// 빈 칸에 장착한다. 같은 부위를 이미 끼고 있어도 겹쳐 낀다.
     /// 다른 종족이 끼고 있었으면 <b>그 종족에게서 벗겨 온다</b> — 장비 하나는 한 마리만 낀다.
     /// 조건이 안 맞으면 아무것도 하지 않고 false.
     /// </summary>
@@ -209,9 +207,7 @@ public class MonsterGearInventory : ISaveSection
         if (!_equipped.TryGetValue(species.Id, out var list))
             _equipped[species.Id] = list = new List<string>(MonsterGearRule.MaxSlots);
 
-        int same = SamePartIndex(species.Id, gear.Part);
-        if (same >= 0) list[same] = gear.Id;   // 같은 부위 교체 — 자리를 물려받는다
-        else           list.Add(gear.Id);
+        list.Add(gear.Id);
 
         Changed();
         return true;
@@ -234,7 +230,7 @@ public class MonsterGearInventory : ISaveSection
 
     /// <summary>
     /// 그 칸에 끼운다 — 칸에 있던 것은 벗겨진다. 다른 종족이 끼고 있었으면 벗겨 온다.
-    /// ⚠ 부위는 한 몬스터에 하나다 — 같은 부위가 다른 칸에 있으면 그것도 벗긴다.
+    /// 같은 부위가 다른 칸에 있어도 그대로 둔다 — 부위는 겹쳐 낀다.
     /// </summary>
     public bool EquipAt(MonsterSpeciesData species, MonsterGearData gear, int slot)
     {
@@ -245,13 +241,6 @@ public class MonsterGearInventory : ISaveSection
 
         if (!_equipped.TryGetValue(species.Id, out var list))
             _equipped[species.Id] = list = new List<string>(MonsterGearRule.MaxSlots);
-
-        int same = SamePartIndex(species.Id, gear.Part);
-        if (same >= 0 && same != slot)
-        {
-            list.RemoveAt(same);
-            if (same < slot) slot--;   // 앞 칸이 빠지면 뒤 칸이 당겨진다
-        }
 
         if (slot < list.Count) list[slot] = gear.Id;
         else                   list.Add(gear.Id);
@@ -280,21 +269,6 @@ public class MonsterGearInventory : ISaveSection
 
         list.Remove(gearId);
         if (list.Count == 0) _equipped.Remove(speciesId);
-    }
-
-    /// <summary>그 종족이 같은 부위를 이미 끼고 있는 칸. 없으면 −1.</summary>
-    int SamePartIndex(string speciesId, MonsterGearPart part)
-    {
-        var db   = MonsterGearDatabase.Current;
-        var list = EquippedOn(speciesId);
-        if (db == null) return -1;
-
-        for (int i = 0; i < list.Count; i++)
-        {
-            MonsterGearData worn = db.Get(list[i]);
-            if (worn != null && worn.Part == part) return i;
-        }
-        return -1;
     }
 
     void Changed()

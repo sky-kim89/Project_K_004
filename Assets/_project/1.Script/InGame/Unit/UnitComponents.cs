@@ -519,6 +519,20 @@ namespace BattleGame.Units
     public struct ScreenStateComponent : IComponentData
     {
         public bool HasEnteredScreen;
+
+        /// <summary>
+        /// 아직 화면에 못 들어온 채로 허용 범위 밖에 머문 시간(초).
+        /// ScreenClampSystem 이 쌓고, 범위 안으로 돌아오면 0 으로 되돌린다.
+        ///
+        /// ⚠ '누적' 이 아니라 '연속' 이다 — 한 번이라도 범위 안에 들어오면 처음부터 다시 잰다.
+        ///   누적으로 세면 스폰 → 진입을 반복하는 개체가 언젠가 반드시 죽는다.
+        ///
+        /// ⚠ 0 이 올바른 초기값이라 풀 재사용이 저절로 맞는다
+        ///   UnitRuntimeBridge 가 이 구조체를 통째로 새로 써서 스폰할 때마다 0 이 된다.
+        ///   남은 시간을 세는 방식(= 스폰 때 유예값을 넣어야 함)이었다면 그 줄을
+        ///   빠뜨린 경로에서 유예가 조용히 사라졌을 것이다.
+        /// </summary>
+        public float OutOfBoundsSeconds;
     }
 
     /// <summary>
@@ -538,6 +552,11 @@ namespace BattleGame.Units
     /// </summary>
     public struct UnitSizeComponent : IComponentData
     {
+        /// <summary>
+        /// 반경 — localScale 에서 나온다.
+        /// ⚠ 분리(Separation)에서는 **가로** 반지름으로만 쓰인다 —
+        ///   세로는 SeparationJob.FootSquash 로 눌러 발밑 타원을 만든다.
+        /// </summary>
         public float Radius;
         /// <summary>
         /// 분리 질량. 클수록 다른 유닛에게 밀리지 않고 더 강하게 밀어낸다.

@@ -129,7 +129,7 @@ cropped subject, subject touching the edge
 | 파일명 | 노드 | T | 효과 (레벨당) | 주제 | Prompt |
 |---|---|:-:|---|---|---|
 | `node_claw.png` | **날카로운 발톱** | 1 | 공격력 +4% | 휘어진 짐승 발톱 셋 | three curved beast claws splayed outward, chipped keratin edges catching a highlight |
-| `node_feral_memory.png` | **야성의 기억** | 2 | 종족 패시브 수치 +10% | 피어오르는 짐승 두개골 잔영 | a beast skull wreathed in drifting spirit vapor, older skull afterimages behind it |
+| `node_feral_memory.png` | **치유의 기억** | 2 | 재생·회복량 +10% (재생·트롤의 피·치유의 잔재·생명의 씨앗·광합성·힐 슬라임 치유·흡혈 타격·긴급 회복·처치 회복 — 몬스터만) | 피어오르는 짐승 두개골 잔영 | a beast skull wreathed in drifting spirit vapor, older skull afterimages behind it |
 | `node_carapace.png` | **굳은 껍질** | 2 | 체력 +5% | 각질로 굳은 등딱지 조각 | a hardened chitinous carapace plate, overlapping ridged segments |
 | `node_split_legacy.png` | **분열의 유산** | 3 | 분열·재조립체 배율 +7% | 둘로 갈라지는 점액 덩이 | a gelatinous blob mid-split into two smaller blobs, a stretching strand between them |
 | `node_fang.png` | **사나운 이빨** | 3 | 공격력 +5% | 아래턱에서 솟은 송곳니 한 쌍 | a pair of jagged fangs rising from a lower jaw, saliva glint on the tips |

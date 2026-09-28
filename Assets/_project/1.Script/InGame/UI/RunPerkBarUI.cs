@@ -155,31 +155,82 @@ public class RunPerkBarUI : MonoBehaviour
         return total;
     }
 
-    // ── 그리기 ───────────────────────────────────────────────
+    // ── 칸 목록 — 패배 화면(ReincarnationPopup)도 같은 함수를 쓴다 ──
+
+    /// <summary>칸 하나에 그릴 것.</summary>
+    public struct Entry
+    {
+        public Sprite Icon;
+        public string Title;
+        public string Desc;
+    }
+
+    readonly System.Collections.Generic.List<Entry> _entries = new(48);
 
     /// <summary>
-    /// 지금 세워야 하는 칸 수. <b>그리기 전에</b> 센다 — 칸 크기와 열 수를
-    /// 먼저 정해야 격자가 한 번에 제 모습으로 그려진다.
+    /// 지금 이 런이 가진 것을 순서대로 모은다 — ① 소환사 개성 ② 주운 특성 ③ 제단 표식.
     ///
-    /// ⚠ 제단 표식은 개수가 아니라 <b>표식 종류</b>마다 한 칸이다
-    ///   (아래 ③ 과 같은 규칙). 합계로 세면 언데드 +3 이 세 칸으로 잡힌다.
+    /// ⚠ 목록은 여기 한 곳이다 (2026-09-16)
+    ///   패배 화면이 "이번 런에 무엇을 들었나" 를 보여 주는데, 따로 모으면
+    ///   한쪽에만 새 출처가 붙어 HUD 와 결산이 서로 다른 것을 말하게 된다.
     /// </summary>
-    int CountNeeded()
+    /// <param name="data">런 특성. 아직 없으면 null — 개성·제단만 모은다.</param>
+    /// <param name="synergyIcons">제단 표식 그림. ⚠ MonsterSynergyRule.AllTags 순서.</param>
+    public static void Collect(System.Collections.Generic.List<Entry> into, RunPerkData data,
+                               Sprite[] synergyIcons)
     {
-        int n = 0;
-
+        // ① 소환사 개성 — 맨 앞 고정.
+        //
+        //    ⚠ 아이콘을 넘긴다 (사용자 지적, 2026-09-07 — 두 번 지적받았다)
+        //      한때 그림 없이 넘겨 줄에서 **빈 칸**으로 보였다. 개성은 그 런의 성격을
+        //      정하는 단 하나의 상시 효과라 오히려 제일 잘 보여야 하는 칸이다.
+        //      그림은 SummonerPerkIconGenerator 가 굽는다 (sperk_*).
         SummonerData summoner = SummonerRuntimeBridge.Current?.Data;
-        if (summoner != null && summoner.Perk != SummonerPerk.None) n++;
 
-        if (_data != null)
-            foreach (RunPerk perk in _data.Perks)
-                if (perk != RunPerk.None) n++;
+        if (summoner != null && summoner.Perk != SummonerPerk.None)
+            into.Add(new Entry
+            {
+                Icon  = SpriteManager.Instance?.Get(summoner.Perk.IconKey()),
+                Title = LocalizationManager.Instance.Format("{0}  (소환사)", summoner.Perk.ToKorean()),
+                Desc  = summoner.Perk.Describe(summoner.PerkValue),
+            });
 
+        // ② 주운 특성.
+        if (data != null)
+            foreach (RunPerk perk in data.Perks)
+            {
+                if (perk == RunPerk.None) continue;
+
+                into.Add(new Entry
+                {
+                    Icon  = SpriteManager.Instance?.Get(perk.IconKey()),
+                    Title = perk.ToKorean(),
+                    Desc  = perk.Describe(),
+                });
+            }
+
+        // ③ 제단이 얹은 표식 — 카드를 바쳐 산 것이라 특성과 같은 줄에 선다.
+        //    ⚠ 개수가 아니라 **표식 종류**마다 한 칸이다. 합계로 세면 언데드 +3 이 세 칸이 된다.
+        //    ⚠ 아이콘은 시너지 것을 그대로 쓴다. 전용 그림을 또 만들면
+        //      상단 시너지 줄과 여기가 같은 것을 다르게 그리게 된다.
         foreach (MonsterTag tag in MonsterSynergyRule.AllTags)
-            if (MonsterSynergyRule.BoonCountOf(tag) > 0) n++;
+        {
+            int n = MonsterSynergyRule.BoonCountOf(tag);
+            if (n <= 0) continue;
 
-        return n;
+            int idx = MonsterSynergyRule.IndexOf(tag);
+
+            into.Add(new Entry
+            {
+                Icon  = synergyIcons != null && idx >= 0 && idx < synergyIcons.Length
+                      ? synergyIcons[idx] : null,
+                Title = LocalizationManager.Instance.Format("{0} +{1}  (제단)", MonsterSynergyRule.NameOf(tag), n),
+                Desc  = "제물로 바친 카드가 남긴 표식이다. 카드가 없어도 카운트에 든다.",
+            });
+        }
     }
+
+    // ── 그리기 ───────────────────────────────────────────────
 
     /// <summary>
     /// 칸 수에 맞는 모습으로 격자를 맞춘다.
@@ -209,72 +260,22 @@ public class RunPerkBarUI : MonoBehaviour
 
     void Refresh()
     {
+        _entries.Clear();
+        Collect(_entries, _data, _synergyIcons);
+
         // ⚠ 칸을 채우기 **전에** 모습을 정한다 (ApplyLayout 주석 참고).
-        ApplyLayout(CountNeeded());
+        ApplyLayout(_entries.Count);
 
-        int slot = 0;
-
-        // ① 소환사 개성 — 맨 앞 고정.
-        //
-        //    ⚠ 아이콘을 넘긴다 (사용자 지적, 2026-09-07 — 두 번 지적받았다)
-        //      한때 SetupCustom(null, ...) 로 **그림 없이** 넘겼다. 주석에는
-        //      "개성은 하나뿐이라 이름과 설명이면 된다" 고 적혀 있었지만,
-        //      화면에서는 그냥 **빈 칸**이다 — 줄에 선 나머지 칸이 전부
-        //      그림이라 더 그렇다. 개성은 그 런의 성격을 정하는 단 하나의
-        //      상시 효과라 오히려 제일 잘 보여야 하는 칸이다.
-        //      그림은 SummonerPerkIconGenerator 가 굽는다 (sperk_*).
         SummonerData summoner = SummonerRuntimeBridge.Current?.Data;
-
         _shownSummoner = summoner != null;
         _shownPerk     = summoner != null ? summoner.Perk : SummonerPerk.None;
+        _shownBoons    = BoonTotal();
 
-        if (summoner != null && summoner.Perk != SummonerPerk.None && slot < _slots.Length)
+        int slot = 0;
+        for (; slot < _entries.Count && slot < _slots.Length; slot++)
         {
             _slots[slot].gameObject.SetActive(true);
-            _slots[slot].SetupCustom(SpriteManager.Instance?.Get(summoner.Perk.IconKey()),
-                                     $"{summoner.Perk.ToKorean()}  (소환사)",
-                                     summoner.Perk.Describe(summoner.PerkValue));
-            slot++;
-        }
-
-        // ② 주운 특성.
-        if (_data != null)
-        {
-            foreach (RunPerk perk in _data.Perks)
-            {
-                if (slot >= _slots.Length) break;
-                if (perk == RunPerk.None)  continue;
-
-                _slots[slot].gameObject.SetActive(true);
-                _slots[slot].SetupCustom(SpriteManager.Instance?.Get(perk.IconKey()),
-                                         perk.ToKorean(),
-                                         perk.Describe());
-                slot++;
-            }
-        }
-
-        // ③ 제단이 얹은 표식 — 카드를 바쳐 산 것이라 특성과 같은 줄에 선다.
-        //    ⚠ 아이콘은 시너지 것을 그대로 쓴다. 전용 그림을 또 만들면
-        //      상단 시너지 줄과 여기가 같은 것을 다르게 그리게 된다.
-        _shownBoons = 0;
-
-        foreach (MonsterTag tag in MonsterSynergyRule.AllTags)
-        {
-            int n = MonsterSynergyRule.BoonCountOf(tag);
-            if (n <= 0) continue;
-
-            _shownBoons += n;
-            if (slot >= _slots.Length) continue;
-
-            int    idx  = MonsterSynergyRule.IndexOf(tag);
-            Sprite icon = _synergyIcons != null && idx >= 0 && idx < _synergyIcons.Length
-                        ? _synergyIcons[idx] : null;
-
-            _slots[slot].gameObject.SetActive(true);
-            _slots[slot].SetupCustom(icon,
-                                     $"{MonsterSynergyRule.NameOf(tag)} +{n}  (제단)",
-                                     "제물로 바친 카드가 남긴 표식이다. 카드가 없어도 카운트에 든다.");
-            slot++;
+            _slots[slot].SetupCustom(_entries[slot].Icon, _entries[slot].Title, _entries[slot].Desc);
         }
 
         // 남는 칸은 끈다 — 켜 둔 채로 두면 지난 런의 특성이 그대로 남는다.

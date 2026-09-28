@@ -300,6 +300,10 @@ public class BattleManager : Singleton<BattleManager>
             _context.State == BattleState.BattleVictory) return;
 
         _context.State = BattleState.BattleDefeat;
+
+        // ⚠ 마왕성 함락(EvaluateBattleState)과 같이 내린다 — 한때 여기만 빠져서, 포기 뒤
+        //   환생 창이 떠 있는 동안에도 성벽 통과(CoreBreachSystem)·화면 밖 사망 판정이 계속 돌았다.
+        IsWaveRunning  = false;
         Debug.Log($"[BattleManager] 포기 — 스테이지 {_context.StageNumber}");
         LogBattleStats("포기");
         _mode?.OnBattleDefeat();

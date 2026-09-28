@@ -24,7 +24,7 @@ MonoBehaviour:
   AllowedJobs: 
   IsRare: 0
   CasterEffectKey: FX_Heal_Aura
-  TargetEffectKey: FX_Heal_Target
+  TargetEffectKey: 
   BaseEffectKey: 
   ShowRangeIndicator: 1
   RangeIndicatorDuration: 0

@@ -116,7 +116,7 @@ public class DifficultySelectorUI : MonoBehaviour
             if (open)
             {
                 float mul = config.Get(tier).ReincarnationMultiplier;
-                row.Note.text  = $"환생 포인트 ×{mul:0.0#}";
+                row.Note.text  = LocalizationManager.Instance.Format("환생 포인트 ×{0:0.0#}", mul);
                 // 1 초과 = 보상 · 1 = 기준 · 1 미만 = 깎인다(쉬움)
                 row.Note.color = mul > 1.001f ? RewardOn : mul < 0.999f ? RewardCut : RewardOff;
             }
@@ -125,7 +125,8 @@ public class DifficultySelectorUI : MonoBehaviour
                 // 한 칸 아래 등급에서 UnlockStage 를 깨야 열린다 (DifficultyData.TryBreakthrough)
                 // ⚠ 짧게 — 이 칸은 약 320px 뿐이고 줄바꿈·자동 축소가 없다.
                 //   "어려움 20스테이지 돌파" 는 넘친다.
-                row.Note.text  = $"{((DifficultyTier)(i - 1)).Label()} {DifficultyData.UnlockStage}스테이지";
+                row.Note.text  = LocalizationManager.Instance.Format("{0} {1}스테이지",
+                                                    ((DifficultyTier)(i - 1)).Label(), DifficultyData.UnlockStage);
                 row.Note.color = DimText;
             }
 

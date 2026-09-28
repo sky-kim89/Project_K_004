@@ -66,6 +66,34 @@ public static class GearBoxPopupCreator
     //  ⚠ SparkCount 는 GearBoxPopup.LookOf 의 **최댓값 이상**이어야 한다
     //    런타임은 표가 말하는 수만큼만 켠다. 여기가 적으면 영웅 상자에서
     //    불꽃이 모자라는데 **에러는 나지 않는다** — 그냥 초라해진다.
+    // ── 여러 상자 (사용자 지시, 2026-09-15) ───────────────────
+    //
+    //  ■ 하나면 크게 하나, 둘 이상이면 나란히 놓고 **한 번에** 연다
+    //    전에는 한 창이 [다음 상자] 로 차례로 넘겼다. 다섯 개를 받으면 같은 연출을
+    //    다섯 번 보고 다섯 번 눌러야 해서, 보상이 아니라 절차가 됐다.
+    //
+    //  ⚠ 칸은 **상자가 곧 장비 자리**다 — 따로 카드를 두지 않는다
+    //    상자 아래에 장비 카드를 또 두면 칸 높이가 두 배가 되어 두 줄이 무대를 넘친다.
+    //    열리면 그 자리에서 아이콘으로 바뀌는 편이 짧고, "이 상자에서 저게 나왔다" 도
+    //    더 잘 읽힌다.
+    //
+    //  ⚠ 최대 6칸이다 — 난이도 5(불지옥) + 유물 '대장간의 기억' 1
+    //    늘리려면 열 수(MultiCols)와 무대 높이를 함께 볼 것. Verify 가 검사한다.
+
+    const int   MultiMax     = 6;
+    const int   MultiCols    = 3;
+    const float MultiSlotW   = 200f;
+    const float MultiBoxSize = 96f;
+    const float MultiLidH    = 28f;
+    const float MultiGap     = 14f;
+
+    /// <summary>칸 높이 = 상자 + 간격 + 이름 한 줄.</summary>
+    static float MultiSlotH => MultiBoxSize + 8f + UIScale.RowSm;
+
+    /// <summary>가장 많이 받았을 때(6칸 = 2줄)의 격자 크기.</summary>
+    static float MultiGridW => MultiCols * MultiSlotW;
+    static float MultiGridH => 2f * MultiSlotH + MultiGap;
+
     const int SparkCount = 24;
     const int RayCount   = 8;      // 막대 하나가 양쪽으로 뻗으니 화면에는 16갈래다
 
@@ -157,6 +185,10 @@ public static class GearBoxPopupCreator
                   out var gearRoot, out var frame, out var icon,
                   out var gearName, out var gearGrade, out var gearStat, out var gearDesc);
 
+        BuildMulti(stage, out var multiRoot, out var multiBtn, out var multiHint,
+                   out var mSlots, out var mBoxes, out var mLids, out var mLidImgs,
+                   out var mGearRoots, out var mFrames, out var mIcons, out var mNames);
+
         BuildClose(panel, out var closeBtn, out var closeLabel);
 
         // ⚠ 섬광은 **맨 마지막 자식**이다 — 창까지 덮어야 터진 것으로 보인다.
@@ -192,6 +224,18 @@ public static class GearBoxPopupCreator
         EditorUIBuilder.SetObj(so, "_gearStat",  gearStat,  Tag);
         EditorUIBuilder.SetObj(so, "_gearDesc",  gearDesc,  Tag);
 
+        EditorUIBuilder.SetObj(so, "_multiRoot",   multiRoot, Tag);
+        EditorUIBuilder.SetObj(so, "_multiButton", multiBtn,  Tag);
+        EditorUIBuilder.SetObj(so, "_multiHint",   multiHint, Tag);
+        EditorUIBuilder.SetObjArray(so, "_multiSlots",     mSlots,     Tag);
+        EditorUIBuilder.SetObjArray(so, "_multiBoxes",     mBoxes,     Tag);
+        EditorUIBuilder.SetObjArray(so, "_multiLids",      mLids,      Tag);
+        EditorUIBuilder.SetObjArray(so, "_multiLidImages", mLidImgs,   Tag);
+        EditorUIBuilder.SetObjArray(so, "_multiGearRoots", mGearRoots, Tag);
+        EditorUIBuilder.SetObjArray(so, "_multiFrames",    mFrames,    Tag);
+        EditorUIBuilder.SetObjArray(so, "_multiIcons",     mIcons,     Tag);
+        EditorUIBuilder.SetObjArray(so, "_multiNames",     mNames,     Tag);
+
         EditorUIBuilder.SetObj(so, "_closeBtn",   closeBtn,   Tag);
         EditorUIBuilder.SetObj(so, "_closeLabel", closeLabel, Tag);
 
@@ -221,8 +265,164 @@ public static class GearBoxPopupCreator
         if (BoxBlockH > StageH)
             Debug.LogError($"[{Tag}] 상자 블록({BoxBlockH:0})이 무대({StageH:0})보다 큽니다.");
 
+        if (MultiGridH > StageH)
+            Debug.LogError($"[{Tag}] 여러 상자 격자({MultiGridH:0})가 무대({StageH:0})보다 큽니다 — " +
+                           "6개를 받으면 두 줄이 무대를 넘칩니다. MultiBoxSize 를 줄이거나 " +
+                           "PanelH 를 키우세요.");
+
+        if (MultiGridW > PanelW - Pad * 2f)
+            Debug.LogError($"[{Tag}] 여러 상자 격자 폭({MultiGridW:0})이 창 안쪽" +
+                           $"({PanelW - Pad * 2f:0})을 넘습니다 — MultiSlotW 를 줄이세요.");
+
         if (PanelH > UIScale.PopupMaxH)
             Debug.LogError($"[{Tag}] 창 높이 {PanelH} 가 상한 {UIScale.PopupMaxH} 를 넘습니다 (UI 규칙 6).");
+    }
+
+    // ── 여러 상자 ────────────────────────────────────────────
+
+    /// <summary>
+    /// 상자 여럿을 나란히 놓는 격자. 기본은 꺼져 있다 — 하나만 받으면 안 쓴다.
+    ///
+    /// ⚠ 자리는 **런타임이 다시 잡는다** (GearBoxPopup.LayoutMulti)
+    ///   몇 개를 받을지는 난이도·유물이 정하므로 굽는 시점에 알 수 없다.
+    ///   여기서는 6칸을 만들어 두고, 런타임이 개수만큼 켜서 가운데로 모은다
+    ///   (ChoicePopup.Recenter · CardSelectPopup.Recenter 와 같은 문법).
+    ///
+    /// ⚠ 누르는 것은 **칸이 아니라 격자 전체**다
+    ///   "한 번에 연다" 가 이 모드의 전부라, 칸마다 버튼을 두면 다시 여러 번 누르게 된다.
+    /// </summary>
+    static void BuildMulti(GameObject stage,
+                           out GameObject multiRoot, out Button btn, out TextMeshProUGUI hint,
+                           out RectTransform[] slots, out Image[] boxes,
+                           out RectTransform[] lids, out Image[] lidImgs,
+                           out GameObject[] gearRoots, out Image[] frames,
+                           out Image[] icons, out TextMeshProUGUI[] names)
+    {
+        multiRoot = EditorUIBuilder.Go("MultiRoot", stage);
+        EditorUIBuilder.Stretch(multiRoot);
+
+        // 격자 전체가 버튼이다 — 투명판 하나가 무대를 덮는다.
+        var plate = EditorUIBuilder.Img(multiRoot, "Plate", new Color(0f, 0f, 0f, 0f));
+        EditorUIBuilder.Stretch(plate.gameObject);
+        btn = plate.gameObject.AddComponent<Button>();
+        btn.targetGraphic = plate;
+        EditorUIBuilder.TintTransition(plate.gameObject, Color.white);
+
+        slots     = new RectTransform[MultiMax];
+        boxes     = new Image[MultiMax];
+        lids      = new RectTransform[MultiMax];
+        lidImgs   = new Image[MultiMax];
+        gearRoots = new GameObject[MultiMax];
+        frames    = new Image[MultiMax];
+        icons     = new Image[MultiMax];
+        names     = new TextMeshProUGUI[MultiMax];
+
+        for (int i = 0; i < MultiMax; i++)
+        {
+            var slot = EditorUIBuilder.Go($"Slot{i}", multiRoot);
+            var srt  = slot.GetComponent<RectTransform>();
+            srt.anchorMin = srt.anchorMax = srt.pivot = new Vector2(0.5f, 0.5f);
+            srt.sizeDelta = new Vector2(MultiSlotW, MultiSlotH);
+            slots[i] = srt;
+
+            // ── 상자 (열리면 꺼진다) ──
+            var boxGo = EditorUIBuilder.Img(slot, "Box", Color.white);
+            {
+                var rt = boxGo.rectTransform;
+                rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 1f);
+                rt.anchoredPosition = Vector2.zero;
+                rt.sizeDelta        = new Vector2(MultiBoxSize, MultiBoxSize);
+            }
+            boxGo.raycastTarget = false;     // ⚠ 누르는 것은 격자다
+            boxes[i] = boxGo;
+
+            var strap = EditorUIBuilder.Img(boxGo.gameObject, "Strap", BoxDark);
+            {
+                var rt = strap.rectTransform;
+                rt.anchorMin = new Vector2(0.42f, 0f); rt.anchorMax = new Vector2(0.58f, 1f);
+                rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+            }
+            strap.raycastTarget = false;
+
+            // ⚠ 뚜껑은 상자의 자식이 아니다 — 따로 날아간다 (단일 상자와 같은 이유)
+            var lidGo = EditorUIBuilder.Img(slot, "Lid", Color.white);
+            {
+                var rt = lidGo.rectTransform;
+                rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 1f);
+                rt.anchoredPosition = Vector2.zero;
+                rt.sizeDelta        = new Vector2(MultiBoxSize + 10f, MultiLidH);
+            }
+            lidGo.raycastTarget = false;
+            lids[i]    = lidGo.rectTransform;
+            lidImgs[i] = lidGo;
+
+            // ── 장비 (열린 뒤 상자 **자리에** 선다) ──
+            var gearGo = EditorUIBuilder.Go("Gear", slot);
+            {
+                var rt = gearGo.GetComponent<RectTransform>();
+                rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 1f);
+                rt.anchoredPosition = Vector2.zero;
+                rt.sizeDelta        = new Vector2(MultiBoxSize, MultiBoxSize);
+            }
+            gearRoots[i] = gearGo;
+            gearGo.SetActive(false);
+
+            var frame = EditorUIBuilder.Img(gearGo, "Frame", Color.white);
+            EditorUIBuilder.Stretch(frame.gameObject);
+            frame.raycastTarget = false;
+            frames[i] = frame;
+
+            var inner = EditorUIBuilder.Img(gearGo, "Inner", SlotBg);
+            {
+                var rt = inner.rectTransform;
+                rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+                rt.offsetMin = new Vector2(4f, 4f); rt.offsetMax = new Vector2(-4f, -4f);
+            }
+            inner.raycastTarget = false;
+
+            var icon = EditorUIBuilder.Img(gearGo, "Icon", Color.white);
+            {
+                var rt = icon.rectTransform;
+                rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+                rt.offsetMin = new Vector2(12f, 12f); rt.offsetMax = new Vector2(-12f, -12f);
+            }
+            icon.preserveAspect = true;
+            icon.raycastTarget  = false;
+            icons[i] = icon;
+
+            // ── 이름 — 칸 폭을 그대로 쓴다 (상자보다 넓게, 글이 안 잘리게) ──
+            var nm = EditorUIBuilder.TMP(slot, "Name", "장비", UIScale.FontSm, FontStyles.Bold);
+            nm.alignment            = TextAlignmentOptions.Center;
+            nm.raycastTarget        = false;
+            nm.enableAutoSizing     = true;
+            nm.fontSizeMin          = UIScale.FontSm * 0.7f;   // ⚠ 바닥을 더 내리지 말 것 (UI 규칙 8)
+            nm.fontSizeMax          = UIScale.FontSm;
+            nm.overflowMode         = TextOverflowModes.Ellipsis;
+            {
+                var rt = nm.rectTransform;
+                rt.anchorMin = new Vector2(0f, 1f); rt.anchorMax = new Vector2(1f, 1f);
+                rt.pivot     = new Vector2(0.5f, 1f);
+                rt.offsetMin = new Vector2(6f, 0f); rt.offsetMax = new Vector2(-6f, 0f);
+                rt.anchoredPosition = new Vector2(0f, -(MultiBoxSize + 8f));
+                rt.sizeDelta        = new Vector2(-12f, UIScale.RowSm);
+            }
+            names[i] = nm;
+        }
+
+        hint = EditorUIBuilder.TMP(multiRoot, "MultiHint", "눌러서 모두 열기",
+                                   UIScale.FontMd, FontStyles.Bold);
+        hint.color         = SubText;
+        hint.alignment     = TextAlignmentOptions.Center;
+        hint.raycastTarget = false;
+        {
+            var rt = hint.rectTransform;
+            rt.anchorMin = new Vector2(0f, 0f); rt.anchorMax = new Vector2(1f, 0f);
+            rt.pivot     = new Vector2(0.5f, 0f);
+            rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+            rt.sizeDelta = new Vector2(0f, UIScale.RowMd);
+        }
+
+        multiRoot.SetActive(false);   // 기본은 단일 상자다
     }
 
     // ── 창 ───────────────────────────────────────────────────

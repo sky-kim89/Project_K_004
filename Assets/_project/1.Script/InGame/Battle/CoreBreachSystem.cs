@@ -79,6 +79,21 @@ namespace BattleGame.Units
 
             float line = SummonFieldLayout.WallX + BreachMargin;
 
+            // ── 아군이 남아 있으면 보스는 성벽에 붙들린다 (사용자 지시, 2026-09-16) ──
+            //
+            //  ⚠ 특성 '매복'(판 시작 5초 배출 정지) + 보스판에서 보스가 돌진해 빈 전장을
+            //    가로질러 성벽에 닿으면, 대기열에 몬스터가 잔뜩 있는데도 그 자리에서 런이 끝났다.
+            //    "막지 못했다" 가 아니라 "아직 막을 차례가 안 왔다" 였다.
+            //  지금은 필드에 몬스터가 있거나 **실제로 나오고 있는** 대기열이 있으면 보스를 거두지 않는다 —
+            //  ScreenClampJob 이 성벽선에 물려 두므로 보스는 그 자리에서 몰려나오는 몬스터와 싸운다.
+            //  둘 다 없을 때만 함락이다.
+            //  ⚠ 대기열 수(TotalCount)로 보지 않는다 (2026-09-16 교착)
+            //    이번 판에 안 나오는 대기열(배출이 멈춘 라인에 되돌아온 몬스터)까지 세면
+            //    필드가 텅 빈 채 보스가 영원히 붙들렸다. 배출이 도는 라인만 센다.
+            //  ⚠ 보통 용사는 그대로 −1 이다. 한 기 = 1 이라 즉사 문제가 없다.
+            bool alliesStand = MonsterLineReturner.AliveCount > 0
+                            || SummonController.Instance.HasPendingSpawns;
+
             var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
             int  breached  = 0;
             bool bossBroke = false;
@@ -95,12 +110,17 @@ namespace BattleGame.Units
                     if (identity.Team != Faction.Hero) return;
                     if (xform.Position.x > line)       return;
 
+                    bool isBoss = EntityManager.HasComponent<BossComponent>(entity);
+
+                    // 싸울 아군이 남아 있으면 보스는 성벽에 붙든 채 둔다 (위 alliesStand 주석)
+                    if (isBoss && alliesStand) return;
+
                     // ⚠ 순회 중에 구조적 변경을 하지 않는다 — ECB 로 미룬다.
                     ecb.AddComponent<BreachedTag>(entity);
                     ecb.AddComponent<DeadTag>(entity);
 
                     // 보스는 한 기로 끝이다 (사용자 확정, 2026-09-06)
-                    if (EntityManager.HasComponent<BossComponent>(entity)) bossBroke = true;
+                    if (isBoss) bossBroke = true;
 
                     breached++;
                 })

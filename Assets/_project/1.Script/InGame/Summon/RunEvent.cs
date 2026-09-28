@@ -510,22 +510,23 @@ public static class RunEventRule
     {
         string gain = choice.Gain switch
         {
-            RunEventGain.Gold         => $"골드 +{GoldUnit(stageNumber) * choice.Amount:N0}",
-            RunEventGain.Perk         => $"특성 {choice.Amount}개를 얻는다",
-            RunEventGain.CardLevel    => $"덱에서 레벨이 가장 낮은 카드 Lv +{choice.Amount}",
+            RunEventGain.Gold         => F("골드 +{0:N0}", GoldUnit(stageNumber) * choice.Amount),
+            RunEventGain.Perk         => F("특성 {0}개를 얻는다", choice.Amount),
+            RunEventGain.CardLevel    => F("덱에서 레벨이 가장 낮은 카드 Lv +{0}", choice.Amount),
             RunEventGain.NewCard      => choice.Amount > 1
-                                       ? $"몬스터 카드 {choice.Amount}장을 얻는다"
-                                       : "몬스터 카드 1장을 얻는다",
-            RunEventGain.SynergyCount => $"덱에 가장 많은 표식의 카운트 +{choice.Amount}",
-            RunEventGain.ExtraSummons => $"가장 비싼 카드의 소환 마릿수 +{choice.Amount}",
-            RunEventGain.ManaCut      => $"가장 비싼 카드의 소환 비용 −{choice.Amount}",
-            RunEventGain.CoreMax      => $"마왕성 최대 체력 +{choice.Amount} · 최대 마나 +{ManaForCoreMax(choice.Amount)}",
+                                       ? F("몬스터 카드 {0}장을 얻는다", choice.Amount)
+                                       : F("몬스터 카드 1장을 얻는다"),
+            RunEventGain.SynergyCount => F("덱에 가장 많은 표식의 카운트 +{0}", choice.Amount),
+            RunEventGain.ExtraSummons => F("가장 비싼 카드의 소환 마릿수 +{0}", choice.Amount),
+            RunEventGain.ManaCut      => F("가장 비싼 카드의 소환 비용 −{0}", choice.Amount),
+            RunEventGain.CoreMax      => F("마왕성 최대 체력 +{0} · 최대 마나 +{1}",
+                                           choice.Amount, ManaForCoreMax(choice.Amount)),
 
             // ⚠ choice.Amount 가 아니라 HealAmount 다 — 양의 정본은 하나다.
-            RunEventGain.CoreHeal     => $"마왕성 체력 +{HealAmount}",
+            RunEventGain.CoreHeal     => F("마왕성 체력 +{0}", HealAmount),
 
-            RunEventGain.SignatureUse => $"시그니처 스킬 스테이지당 사용 +{choice.Amount}",
-            RunEventGain.TopCardLevel => $"덱에서 가장 비싼 카드 Lv +{choice.Amount}",
+            RunEventGain.SignatureUse => F("시그니처 스킬 스테이지당 사용 +{0}", choice.Amount),
+            RunEventGain.TopCardLevel => F("덱에서 가장 비싼 카드 Lv +{0}", choice.Amount),
 
             _                         => "",
         };
@@ -549,23 +550,36 @@ public static class RunEventRule
         switch (choice.Cost)
         {
             case RunEventCost.Core:
-                return $"마왕성 체력 −{choice.CostAmount}";
+                return F("마왕성 체력 −{0}", choice.CostAmount);
 
             case RunEventCost.HalfCore:
-                return $"마왕성 체력 −{HalfCoreCost(user)} (지금의 절반)";
+                return F("마왕성 체력 −{0} (지금의 절반)", HalfCoreCost(user));
 
             case RunEventCost.LowestCard:
             {
                 int at = LowestLevelSlotForSacrifice(user.Get<SummonDeckData>());
                 return at < 0
-                     ? "바칠 카드가 없다"
-                     : $"[{NameOf(user.Get<SummonDeckData>().GetSlot(at).Id)}] 카드를 잃는다";
+                     ? F("바칠 카드가 없다")
+                     : F("[{0}] 카드를 잃는다", NameOf(user.Get<SummonDeckData>().GetSlot(at).Id));
             }
 
             default:
                 return string.Empty;
         }
     }
+
+    /// <summary>
+    /// 표에서 문장을 찾아 숫자·이름을 끼워 넣는다 — 원본 표가 쓰는 <c>{0}</c> 방식.
+    ///
+    /// ⚠ <b>수치가 든 설명은 반드시 이걸 쓴다. 보간 문자열($"…{값}…")을 쓰지 말 것</b>
+    ///   (2026-09-16). 보간은 실행 시점에 이미 숫자로 바뀌어 있어서 번역표의
+    ///   키(코드에 적힌 그대로의 문자열)와 **영원히 일치하지 않는다** — 표에는
+    ///   줄이 있는데 화면에는 한국어로 남는다.
+    ///
+    /// ⚠ 키를 고치면 LocalizationTable.txt 의 같은 문장도 함께 고칠 것.
+    /// </summary>
+    static string F(string key, params object[] args)
+        => LocalizationManager.Instance.Format(key, args);
 
     /// <summary>지금 체력의 절반(내림). ⚠ 최소 1 — 0 이면 공짜 갈래가 된다.</summary>
     static int HalfCoreCost(UserDataManager user)
@@ -692,13 +706,13 @@ public static class RunEventRule
         {
             case RunEventCost.Core:
                 user.Get<RunCoreData>().Pay(choice.CostAmount);
-                return $"마왕성 체력을 {choice.CostAmount} 내주었다.";
+                return F("마왕성 체력을 {0} 내주었다.", choice.CostAmount);
 
             case RunEventCost.HalfCore:
             {
                 int amount = HalfCoreCost(user);
                 user.Get<RunCoreData>().Pay(amount);
-                return $"마왕성 체력을 {amount} 내주었다.";
+                return F("마왕성 체력을 {0} 내주었다.", amount);
             }
 
             case RunEventCost.LowestCard:
@@ -711,7 +725,7 @@ public static class RunEventRule
                 string name = NameOf(deck.GetSlot(at).Id);
                 deck.ClearSlot(at);
 
-                return $"[{name}] 이(가) 삼켜졌다.";
+                return F("[{0}] 이(가) 삼켜졌다.", name);
             }
 
             default:
@@ -729,7 +743,7 @@ public static class RunEventRule
         //   RunGoldData 에 직접 넣으면 그 보너스가 조용히 빠진다.
         RunGoldRule.Grant(amount);
 
-        return $"골드를 {amount:N0} 얻었다.";
+        return F("골드를 {0:N0} 얻었다.", amount);
     }
 
     static string GivePerk(UserDataManager user, int count)
@@ -749,7 +763,7 @@ public static class RunEventRule
             names.Add(perk.ToKorean());
         }
 
-        return $"특성 [{string.Join("] [", names)}] 을(를) 얻었다.";
+        return F("특성 [{0}] 을(를) 얻었다.", string.Join("] [", names));
     }
 
     static string GiveCardLevel(SummonDeckData deck, int amount)
@@ -768,7 +782,7 @@ public static class RunEventRule
         for (int i = 0; i < amount; i++)
             deck.Acquire(SummonKind.Monster, slot.Id);
 
-        return $"[{name}] 이(가) Lv.{was} → Lv.{deck.GetSlot(at).Level} 이 되었다.";
+        return F("[{0}] 이(가) Lv.{1} → Lv.{2} 이 되었다.", name, was, deck.GetSlot(at).Level);
     }
 
     static string GiveNewCard(UserDataManager user, SummonDeckData deck, int count)
@@ -803,7 +817,7 @@ public static class RunEventRule
 
         if (names.Count == 0) return "따라올 만한 것이 없었다.";
 
-        return $"[{string.Join("] [", names)}] 이(가) 따라왔다.";
+        return F("[{0}] 이(가) 따라왔다.", string.Join("] [", names));
     }
 
     static string GiveTopCardLevel(SummonDeckData deck, int amount)
@@ -819,7 +833,7 @@ public static class RunEventRule
         for (int i = 0; i < amount; i++)
             deck.Acquire(SummonKind.Monster, slot.Id);
 
-        return $"[{name}] 이(가) Lv.{was} → Lv.{deck.GetSlot(at).Level} 이 되었다.";
+        return F("[{0}] 이(가) Lv.{1} → Lv.{2} 이 되었다.", name, was, deck.GetSlot(at).Level);
     }
 
     static string GiveSynergy(UserDataManager user, SummonDeckData deck, int amount)
@@ -830,7 +844,7 @@ public static class RunEventRule
         // 저장고는 RunBoonData 다 — 제단 제물과 같은 자리에 쌓인다.
         user.Get<RunBoonData>().AddSynergy(tag, amount);
 
-        return $"[{MonsterSynergyRule.NameOf(tag)}] 카운트가 {amount} 올랐다.";
+        return F("[{0}] 카운트가 {1} 올랐다.", MonsterSynergyRule.NameOf(tag), amount);
     }
 
     static string UpgradeCard(SummonDeckData deck, int cut, int extra)
@@ -842,8 +856,8 @@ public static class RunEventRule
         deck.UpgradeCard(at, cut, extra);
 
         return cut > 0
-             ? $"[{name}] 의 소환 비용이 {cut} 줄었다."
-             : $"[{name}] 이(가) {extra}마리 더 나온다.";
+             ? F("[{0}] 의 소환 비용이 {1} 줄었다.", name, cut)
+             : F("[{0}] 이(가) {1}마리 더 나온다.", name, extra);
     }
 
     /// <summary>
@@ -859,13 +873,13 @@ public static class RunEventRule
         int mana = ManaForCoreMax(amount);
         RunPerkRule.GrowMaxMana(mana);
 
-        return $"마왕성 최대 체력이 {amount}, 최대 마나가 {mana} 늘었다.";
+        return F("마왕성 최대 체력이 {0}, 최대 마나가 {1} 늘었다.", amount, mana);
     }
 
     static string GiveSignatureUse(UserDataManager user, int amount)
     {
         user.Get<RunBoonData>().AddSignatureUse(amount);
-        return $"시그니처 스킬을 판마다 {amount}번 더 쓸 수 있게 되었다.";
+        return F("시그니처 스킬을 판마다 {0}번 더 쓸 수 있게 되었다.", amount);
     }
 
     static string GiveCoreHeal(UserDataManager user)
@@ -877,7 +891,7 @@ public static class RunEventRule
 
         // ⚠ 실제로 오른 만큼 적는다 — 상한에 걸리면 HealAmount 보다 적다.
         //   표를 그대로 읊으면 "3 회복" 이라 적고 1 만 오르는 줄이 생긴다.
-        return $"마왕성 체력을 {core.Current - was} 회복했다.";
+        return F("마왕성 체력을 {0} 회복했다.", core.Current - was);
     }
 
     // ── 덱에서 대상 고르기 ───────────────────────────────────

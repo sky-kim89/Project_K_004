@@ -38,9 +38,17 @@ namespace BattleGame.Units
         ComponentLookup<VitalStrikeTag>   _vitalLookup;
         ComponentLookup<ExecuteComponent> _executeLookup;
 
+        // 시너지 2026-09-15 — 사냥(저체력 치명타) · 사격(투사체 하나 더) · 선봉(첫 공격)
+        ComponentLookup<HuntCritComponent>        _huntLookup;
+        ComponentLookup<ExtraProjectileComponent> _extraShotLookup;
+        ComponentLookup<VanguardComponent>        _vanguardLookup;   // ⚠ 쓰기 — 첫 공격 표시
+
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
+            _huntLookup         = state.GetComponentLookup<HuntCritComponent>(isReadOnly: true);
+            _extraShotLookup    = state.GetComponentLookup<ExtraProjectileComponent>(isReadOnly: true);
+            _vanguardLookup     = state.GetComponentLookup<VanguardComponent>(isReadOnly: false);
             _statLookup         = state.GetComponentLookup<StatComponent>(isReadOnly: true);
             _vitalLookup        = state.GetComponentLookup<VitalStrikeTag>(isReadOnly: true);
             _executeLookup      = state.GetComponentLookup<ExecuteComponent>(isReadOnly: true);
@@ -69,6 +77,9 @@ namespace BattleGame.Units
             _statLookup.Update(ref state);
             _vitalLookup.Update(ref state);
             _executeLookup.Update(ref state);
+            _huntLookup.Update(ref state);
+            _extraShotLookup.Update(ref state);
+            _vanguardLookup.Update(ref state);
 
             // ① 쿨다운 감소 (병렬, 근거리 + 원거리)
             new CooldownTickJob { DeltaTime = deltaTime }.ScheduleParallel();
@@ -88,6 +99,8 @@ namespace BattleGame.Units
                 StatLookup         = _statLookup,
                 VitalLookup        = _vitalLookup,
                 ExecuteLookup      = _executeLookup,
+                HuntLookup         = _huntLookup,
+                VanguardLookup     = _vanguardLookup,
                 Ecb                = ecb,
             }.ScheduleParallel();
 
@@ -103,6 +116,9 @@ namespace BattleGame.Units
                 StatLookup         = _statLookup,
                 VitalLookup        = _vitalLookup,
                 ExecuteLookup      = _executeLookup,
+                HuntLookup         = _huntLookup,
+                VanguardLookup     = _vanguardLookup,
+                ExtraShotLookup    = _extraShotLookup,
             }.ScheduleParallel();
         }
 
@@ -135,14 +151,49 @@ namespace BattleGame.Units
         /// <summary>평타 피해를 굴린다. <paramref name="forceCrit"/> 이면 치명타가 확정된다(처형).</summary>
         public static float RollDamage(ref AttackComponent attack, in StatComponent stat,
                                        bool forceCrit, out bool crit)
+            => RollDamage(ref attack, in stat, forceCrit, 0f, out crit);
+
+        /// <param name="extraChance">이번 타격에만 더하는 치명타 확률 (사냥 은·금의 저체력 보너스).</param>
+        public static float RollDamage(ref AttackComponent attack, in StatComponent stat,
+                                       bool forceCrit, float extraChance, out bool crit)
         {
             var   rng   = new Random(attack.RandomSeed == 0u ? 1u : attack.RandomSeed);
             float roll  = rng.NextFloat();
             attack.RandomSeed = rng.state;
 
             float base_ = stat.Final[StatType.Attack];
-            crit = forceCrit || roll < stat.Final[StatType.CritChance];
+            crit = forceCrit || roll < stat.Final[StatType.CritChance] + extraChance;
             return crit ? base_ * stat.Final[StatType.CritDamage] : base_;
+        }
+
+        /// <summary>사냥 은·금 — 대상 체력이 문턱 이하면 더할 치명타 확률. 아니면 0.</summary>
+        public static float HuntChanceFor(in ComponentLookup<HuntCritComponent> hunt,
+                                          in ComponentLookup<StatComponent> stats,
+                                          Entity attacker, Entity target, in HealthComponent targetHealth)
+        {
+            if (!hunt.HasComponent(attacker) || !stats.HasComponent(target)) return 0f;
+
+            HuntCritComponent h     = hunt[attacker];
+            float             maxHp = stats[target].Final[StatType.MaxHp];
+            return maxHp > 0f && targetHealth.CurrentHp <= maxHp * h.LowHpThreshold ? h.BonusChance : 0f;
+        }
+
+        /// <summary>
+        /// 선봉 — 첫 공격이면 배율을 돌려주고 "첫 공격 함" 으로 표시한다. 아니면 1.
+        /// ⚠ 자기 엔티티에만 쓴다 — 병렬 잡에서 안전한 이유가 그것이다.
+        /// </summary>
+        public static float VanguardFirstHit(ref ComponentLookup<VanguardComponent> vanguard,
+                                             Entity attacker, Entity target)
+        {
+            if (!vanguard.HasComponent(attacker)) return 1f;
+
+            VanguardComponent v = vanguard[attacker];
+            if (v.State != 0) return 1f;
+
+            v.State  = 1;
+            v.Target = target;
+            vanguard[attacker] = v;
+            return v.FirstHitMult;
         }
 
         /// <summary>
@@ -209,6 +260,9 @@ namespace BattleGame.Units
         [ReadOnly] public ComponentLookup<StatComponent>         StatLookup;
         [ReadOnly] public ComponentLookup<VitalStrikeTag>        VitalLookup;
         [ReadOnly] public ComponentLookup<ExecuteComponent>      ExecuteLookup;
+        [ReadOnly] public ComponentLookup<HuntCritComponent>     HuntLookup;
+        [NativeDisableParallelForRestriction]
+                   public ComponentLookup<VanguardComponent>     VanguardLookup;   // 자기 엔티티에만 쓴다
         public EntityCommandBuffer.ParallelWriter                 Ecb;
 
         public void Execute(
@@ -272,8 +326,12 @@ namespace BattleGame.Units
 
             bool  forceCrit   = UnitAttackSystem.IsExecute(in ExecuteLookup, in StatLookup,
                                                            entity, attack.TargetEntity, targetHealth);
-            float finalDamage = UnitAttackSystem.RollDamage(ref attack, in stat, forceCrit, out bool crit);
+            float huntChance  = UnitAttackSystem.HuntChanceFor(in HuntLookup, in StatLookup,
+                                                               entity, attack.TargetEntity, targetHealth);
+            float finalDamage = UnitAttackSystem.RollDamage(ref attack, in stat, forceCrit, huntChance, out bool crit);
             float pierce      = UnitAttackSystem.PierceFor(in VitalLookup, entity, in stat, crit);
+
+            finalDamage *= UnitAttackSystem.VanguardFirstHit(ref VanguardLookup, entity, attack.TargetEntity);
 
             float3 hitDir = math.normalize(targetPos - transform.Position);
 
@@ -328,6 +386,10 @@ namespace BattleGame.Units
         [ReadOnly] public ComponentLookup<StatComponent>         StatLookup;
         [ReadOnly] public ComponentLookup<VitalStrikeTag>        VitalLookup;
         [ReadOnly] public ComponentLookup<ExecuteComponent>      ExecuteLookup;
+        [ReadOnly] public ComponentLookup<HuntCritComponent>     HuntLookup;
+        [ReadOnly] public ComponentLookup<ExtraProjectileComponent> ExtraShotLookup;
+        [NativeDisableParallelForRestriction]
+                   public ComponentLookup<VanguardComponent>     VanguardLookup;   // 자기 엔티티에만 쓴다
 
         const float ArrowSpeed     = 15f;
         const float MagicBoltSpeed = 10f;
@@ -387,27 +449,42 @@ namespace BattleGame.Units
 
             bool  forceCrit   = UnitAttackSystem.IsExecute(in ExecuteLookup, in StatLookup,
                                                            entity, attack.TargetEntity, targetHealth);
-            float finalDamage = UnitAttackSystem.RollDamage(ref attack, in stat, forceCrit, out bool crit);
+            float huntChance  = UnitAttackSystem.HuntChanceFor(in HuntLookup, in StatLookup,
+                                                               entity, attack.TargetEntity, targetHealth);
+            float finalDamage = UnitAttackSystem.RollDamage(ref attack, in stat, forceCrit, huntChance, out bool crit);
             float pierce      = UnitAttackSystem.PierceFor(in VitalLookup, entity, in stat, crit);
+
+            finalDamage *= UnitAttackSystem.VanguardFirstHit(ref VanguardLookup, entity, attack.TargetEntity);
 
             attack.AttackedThisFrame = true;
             attack.LastDamageDealt   = finalDamage;
 
+            var request = new ProjectileLaunchRequest
+            {
+                TargetEntity   = attack.TargetEntity,
+                AttackerEntity = entity,
+                AttackerPos    = transform.Position,
+                TargetPos      = targetPos,
+                Damage         = finalDamage,
+                Speed          = SpeedOverrideLookup.HasComponent(entity)
+                                   ? SpeedOverrideLookup[entity].Speed
+                                   : (jobComp.Job == UnitJob.Archer ? ArrowSpeed : MagicBoltSpeed),
+                Team           = identity.Team,
+                DefensePierce  = pierce,
+            };
+
             int launchCount = DoubleStrikeLookup.HasComponent(entity) ? 2 : 1;
             for (int h = 0; h < launchCount; h++)
-                launchBuffer.Add(new ProjectileLaunchRequest
-                {
-                    TargetEntity   = attack.TargetEntity,
-                    AttackerEntity = entity,
-                    AttackerPos    = transform.Position,
-                    TargetPos      = targetPos,
-                    Damage         = finalDamage,
-                    Speed          = SpeedOverrideLookup.HasComponent(entity)
-                                       ? SpeedOverrideLookup[entity].Speed
-                                       : (jobComp.Job == UnitJob.Archer ? ArrowSpeed : MagicBoltSpeed),
-                    Team           = identity.Team,
-                    DefensePierce  = pierce,
-                });
+                launchBuffer.Add(request);
+
+            // 사격 금 — 투사체 하나 더. 같은 대상, 약한 피해. 겹쳐 보이지 않게 조금 위에서 쏜다.
+            if (ExtraShotLookup.HasComponent(entity))
+            {
+                var extra = request;
+                extra.Damage      = finalDamage * ExtraShotLookup[entity].Ratio;
+                extra.AttackerPos = transform.Position + new float3(0f, 0.35f, 0f);
+                launchBuffer.Add(extra);
+            }
         }
 
         static void ChangeState(ref UnitStateComponent s, UnitState next)

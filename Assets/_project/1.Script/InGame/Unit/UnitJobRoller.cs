@@ -81,7 +81,7 @@ public static class UnitJobRoller
         //   선형이면 곱으로 크는 아군(라인 복귀 물량 × 시너지 × 패시브)과
         //   반드시 갈린다. 정본은 GameplayConfig.LevelGrowthAccel 이다.
         int   levelUps  = Mathf.Max(0, level - 1);
-        float accel     = cfg != null ? cfg.LevelGrowthAccel : 0.02f;
+        float accel     = cfg != null ? cfg.LevelGrowthAccel : 0.05f;
         float growth    = levelUps * (1f + accel * levelUps);
 
         float flatHp    = (cfg != null ? cfg.LevelFlatHpPerLevel     : 20f)  * growth;
@@ -101,9 +101,15 @@ public static class UnitJobRoller
         //  → 등급 1단계마다 "해당 스텟 최댓값의 N%" 를 모든 굴림 스텟에 더한다.
         float flatRatio = (cfg != null ? cfg.GradeFlatMaxRatio : 0.05f) * (int)grade;
 
+        // ── 후반 복리 — 체력·공격력만 (GameplayConfig.LateGrowthRate, 2026-09-16) ──
+        //   ⚠ 고정 성장까지 다 더한 뒤에 곱한다 — 앞에 두면 가산 몫이 복리를 안 받아 곡선이 눕는다.
+        int   lateFrom  = cfg != null ? cfg.LateGrowthFromLevel : 10;
+        float lateRate  = cfg != null ? cfg.LateGrowthRate      : 0.07f;
+        float lateMult  = Mathf.Pow(1f + lateRate, Mathf.Max(0, level - lateFrom));
+
         // ── 배율 적용 ─────────────────────────────────────────
-        stat.Set(StatType.MaxHp,        hp    * totalMult + flatHp  + ranges.Hp.Max      * flatRatio);
-        stat.Set(StatType.Attack,       attack * totalMult + flatAtk + ranges.Attack.Max  * flatRatio);
+        stat.Set(StatType.MaxHp,        (hp    * totalMult + flatHp  + ranges.Hp.Max     * flatRatio) * lateMult);
+        stat.Set(StatType.Attack,       (attack * totalMult + flatAtk + ranges.Attack.Max * flatRatio) * lateMult);
         // ⚠ 방어율만 성장에 천장이 있다 (2026-09-06)
         //   레벨 배율 × 등급 배율 × 등급 고정 가산이 겹치면 방패병이 1.7 을 넘어,
         //   전투 쪽 소프트캡을 타고도 98% 감소가 된다 — 아군이 무엇을 하든 피해가
@@ -174,6 +180,28 @@ public static class UnitJobRoller
     /// unitName 시드에서 태생 등급을 결정적으로 반환.
     /// 같은 이름은 항상 같은 등급 — 직업 시드(FNV-1a)와 독립된 djb2 해시 사용.
     /// </summary>
+    /// <summary>이 레벨(= 스테이지) 미만의 용사는 등급이 <see cref="EarlyGradeCap"/> 을 넘지 않는다.</summary>
+    public const int EarlyGradeCapUntilLevel = 10;
+
+    /// <summary>초반 용사의 태생 등급 상한.</summary>
+    public const UnitGrade EarlyGradeCap = UnitGrade.Uncommon;
+
+    /// <summary>
+    /// 용사의 태생 등급 — <b>레벨(= 스테이지)을 아는 곳은 이 함수를 쓴다.</b>
+    ///
+    /// ■ 초반(1~9)은 고급까지로 자른다 (사용자 지시, 2026-09-16)
+    ///   이름 시드가 5스테이지 장수 둘을 영웅으로 굴려, 첫 장수 스테이지부터
+    ///   지휘력까지 ×1.6 이 붙은 기사가 병사 14명을 스탯 99% 로 끌고 왔다.
+    ///   견습 첫 런이 그 판을 한 번도 못 넘었다. 10 부터는 시드 그대로다.
+    /// ⚠ 전투(HeroSpawner·GeneralRuntimeBridge)와 화면(전황·용사 상세)이 같은 값을 봐야 한다 —
+    ///   한쪽만 자르면 화면에는 고급인데 영웅 스탯으로 싸운다.
+    /// </summary>
+    public static UnitGrade GetBirthGrade(string unitName, int level)
+    {
+        UnitGrade born = GetBirthGrade(unitName);
+        return level < EarlyGradeCapUntilLevel && born > EarlyGradeCap ? EarlyGradeCap : born;
+    }
+
     public static UnitGrade GetBirthGrade(string unitName)
     {
         // 희귀 스킬 주인은 태생부터 영웅 등급이다 — 추첨을 타지 않는다

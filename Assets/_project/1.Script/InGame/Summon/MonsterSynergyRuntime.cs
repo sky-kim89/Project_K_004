@@ -1,7 +1,11 @@
 using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
 using UnityEngine;
 using BattleGame.Units;
+using Random = UnityEngine.Random;   // Unity.Mathematics 와 겹친다 — 부활 확률은 UnityEngine 쪽이다
 
 // ============================================================
 //  MonsterSynergyRuntime.cs
@@ -39,7 +43,8 @@ public static class MonsterSynergyRuntime
     ///   비율 항목이 '그 시점의 값' 에 곱해 더해지므로, 시너지를 먼저 얹으면
     ///   레벨 보너스가 부풀려진 값을 기준으로 다시 곱한다(이중 계산).
     /// </summary>
-    public static void ApplyStats(UnitStat stat, MonsterTag tags)
+    /// <param name="ranged">사격 시너지는 원거리 종족에게만 붙는다.</param>
+    public static void ApplyStats(UnitStat stat, MonsterTag tags, bool ranged)
     {
         if (tags == MonsterTag.None) return;
 
@@ -98,6 +103,35 @@ public static class MonsterSynergyRuntime
             float cdr = MonsterSynergyRule.SorceryCooldownReduce(Tier(MonsterTag.Sorcery)) * m;
             if (cdr > 0f)
                 stat.Add(StatType.SkillCooldownReduce, cdr, "synergy");
+        }
+
+        // ── 사냥 — 치명타 확률·피해 (둘 다 더하는 %p) ──
+        if (Has(tags, MonsterTag.Hunt))
+        {
+            SynergyTier t = Tier(MonsterTag.Hunt);
+
+            float chance = MonsterSynergyRule.HuntCritChance(t) * m;
+            if (chance > 0f)
+                stat.Set(StatType.CritChance, Mathf.Min(1f, stat.Get(StatType.CritChance) + chance));
+
+            float dmg = MonsterSynergyRule.HuntCritDamage(t) * m;
+            if (dmg > 0f)
+                stat.Set(StatType.CritDamage, stat.Get(StatType.CritDamage) + dmg);
+        }
+
+        // ── 사격 — 원거리 종족만 공격력·사거리 ──
+        //   ⚠ 근접이 표식을 가져도 받지 않는다 — 표식 재분배가 원거리만 넣었지만,
+        //     융합·진화가 섞이면 조용히 새기 쉬운 축이라 여기서 한 번 더 막는다.
+        if (ranged && Has(tags, MonsterTag.Marksman))
+        {
+            SynergyTier t = Tier(MonsterTag.Marksman);
+
+            float atk = MonsterSynergyRule.MarksmanAttack(t) * m;
+            if (atk > 0f) stat.Set(StatType.Attack, stat.Get(StatType.Attack) * (1f + atk));
+
+            float range = MonsterSynergyRule.MarksmanRange(t) * m;
+            if (range > 0f)
+                stat.Set(StatType.AttackRange, stat.Get(StatType.AttackRange) * (1f + range));
         }
 
         // ── 시너지 강화 카드 — 그 시너지 소속에게만 ──
@@ -204,6 +238,55 @@ public static class MonsterSynergyRuntime
                 em.AddComponent<KnockbackImmuneTag>(e);
         }
 
+        // ── 2026-09-15 추가 5종 — 풀 재사용이라 **먼저 뗀다** ──
+        //   ⚠ 안 떼면 사냥 슬라임이 쓰던 엔티티를 물려받은 스켈레톤이 저체력 치명타를 친다.
+        Remove<HuntCritComponent>(em, e);
+        Remove<ExtraProjectileComponent>(em, e);
+        Remove<VanguardComponent>(em, e);
+        Remove<SwarmComponent>(em, e);
+
+        // ── 사냥 — 저체력 치명타(은부터) · 방어율 무시(금) ──
+        if (Has(tags, MonsterTag.Hunt))
+        {
+            SynergyTier t = Tier(MonsterTag.Hunt);
+
+            float bonus = MonsterSynergyRule.HuntLowHpCritBonus(t);
+            if (bonus > 0f)
+                em.AddComponentData(e, new HuntCritComponent
+                {
+                    LowHpThreshold = MonsterSynergyRule.HuntLowHpThreshold,
+                    BonusChance    = bonus,
+                });
+
+            // ⚠ 급소 찌르기(장비 패시브)와 같은 태그다 — 떼는 곳은 ClearSpeciesPassiveResidue
+            if (MonsterSynergyRule.HuntIgnoresDefense(t) && !em.HasComponent<VitalStrikeTag>(e))
+                em.AddComponent<VitalStrikeTag>(e);
+        }
+
+        // ── 사격 금 — 투사체 하나 더 (원거리 잡만 읽으므로 근접에 붙어도 무해하다) ──
+        if (Has(tags, MonsterTag.Marksman))
+        {
+            float ratio = MonsterSynergyRule.MarksmanExtraShotRatio(Tier(MonsterTag.Marksman));
+            if (ratio > 0f) em.AddComponentData(e, new ExtraProjectileComponent { Ratio = ratio });
+        }
+
+        // ── 선봉 — 첫 공격 배율. 나머지는 Tick 이 첫 공격을 본 뒤 건다 ──
+        if (Has(tags, MonsterTag.Vanguard))
+        {
+            SynergyTier t = Tier(MonsterTag.Vanguard);
+            if (t != SynergyTier.None)
+                em.AddComponentData(e, new VanguardComponent
+                {
+                    FirstHitMult = 1f + MonsterSynergyRule.VanguardFirstHitBonus(t),
+                    State        = 0,
+                    Target       = Entity.Null,
+                });
+        }
+
+        // ── 무리 — 뭉쳤는지는 Tick 이 0.5초마다 잰다 ──
+        if (Has(tags, MonsterTag.Swarm) && Tier(MonsterTag.Swarm) != SynergyTier.None)
+            em.AddComponentData(e, new SwarmComponent { SpeciesKey = speciesKey });
+
         // ── 투지 — 처치당 공격력 누적 ──
         //   ⚠ 야수의 공속 누적과 **같은 컴포넌트**를 쓴다 (처치 수를 공유한다)
         //     늑대처럼 둘을 다 가진 종족은 한 번 처치로 공격력과 공속이 함께 오른다.
@@ -241,6 +324,14 @@ public static class MonsterSynergyRuntime
     ///   소환 지점에는 적이 없다. 여기서 발사하면 허공에 버리는 것이라
     ///   금 단계의 값이 0 이 된다. 쿨다운만 채워 두면 적을 처음 마주치는
     ///   순간 첫 스킬이 나간다.
+    ///
+    /// ⚠ **주 스킬 한 칸만** 채운다 — 권속 소환 슬롯은 일부러 뺐다 (2026-09-15)
+    ///   2차는 ActiveSkillSlot 버퍼에 권속 소환을 따로 들고 있다
+    ///   (MonsterRuntimeBridge.FillBroodSlot). 여기에도 충전을 걸면 술법 금을 켠 순간
+    ///   슬라임 킹이 **나오자마자 슬라임 셋을 데리고 선다** — "왕을 냈다" 가 아니라
+    ///   "한 장에 다섯 마리가 나왔다" 로 읽힌다. 금 능력의 말도 "스킬" 한 칸이다.
+    ///   ⚠ 술법 **쿨감**(SorceryCooldownReduce)은 권속에도 걸린다 — 빨라지긴 하되
+    ///     시작이 앞당겨지지는 않는다. 둘을 같이 묶지 말 것.
     /// </summary>
     public static void PrimeSkill(GameObject monster, MonsterTag tags)
     {
@@ -331,6 +422,235 @@ public static class MonsterSynergyRuntime
             float share = MonsterSynergyRule.FerocityInherit(Tier(MonsterTag.Ferocity));
             if (share > 0f) InheritFerocity(em, at, share);
         }
+
+        // ── 무리 — 쓰러질 때 주변 무리의 공격력이 쌓인다 (은부터) ──
+        if (Has(tags, MonsterTag.Swarm))
+        {
+            float rally = MonsterSynergyRule.SwarmRallyPerDeath(Tier(MonsterTag.Swarm));
+            if (rally > 0f) RallySwarm(em, at, rally);
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  ④ 매 프레임 — SummonController.Update 가 부른다 (2026-09-15)
+    //
+    //  ■ 선봉 — 공격 잡(Burst)이 첫 공격을 표시만 한다 (VanguardComponent.State = 1)
+    //    받는 피해 감소·넉백·기절은 상태효과·범위 수집이 필요해 여기서 건다.
+    //  ■ 무리 — 0.5초마다 같은 종족이 곁에 모였는지 잰다. 버프는 끊기지 않게 갱신만 한다.
+    //
+    //  ⚠ 쿼리를 도는 도중에 EntityManager 를 부르지 않는다 — 엔티티 배열을 먼저 복사한다
+    //    (MonsterSynergyKillSystem 이 그걸로 한 번 크래시했다).
+    // ══════════════════════════════════════════════════════════
+
+    const int SwarmGuardSourceId  = 9101;
+    const int SwarmAttackSourceId = 9102;
+    const int SwarmRallySourceId  = 9103;
+
+    static World       _tickWorld;
+    static EntityQuery _vanguardQuery;
+    static EntityQuery _swarmQuery;
+    static float       _swarmTimer;
+
+    public static void Tick()
+    {
+        World world = World.DefaultGameObjectInjectionWorld;
+        if (world == null || !world.IsCreated) return;
+
+        EntityManager em = world.EntityManager;
+
+        if (_tickWorld != world)
+        {
+            _tickWorld     = world;
+            _vanguardQuery = em.CreateEntityQuery(new EntityQueryDesc
+            {
+                All  = new ComponentType[] { ComponentType.ReadOnly<VanguardComponent>() },
+                None = new ComponentType[] { typeof(DeadTag) },
+            });
+            _swarmQuery = em.CreateEntityQuery(new EntityQueryDesc
+            {
+                All  = new ComponentType[] { ComponentType.ReadOnly<SwarmComponent>(),
+                                             ComponentType.ReadOnly<LocalTransform>() },
+                None = new ComponentType[] { typeof(DeadTag) },
+            });
+        }
+
+        TickVanguard(em);
+
+        _swarmTimer += Time.deltaTime;
+        if (_swarmTimer < MonsterSynergyRule.SwarmCheckInterval) return;
+        _swarmTimer = 0f;
+
+        TickSwarm(em);
+    }
+
+    static void TickVanguard(EntityManager em)
+    {
+        NativeArray<Entity> ents = _vanguardQuery.ToEntityArray(Allocator.Temp);
+        SynergyTier t = Tier(MonsterTag.Vanguard);
+
+        for (int i = 0; i < ents.Length; i++)
+        {
+            Entity e = ents[i];
+            var    v = em.GetComponentData<VanguardComponent>(e);
+            if (v.State != 1) continue;
+
+            v.State = 2;
+            em.SetComponentData(e, v);
+
+            float guard = MonsterSynergyRule.VanguardGuard(t);
+            if (guard > 0f)
+                AddStatus(em, e, StatType.Defense, guard, EffectMode.Add,
+                          MonsterSynergyRule.VanguardGuardSeconds(t));
+
+            Entity target = v.Target;
+            if (target == Entity.Null || !em.Exists(target) || em.HasComponent<DeadTag>(target)) continue;
+
+            Vector3 at = SkillCrowdControl.PositionOf(em, target);
+
+            if (MonsterSynergyRule.VanguardKnockback(t) && !em.HasComponent<KnockbackImmuneTag>(target))
+                Push(em, target, at - SkillCrowdControl.PositionOf(em, e));
+
+            float stun = MonsterSynergyRule.VanguardStunSeconds(t);
+            if (stun > 0f)
+                foreach (Entity enemy in SkillCrowdControl.CollectEnemiesInRadius(
+                             em, at, MonsterSynergyRule.VanguardStunRadius, Faction.Monster))
+                    SkillCrowdControl.Stun(em, enemy, stun);
+        }
+
+        ents.Dispose();
+    }
+
+    /// <summary>
+    /// 선봉 은 — 첫 공격 대상을 밀쳐 낸다.
+    /// ⚠ 넉백은 경직 중에만 들어간다(UnitHitSystem) — 짧게 굳힌 뒤 속도를 넣는다.
+    ///   보스처럼 CC 내성으로 굳지 않으면 넉백도 들어가지 않는다 (의도한 것이다).
+    /// </summary>
+    static void Push(EntityManager em, Entity target, Vector3 dir)
+    {
+        dir.z = 0f;
+        if (dir.sqrMagnitude < 0.0001f) dir = Vector3.right;
+
+        SkillCrowdControl.Stun(em, target, MonsterSynergyRule.VanguardPushStun);
+        if (!em.HasComponent<HitReactionComponent>(target)) return;
+
+        var r = em.GetComponentData<HitReactionComponent>(target);
+        if (!r.IsStunned) return;
+
+        Vector3 v = dir.normalized * MonsterSynergyRule.VanguardPushPower;
+        r.KnockbackVelocity = new float3(v.x, v.y, 0f);
+        em.SetComponentData(target, r);
+    }
+
+    static void TickSwarm(EntityManager em)
+    {
+        SynergyTier t      = Tier(MonsterTag.Swarm);
+        float       reduce = MonsterSynergyRule.SwarmGuard(t);
+        float       atk    = MonsterSynergyRule.SwarmAttackBonus(t);
+        if (reduce <= 0f && atk <= 0f) return;
+
+        NativeArray<Entity>         ents = _swarmQuery.ToEntityArray(Allocator.Temp);
+        NativeArray<SwarmComponent> keys = _swarmQuery.ToComponentDataArray<SwarmComponent>(Allocator.Temp);
+        NativeArray<LocalTransform> pos  = _swarmQuery.ToComponentDataArray<LocalTransform>(Allocator.Temp);
+
+        float radSq    = MonsterSynergyRule.SwarmRadius * MonsterSynergyRule.SwarmRadius;
+        float duration = MonsterSynergyRule.SwarmCheckInterval + MonsterSynergyRule.SwarmBuffGrace;
+
+        for (int i = 0; i < ents.Length; i++)
+        {
+            int near = 0;
+
+            for (int j = 0; j < ents.Length && near < MonsterSynergyRule.SwarmNeedAllies; j++)
+            {
+                if (i == j || keys[j].SpeciesKey != keys[i].SpeciesKey) continue;
+
+                float3 d = pos[j].Position - pos[i].Position;
+                d.z = 0f;
+                if (math.lengthsq(d) <= radSq) near++;
+            }
+
+            if (near < MonsterSynergyRule.SwarmNeedAllies) continue;
+
+            if (reduce > 0f)
+                RefreshStatus(em, ents[i], StatType.Defense, reduce, EffectMode.Add,
+                              duration, SwarmGuardSourceId);
+            if (atk > 0f)
+                RefreshStatus(em, ents[i], StatType.Attack, 1f + atk, EffectMode.Multiply,
+                              duration, SwarmAttackSourceId);
+        }
+
+        ents.Dispose();
+        keys.Dispose();
+        pos.Dispose();
+    }
+
+    /// <summary>무리 은 — 주변 무리 아군에게 영구 공격력 한 겹. 상한 SwarmRallyMaxStacks.</summary>
+    static void RallySwarm(EntityManager em, Vector3 at, float rally)
+    {
+        float radSq = MonsterSynergyRule.SwarmRallyRadius * MonsterSynergyRule.SwarmRallyRadius;
+
+        foreach (Entity ally in SkillCrowdControl.CollectAllies(em, Faction.Monster))
+        {
+            if (!HasTag(em, ally, MonsterTag.Swarm)) continue;
+            if ((SkillCrowdControl.PositionOf(em, ally) - at).sqrMagnitude > radSq) continue;
+            if (!em.HasBuffer<StatusEffectBufferElement>(ally)) continue;
+
+            var buff   = em.GetBuffer<StatusEffectBufferElement>(ally);
+            int stacks = 0;
+            for (int i = 0; i < buff.Length; i++)
+                if (buff[i].SourceType == BuffSourceType.Passive && buff[i].SourceId == SwarmRallySourceId)
+                    stacks++;
+
+            if (stacks >= MonsterSynergyRule.SwarmRallyMaxStacks) continue;
+
+            // ⚠ Multiply 의 Delta 는 배율이다 (1.03 = +3%) — 겹마다 곱해진다
+            buff.Add(new StatusEffectBufferElement
+            {
+                Stat       = StatType.Attack,
+                Delta      = 1f + rally,
+                Mode       = EffectMode.Multiply,
+                Duration   = -1f,
+                Remaining  = 1f,   // 영구여도 0 보다 커야 한다
+                SourceType = BuffSourceType.Passive,
+                SourceId   = SwarmRallySourceId,
+            });
+        }
+    }
+
+    /// <summary>같은 출처·스탯이면 시간만 되살린다 — 매 판정마다 쌓이지 않게.</summary>
+    static void RefreshStatus(EntityManager em, Entity e, StatType stat, float delta,
+                              EffectMode mode, float duration, int sourceId)
+    {
+        if (!em.HasBuffer<StatusEffectBufferElement>(e)) return;
+
+        var buff = em.GetBuffer<StatusEffectBufferElement>(e);
+
+        for (int i = 0; i < buff.Length; i++)
+        {
+            var b = buff[i];
+            if (b.SourceType != BuffSourceType.Passive || b.SourceId != sourceId || b.Stat != stat) continue;
+
+            b.Delta     = delta;
+            b.Duration  = duration;
+            b.Remaining = duration;
+            buff[i]     = b;
+            return;
+        }
+
+        buff.Add(new StatusEffectBufferElement
+        {
+            Stat       = stat,
+            Delta      = delta,
+            Mode       = mode,
+            Duration   = duration,
+            Remaining  = duration,
+            SourceType = BuffSourceType.Passive,
+            SourceId   = sourceId,
+        });
+    }
+
+    static void Remove<T>(EntityManager em, Entity e) where T : unmanaged, IComponentData
+    {
+        if (em.HasComponent<T>(e)) em.RemoveComponent<T>(e);
     }
 
     /// <summary>
@@ -346,10 +666,8 @@ public static class MonsterSynergyRuntime
         if (!Has(species.Tags, MonsterTag.Forest))                              return;
         if (!MonsterSynergyRule.ForestReturnsOnDeath(Tier(MonsterTag.Forest)))  return;
 
-        SummonReservation reservation = SummonController.Instance?.Reservation;
-        if (reservation == null) return;
-
-        reservation.EnqueueOne(species, lane);
+        // ⚠ 대기열에 넣기만 하면 배출이 끝난 라인에서 다음 판까지 갇힌다 — ReturnToLine 이 배출도 켠다
+        SummonController.Instance.ReturnToLine(species, lane);
     }
 
     // ── 사망 효과 세부 ───────────────────────────────────────

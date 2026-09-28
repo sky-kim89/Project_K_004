@@ -44,9 +44,15 @@ MonoBehaviour:
   SummonPowerToHp: 1.2
   SummonPowerToAttack: 0.9
   UpgradeOf: {fileID: 11400000, guid: bafb509cc44832742b7b54e01531076a, type: 2}
+  AlsoUpgradeOf: []
   SpeciesTrait: 21
+  ExtraTraits: 
+  BlockedInherit: 
   ActiveSkill: 0
   Passives: 
+  BroodSpecies: {fileID: 0}
+  BroodCount: 0
+  BroodCooldown: 0
   LevelBonuses:
   - Label: "\uB9F9\uB3C5 \uBD84\uBE44"
     Stat1: 2

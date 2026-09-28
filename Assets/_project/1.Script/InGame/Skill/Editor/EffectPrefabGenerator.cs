@@ -35,6 +35,8 @@ public static class EffectPrefabGenerator
         { "FX_Heal_Target",      new[] { "MAT_FX_Cross_Add",    "MAT_FX_Wisp_Add",      "MAT_FX_Soft_Add"      } },
         { "FX_Bind",             new[] { "MAT_FX_Spiral_Add",   "MAT_FX_Ring_Add",      "MAT_FX_Smoke_Alpha"   } },
         { "FX_Poison_Zone",      new[] { "MAT_FX_Smoke_Alpha",  "MAT_FX_Poison_Alpha",  "MAT_FX_Ring_Add"      } },
+        // 화염 오라 — 독성 지대와 **같은 구조**(연기 + 본체 + 링)로 잡았다. 색과 방향만 다르다.
+        { "FX_Flame_Zone",       new[] { "MAT_FX_Flame_Add",    "MAT_FX_Smoke_Alpha",   "MAT_FX_Spark_Add"     } },
         { "FX_Blizzard",             new[] { "MAT_FX_Snowflake_Add","MAT_FX_Streak_Add",    "MAT_FX_Vortex_Add",  "MAT_FX_Smoke_Alpha" } },
         // 메테오 본체 — 폭발(FX_Meteor_Explosion)과는 다른 물건이다. 이건 떨어지는 돌덩이.
         { "FX_Meteor_Rock",          new[] { "MAT_FX_Shard_Add",   "MAT_FX_Flame_Add",     "MAT_FX_Smoke_Alpha", "MAT_FX_Spark_Add"   } },
@@ -73,6 +75,7 @@ public static class EffectPrefabGenerator
         n += Save("FX_Heal_Target",     BuildHealTarget());
         n += Save("FX_Bind",            BuildBind());
         n += Save("FX_Poison_Zone",     BuildPoisonZone());
+        n += Save("FX_Flame_Zone",      BuildFlameZone());
         n += Save("FX_Blizzard",           BuildBlizzard());
         n += Save("FX_RedLightning_Chain", BuildRedLightningChain());
         n += Save("FX_Martyr_Explosion",   BuildMartyrExplosion());
@@ -1564,6 +1567,93 @@ public static class EffectPrefabGenerator
                 new[] { (0f, 0.55f), (1f, 0f) }));
             var sz = ps.sizeOverLifetime; sz.enabled = true;
             sz.size = new ParticleSystem.MinMaxCurve(1f, AC3(0.4f, 0.6f, 1.2f, 0.1f));
+        }
+
+        return go;
+    }
+
+    // ── FX_Flame_Zone — 화염 오라 (따라다니는 장판, 2026-09-15) ──
+    // Root:Flame_Add(loop)  c1:Smoke_Alpha(loop)  c2:Spark_Add(loop)
+    //
+    //  ⚠ 시뮬레이션 공간이 World 여야 한다
+    //    이 장판은 **움직인다**(SkillZoneRunner.FollowCaster). Local 로 두면 불이
+    //    멧돼지에 붙어 통째로 미끄러져 "스티커" 로 보인다. World 면 뿜은 자리에
+    //    남아 지나온 길에 불꼬리가 깔린다 — 돌진하는 종족이라 그 그림이 맞다.
+    //
+    //  ⚠ 독성 지대보다 파티클을 적게 잡았다
+    //    그쪽은 한 판에 한둘이지만 이건 넷이 동시에 돌 수 있다 (화염 멧돼지 Count 4).
+    static GameObject BuildFlameZone()
+    {
+        var go = NewGO();
+
+        // Root — 이글거리는 불길 (Flame_Add, loop). 위로 솟는다.
+        {
+            var ps = AddPS(go);
+            var m = ps.main;
+            m.duration = 2f; m.loop = true;
+            m.startLifetime  = new ParticleSystem.MinMaxCurve(0.35f, 0.75f);
+            m.startSpeed     = new ParticleSystem.MinMaxCurve(0.6f, 1.8f);
+            m.startSize      = new ParticleSystem.MinMaxCurve(0.45f, 1.05f);
+            m.startColor     = new ParticleSystem.MinMaxGradient(C(255,170,40), C(255,90,20));
+            m.gravityModifier = -0.12f;          // 불은 올라간다
+            m.simulationSpace = ParticleSystemSimulationSpace.World; m.maxParticles = 34;
+            var em = ps.emission; em.rateOverTime = 22f;
+            var sh = ps.shape; sh.enabled = true; sh.shapeType = ParticleSystemShapeType.Circle;
+            sh.radius = 1.0f; sh.radiusThickness = 1f;
+            var col = ps.colorOverLifetime; col.enabled = true;
+            col.color = new ParticleSystem.MinMaxGradient(MakeGrad(
+                new[] { (0f, new Color(1f,0.85f,0.35f)), (0.45f, new Color(1f,0.42f,0.08f)),
+                        (1f, new Color(0.45f,0.09f,0.02f)) },
+                new[] { (0f, 0.85f), (0.55f, 0.55f), (1f, 0f) }));
+            var sz = ps.sizeOverLifetime; sz.enabled = true;
+            sz.size = new ParticleSystem.MinMaxCurve(1f, AC3(0.35f, 1.0f, 1.2f, 0.15f));
+        }
+
+        // c1 — 검은 연기 (Smoke_Alpha, loop). 불 위로 옅게 깔린다.
+        var c1 = new GameObject("Smoke"); c1.transform.SetParent(go.transform, false);
+        {
+            var ps = AddPS(c1);
+            var m = ps.main;
+            m.duration = 2f; m.loop = true;
+            m.startLifetime  = new ParticleSystem.MinMaxCurve(0.7f, 1.4f);
+            m.startSpeed     = new ParticleSystem.MinMaxCurve(0.3f, 1.0f);
+            m.startSize      = new ParticleSystem.MinMaxCurve(0.5f, 1.2f);
+            m.startColor     = new ParticleSystem.MinMaxGradient(C(48,30,22), C(78,52,38));
+            m.gravityModifier = -0.06f;
+            m.simulationSpace = ParticleSystemSimulationSpace.World; m.maxParticles = 20;
+            var em = ps.emission; em.rateOverTime = 7f;
+            var sh = ps.shape; sh.enabled = true; sh.shapeType = ParticleSystemShapeType.Circle;
+            sh.radius = 0.9f; sh.radiusThickness = 1f;
+            var col = ps.colorOverLifetime; col.enabled = true;
+            col.color = new ParticleSystem.MinMaxGradient(MakeGrad(
+                new[] { (0f, new Color(0.24f,0.15f,0.10f)), (1f, new Color(0.10f,0.07f,0.05f)) },
+                new[] { (0f, 0.45f), (0.5f, 0.28f), (1f, 0f) }));
+            var sz = ps.sizeOverLifetime; sz.enabled = true;
+            sz.size = new ParticleSystem.MinMaxCurve(1f, AC3(0.4f, 0.5f, 1.5f, 0.5f));
+        }
+
+        // c2 — 불똥 링 (Spark_Add). 범위의 가장자리를 알려 주는 표식이다.
+        //   ⚠ 이게 곧 사거리 표시다 — 반경을 바꾸면 여기 radius 도 함께 본다.
+        var c2 = new GameObject("EmberRing"); c2.transform.SetParent(go.transform, false);
+        {
+            var ps = AddPS(c2);
+            var m = ps.main;
+            m.duration = 1f; m.loop = true;
+            m.startLifetime  = new ParticleSystem.MinMaxCurve(0.35f, 0.65f);
+            m.startSpeed     = new ParticleSystem.MinMaxCurve(1.2f, 3.2f);
+            m.startSize      = new ParticleSystem.MinMaxCurve(0.07f, 0.2f);
+            m.startColor     = new ParticleSystem.MinMaxGradient(C(255,215,120), C(255,130,40));
+            m.gravityModifier = -0.05f;
+            m.simulationSpace = ParticleSystemSimulationSpace.World; m.maxParticles = 40;
+            var em = ps.emission; em.rateOverTime = 0f;
+            em.SetBursts(new[] { new ParticleSystem.Burst(0f, 18), new ParticleSystem.Burst(0.5f, 18) });
+            var sh = ps.shape; sh.enabled = true; sh.shapeType = ParticleSystemShapeType.Circle;
+            sh.radius = 1.1f; sh.radiusThickness = 0f;   // 테두리에서만 튄다
+            var col = ps.colorOverLifetime; col.enabled = true;
+            col.color = new ParticleSystem.MinMaxGradient(MakeGrad(
+                new[] { (0f, new Color(1f,0.9f,0.55f)), (0.5f, new Color(1f,0.5f,0.12f)),
+                        (1f, new Color(0.5f,0.12f,0.02f)) },
+                new[] { (0f, 0.95f), (0.5f, 0.5f), (1f, 0f) }));
         }
 
         return go;

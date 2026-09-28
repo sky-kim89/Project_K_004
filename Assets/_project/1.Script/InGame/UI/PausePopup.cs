@@ -47,6 +47,9 @@ public class PausePopup : PopupBase
     [SerializeField] Image           _bgmPill;
     [SerializeField] TextMeshProUGUI _bgmState;
 
+    [Header("언어")]
+    [SerializeField] TMP_Dropdown _languageDropdown;
+
     [Header("전투 전용 행 접기 (Creator 가 채운다)")]
     [SerializeField] RectTransform _panelRect;
     [SerializeField] RectTransform _borderRect;
@@ -75,6 +78,33 @@ public class PausePopup : PopupBase
 
         _reincarnateButton?.onClick.RemoveAllListeners();
         _reincarnateButton?.onClick.AddListener(OnReincarnateClicked);
+
+        // 언어 — 목록은 표(LocalizationTable)에서 각 언어의 제 이름으로 온다.
+        //   ⚠ 열 때마다 다시 채운다. 팝업이 풀에서 재사용되므로 리스너가 쌓이면 안 된다.
+        if (_languageDropdown != null)
+        {
+            // ⚠ 언어 이름은 **원어 고정**이다 (사용자 지적, 2026-09-16)
+            //   LocalizedText 가 붙어 있으면 "日本語" 가 지금 언어로 되번역돼,
+            //   영어를 고르면 목록이 전부 영어가 된다 — 제 나라 말을 찾을 수가 없다.
+            foreach (var label in _languageDropdown.GetComponentsInChildren<LocalizedText>(true))
+                label.enabled = false;
+
+            // ⚠ 글꼴에 **손대지 않는다** (사용자 지시, 2026-09-16)
+            //   한때 라벨의 글꼴을 번들 CJK 로 갈아 끼웠다가 캡션만 보이고 펼친 목록의 줄이
+            //   전부 빈칸이 됐고, 런타임 생성 폰트라 플레이를 나갈 때 파괴돼
+            //   MissingReferenceException 까지 남겼다.
+            //   지금은 필요한 가나·한자를 **미리 구운 에셋**(LanguagePickerFont)이 기본 폰트의
+            //   폴백표에 박혀 있다 — 한글이 TDS_RPG_2 로 그려지는 것과 같은 길이라
+            //   런타임 코드가 아예 관여하지 않는다.
+            //   굽는 곳: Tools > Project K > 아이콘·텍스처 > 언어 선택 폰트
+
+            _languageDropdown.onValueChanged.RemoveAllListeners();
+            _languageDropdown.ClearOptions();
+            _languageDropdown.AddOptions(
+                new System.Collections.Generic.List<string>(LocalizationManager.SupportedLanguageNames));
+            _languageDropdown.onValueChanged.AddListener(SetLanguage);
+            RefreshLanguage();
+        }
 
         _sfxButton?.onClick.RemoveAllListeners();
         _sfxButton?.onClick.AddListener(ToggleSfx);
@@ -124,6 +154,19 @@ public class PausePopup : PopupBase
     }
 
     // ── 사운드 토글 ──────────────────────────────────────────
+
+    /// <summary>언어를 바꾼다 — LocalizedText 가 화면의 TMP 를 즉시 다시 그린다.</summary>
+    void SetLanguage(int index)
+    {
+        LocalizationManager.Instance.SetLanguageIndex(index);
+        RefreshLanguage();
+    }
+
+    void RefreshLanguage()
+    {
+        _languageDropdown.SetValueWithoutNotify(LocalizationManager.Instance.CurrentLanguageIndex);
+        _languageDropdown.RefreshShownValue();
+    }
 
     void ToggleSfx()
     {

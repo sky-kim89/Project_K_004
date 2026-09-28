@@ -41,7 +41,10 @@ public class TraitIconUI : MonoBehaviour
         if (_iconBtn != null)
         {
             _iconBtn.onClick.RemoveAllListeners();
-            _iconBtn.onClick.AddListener(() => _tooltip.Show(title, desc, stat));
+            // PC 는 올려서, 모바일은 눌러서 연다 (TooltipInput, 2026-09-17)
+            //   인게임 상단 특성 줄이 클릭으로만 열려 올려도 안 떴다
+            _iconBtn.onClick.AddListener(() => { if (!TooltipInput.HoverMode) _tooltip.Show(title, desc, stat); });
+            TooltipInput.HookHover(_iconBtn.gameObject, () => _tooltip.Show(title, desc, stat), CloseTooltip);
         }
     }
 

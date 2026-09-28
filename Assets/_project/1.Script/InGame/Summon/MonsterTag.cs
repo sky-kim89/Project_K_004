@@ -51,6 +51,23 @@ public enum MonsterTag
 
     /// <summary>술법 — 액티브 스킬을 가진 종족. (소속 6종 · 2/4/6)</summary>
     Sorcery = 1 << 7,
+
+    // ── 2026-09-15 추가 (사용자 확정) — ⚠ 뒤에만 붙인다 (RunBoonData 가 AllTags 자리로 저장한다) ──
+
+    /// <summary>사냥 — 치명타. 금은 치명타가 방어율을 무시한다.</summary>
+    Hunt = 1 << 8,
+
+    /// <summary>사격 — 원거리 공격력·사거리. 금은 투사체가 하나 더 나간다.</summary>
+    Marksman = 1 << 9,
+
+    /// <summary>무리 — 같은 종족끼리 뭉치면 덜 맞는다. 금은 카드 마릿수 +1.</summary>
+    Swarm = 1 << 10,
+
+    /// <summary>선봉 — 첫 공격과 첫 교전을 강하게. 빠르게 먼저 닿는 종족의 몫이다.</summary>
+    Vanguard = 1 << 11,
+
+    /// <summary>왕권 — **2차 업그레이드 전용**. 권속 소환을 강화한다. 문턱 1/2/3.</summary>
+    Royal = 1 << 12,
 }
 
 /// <summary>시너지 단계. 동 → 은 → 금.</summary>
@@ -218,9 +235,65 @@ namespace BattleGame.Units
     }
 
     /// <summary>복수 — 같은 종족(SpeciesKey) 아군이 죽을 때마다 쌓인다 (SpeciesPassiveRuntime.NotifyAllyDied).</summary>
+    /// <summary>
+    /// 휩쓸기 — 평타가 주 타겟 주변까지 닿는다 (고대 트롤).
+    ///
+    /// ⚠ 값은 스폰 때 굽는다 — Burst 잡은 SpeciesPassiveRule 을 읽을 수 없다
+    ///   (이 파일의 다른 컴포넌트와 같은 이유).
+    /// ⚠ 푸는 자리가 있어야 한다 — MonsterRuntimeBridge.ClearSpeciesPassiveResidue.
+    ///   안 떼면 고대 트롤이 쓰던 엔티티를 물려받은 슬라임이 광역 평타를 휘두른다.
+    /// </summary>
+    public struct SplashAttackComponent : IComponentData
+    {
+        /// <summary>주 타겟 주변 이 반경 안의 적도 맞는다.</summary>
+        public float Radius;
+
+        /// <summary>주 타겟이 받은 피해의 몇 배를 주변이 받는가.</summary>
+        public float Ratio;
+    }
+
     public struct VengeanceComponent : IComponentData
     {
         public int SpeciesKey;
         public int Stacks;
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  시너지 2026-09-15 추가분 — MonsterSynergyRuntime.ApplyOnSpawn 이 붙이고 **먼저 뗀다**
+    //  ⚠ 값은 스폰 때 굽는다 — 공격 잡(Burst)은 MonsterSynergyRule 을 읽을 수 없다
+    // ══════════════════════════════════════════════════════════
+
+    /// <summary>사냥 은·금 — 체력이 문턱 이하인 적에게 치명타 확률을 더한다 (UnitAttackSystem).</summary>
+    public struct HuntCritComponent : IComponentData
+    {
+        public float LowHpThreshold;
+        public float BonusChance;
+    }
+
+    /// <summary>사격 금 — 평타 투사체를 하나 더 쏜다. 두 번째는 이 비율의 피해 (UnitAttackSystem).</summary>
+    public struct ExtraProjectileComponent : IComponentData
+    {
+        public float Ratio;
+    }
+
+    /// <summary>
+    /// 선봉 — 첫 공격 강화. 공격 잡이 첫 공격에 배율을 곱하고 State 를 1 로 올리면
+    /// MonsterSynergyRuntime.Tick 이 받는 피해 감소·넉백·기절을 건 뒤 2 로 닫는다.
+    /// </summary>
+    public struct VanguardComponent : IComponentData
+    {
+        public float  FirstHitMult;
+
+        /// <summary>0 = 아직 안 때림 · 1 = 첫 공격 함(관리형 처리 대기) · 2 = 끝.</summary>
+        public byte   State;
+
+        /// <summary>첫 공격의 대상 — 넉백·기절의 중심.</summary>
+        public Entity Target;
+    }
+
+    /// <summary>무리 — 같은 종족(SpeciesKey)끼리 뭉쳤는지 MonsterSynergyRuntime.Tick 이 잰다.</summary>
+    public struct SwarmComponent : IComponentData
+    {
+        public int SpeciesKey;
     }
 }

@@ -227,6 +227,16 @@ public class MonsterRuntimeBridge : UnitRuntimeBridge
         //     풀에서 나온 개체의 종족이 매번 바뀌므로, 스킬 있는 종족이
         //     물려받을 수 있는 자리는 미리 갖춰 둔다.
         em.AddBuffer<ActiveSkillExecuteEvent>(entity);
+
+        // ── 두 번째 스킬 슬롯 — 권속 소환 (2차 업그레이드, 2026-09-15) ──
+        //
+        //  ⚠ 슬롯과 마찬가지로 종족과 무관하게 **항상** 붙인다
+        //    구조 변경은 전투 중에 비싸고, 풀에서 나온 개체의 종족이 매번 바뀐다.
+        //    권속이 없는 종족은 버퍼를 비워 두면 ActiveSkillAISystem 이 그냥 지나간다.
+        //  ⚠ 보스 행동 패턴이 쓰는 그 버퍼다 (HeroTierSetup) — 진영·계층을 따지지
+        //    않으므로 몬스터가 그대로 쓸 수 있다. 새 시스템을 만들지 않는다.
+        em.AddBuffer<ActiveSkillSlot>(entity);
+        FillBroodSlot(em.GetBuffer<ActiveSkillSlot>(entity));
     }
 
     /// <summary>
@@ -249,6 +259,10 @@ public class MonsterRuntimeBridge : UnitRuntimeBridge
         em.GetBuffer<ProjectileLaunchRequest>(entity).Clear();
 
         em.SetComponentData(entity, BuildSkillSlot());
+
+        // ⚠ 두 번째 슬롯도 매번 다시 채운다 (풀 재사용)
+        //   안 비우면 리치 킹이 쓰던 엔티티를 물려받은 슬라임이 **리치를 소환한다.**
+        FillBroodSlot(em.GetBuffer<ActiveSkillSlot>(entity));
 
         // 지난 종족이 남긴 발동 요청을 비운다 — 안 비우면 풀에서 나오자마자
         // 이전 개체의 스킬이 한 번 터진다.
@@ -290,6 +304,10 @@ public class MonsterRuntimeBridge : UnitRuntimeBridge
 
         // 연사(고블린 궁수)는 기존 태그를 빌려 쓴다 — 남으면 근접 몬스터가 2연타한다.
         if (em.HasComponent<DoubleStrikeTag>(entity))    em.RemoveComponent<DoubleStrikeTag>(entity);
+
+        // 휩쓸기(고대 트롤) — 남으면 슬라임이 광역 평타를 휘두른다.
+        if (em.HasComponent<SplashAttackComponent>(entity))
+            em.RemoveComponent<SplashAttackComponent>(entity);
 
         // ⚠ 넉백 면역도 뗀다 — 야수 금·거상·난공불락·무게추가 붙인다.
         //   한때 떼는 곳이 없어서, 야수 금으로 한 번 선 엔티티는 풀에서 누가
@@ -363,6 +381,64 @@ public class MonsterRuntimeBridge : UnitRuntimeBridge
             // 라인이 통째로 앞으로 튀어 그림이 무너진다.
             CooldownRemaining = cooldown * 0.5f,
         };
+    }
+
+    /// <summary>
+    /// 권속 소환 슬롯을 다시 채운다. 권속이 없는 종족이면 <b>비운다</b>.
+    ///
+    /// ⚠ 언제나 Clear 로 시작한다 — 풀에서 나온 엔티티에 지난 종족의 슬롯이 남아 있다.
+    /// ⚠ 쿨다운의 정본은 <b>종족</b>이다 (BroodCooldown). SO 값은 종족이 안 적었을 때의
+    ///   기본값일 뿐이다 — 왕마다 부르는 주기가 다른 것이 이 축의 뜻이다.
+    /// ⚠ 술법 쿨감은 여기에도 건다 — 안 걸면 "스킬 하나는 빨라지는데 소환만 그대로" 가 된다
+    ///   (BuildSkillSlot 이 같은 함정을 이미 한 번 밟았다).
+    /// </summary>
+    void FillBroodSlot(DynamicBuffer<ActiveSkillSlot> slots)
+    {
+        slots.Clear();
+
+        if (Species == null || Species.BroodSpecies == null || Species.BroodCount <= 0) return;
+
+        float baseCooldown = Species.BroodBaseCooldown;
+
+        float cdr = GeneralRuntimeBridge.ClampCDR(_stat.Get(StatType.SkillCooldownReduce),
+                                                  GameplayConfig.CooldownCap);
+
+        float cooldown = baseCooldown * (1f - cdr);
+
+        // 시너지 왕권 — 권속 소환 쿨다운 (2차만 표식을 갖는다, 2026-09-15)
+        if ((Species.Tags & MonsterTag.Royal) != 0)
+            cooldown *= 1f - MonsterSynergyRule.RoyalBroodCooldownCut(
+                                 MonsterSynergyRule.TierOf(MonsterTag.Royal));
+
+        slots.Add(new ActiveSkillSlot
+        {
+            SkillId  = (int)ActiveSkillId.SummonBrood,
+            Cooldown = cooldown,
+
+            // 나오자마자 부르지 않는다 — 소환되자마자 권속이 함께 서면
+            // "왕을 냈다" 가 아니라 "한 장에 열 마리가 나왔다" 로 읽힌다.
+            CooldownRemaining = cooldown,
+        });
+    }
+
+    /// <summary>
+    /// 권속 소환 슬롯을 비운다 — 분열체·부활체(1세대 이상)가 쓰는 길이다.
+    ///
+    /// ⚠ MonsterSpawner.Arm 이 부른다. 세대를 아는 곳이 거기뿐이다.
+    /// </summary>
+    public void ClearBroodSlot()
+    {
+        if (!TryGetComponent<EntityLink>(out var link)) return;
+        if (link.Entity == Entity.Null)                 return;
+
+        World world = World.DefaultGameObjectInjectionWorld;
+        if (world == null || !world.IsCreated) return;
+
+        EntityManager em = world.EntityManager;
+        if (!em.Exists(link.Entity))                          return;
+        if (!em.HasBuffer<ActiveSkillSlot>(link.Entity))      return;
+
+        em.GetBuffer<ActiveSkillSlot>(link.Entity).Clear();
     }
 
     GeneralPassiveSetComponent BuildPassiveSet() => new()

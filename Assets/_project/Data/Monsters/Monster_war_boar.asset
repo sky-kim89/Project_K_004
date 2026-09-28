@@ -1,0 +1,89 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3293ffc88440014396a89c49aab65b7, type: 3}
+  m_Name: Monster_war_boar
+  m_EditorClassIdentifier: 
+  Id: war_boar
+  DisplayName: "\uC6CC \uBCF4\uC5B4"
+  BodyType: 1
+  Race: 0
+  NonHumanoidLibrary: {fileID: 11400000, guid: 24274dfb65698a04c93942c5c7705e96, type: 2}
+  BodyTint: {r: 1, g: 1, b: 1, a: 1}
+  BodyScale: 1.45
+  BodyStretch: {x: 1.14, y: 1.02}
+  Mark: 0
+  PoolKey: Monster
+  LineageIcon: {fileID: 21300000, guid: 2a8754dcf218768468588a3e4c791a6d, type: 3}
+  ManaCost: 13
+  SummonCount: 1
+  AttackKind: 0
+  Projectile: 0
+  ProjectileSpeed: 0
+  Traits: 74
+  Tags: 4228
+  Description: "\uBA48\uCD94\uC9C0 \uC54A\uB294 \uB3CC\uC9C4. \uC801\uC9C4\uC744
+    \uAD00\uD1B5\uD558\uBA70 \uAE38 \uC704\uC758 \uBAA8\uB4E0 \uAC83\uC744 \uB4E4\uC774\uBC1B\uB294\uB2E4.\n\uB369\uCE58\uAC00
+    \uCEE4\uC9C4 \uB9CC\uD07C \uC5B4\uC9C0\uAC04\uD574\uC11C\uB294 \uC4F0\uB7EC\uC9C0\uC9C0
+    \uC54A\uB294\uB2E4."
+  MaxHp: 1495
+  Attack: 126
+  AttackRange: 1.7
+  AttackSpeed: 0.95
+  MoveSpeed: 3.4
+  Defense: 0.12
+  CritChance: 0.05
+  CritDamage: 1.5
+  SummonPowerToHp: 2.76
+  SummonPowerToAttack: 2.52
+  UpgradeOf: {fileID: 11400000, guid: de6c569d776d80b4698088d90a9dc27c, type: 2}
+  AlsoUpgradeOf:
+  - {fileID: 11400000, guid: 0900371d162389e4980f35b52614f0b0, type: 2}
+  SpeciesTrait: 106
+  ExtraTraits: 
+  BlockedInherit: 
+  ActiveSkill: 28
+  Passives: 
+  BroodSpecies: {fileID: 11400000, guid: f65663af889c3b841871c86e865c03eb, type: 2}
+  BroodCount: 3
+  BroodCooldown: 13
+  LevelBonuses:
+  - Label: "\uAC15\uCCA0 \uC5C4\uB2C8"
+    Stat1: 2
+    Value1: 0.18
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 0
+  - Label: "\uB450\uAEBC\uC6B4 \uAC00\uC8FD"
+    Stat1: 0
+    Value1: 0.18
+    HasStat2: 1
+    Stat2: 1
+    Value2: 0.05
+    Passive: 0
+  - Label: "\uBA48\uCD94\uC9C0 \uC54A\uB294"
+    Stat1: 5
+    Value1: 0.12
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 24
+  - Label: "\uD30C\uAD34 \uC804\uCC28"
+    Stat1: 2
+    Value1: 0.2
+    HasStat2: 1
+    Stat2: 0
+    Value2: 0.15
+    Passive: 0
+  SignaturePassive: 24
+  SummonDelay: 0.1
+  SummonCircleEffectKey: FX_Summon_Circle

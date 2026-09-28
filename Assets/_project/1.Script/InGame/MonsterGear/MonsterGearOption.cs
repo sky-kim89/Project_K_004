@@ -81,22 +81,34 @@ public static class GearOptionText
 
         return o.Stat switch
         {
-            GearStat.Hp          => $"체력 {Signed(v, "0")}",
-            GearStat.Attack      => $"공격력 {Signed(v, "0.#")}",
-            GearStat.Defense     => $"방어율 {SignedPct(v)}",
-            GearStat.HpPct       => $"체력 {SignedPct(v)}",
-            GearStat.AttackPct   => $"공격력 {SignedPct(v)}",
-            GearStat.CritChance  => $"치명타 확률 {SignedPct(v)}",
-            GearStat.CritDamage  => $"치명타 피해 {SignedPct(v)}",
-            GearStat.AttackSpeed => $"공격 속도 {SignedPct(v)}",
-            GearStat.MoveSpeed   => $"이동 속도 {SignedPct(v)}",
-            GearStat.Cooldown    => $"스킬 쿨타임 {SignedPct(-v)}",
-            GearStat.Penetration => $"방어 관통 {SignedPct(v)}",
-            GearStat.Range       => $"사거리 {Signed(v, "0.0#")}",
-            GearStat.Knockback   => $"넉백 {SignedPct(v)}",
+            GearStat.Hp          => F("체력 {0}", Signed(v, "0")),
+            GearStat.Attack      => F("공격력 {0}", Signed(v, "0.#")),
+            GearStat.Defense     => F("방어율 {0}", SignedPct(v)),
+            GearStat.HpPct       => F("체력 {0}", SignedPct(v)),
+            GearStat.AttackPct   => F("공격력 {0}", SignedPct(v)),
+            GearStat.CritChance  => F("치명타 확률 {0}", SignedPct(v)),
+            GearStat.CritDamage  => F("치명타 피해 {0}", SignedPct(v)),
+            GearStat.AttackSpeed => F("공격 속도 {0}", SignedPct(v)),
+            GearStat.MoveSpeed   => F("이동 속도 {0}", SignedPct(v)),
+            GearStat.Cooldown    => F("스킬 쿨타임 {0}", SignedPct(-v)),
+            GearStat.Penetration => F("방어 관통 {0}", SignedPct(v)),
+            GearStat.Range       => F("사거리 {0}", Signed(v, "0.0#")),
+            GearStat.Knockback   => F("넉백 {0}", SignedPct(v)),
             _                    => "",
         };
     }
+
+    /// <summary>
+    /// 표에서 문장을 찾아 값을 끼워 넣는다 — 원본 표가 쓰는 <c>{0}</c> 방식.
+    ///
+    /// ⚠ <b>스탯 이름과 값을 따로 두지 않는다</b> (2026-09-16) — 어순이 언어마다 다르다.
+    ///   이름만 번역해 붙이면 독일어·프랑스어에서 자리가 어긋난다. 문장째 키로 잡는다.
+    ///
+    /// ⚠ 보간 문자열($"…{값}…")을 쓰지 말 것 — 실행 시점에 이미 숫자로 바뀌어 있어
+    ///   표의 키와 영원히 일치하지 않는다. 에러도 경고도 안 난다.
+    /// </summary>
+    static string F(string key, params object[] args)
+        => LocalizationManager.Instance.Format(key, args);
 
     /// <summary>특이 옵션이면 색을 입힌다.</summary>
     public static string DescribeRich(in GearOption o)

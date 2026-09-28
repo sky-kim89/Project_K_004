@@ -28,7 +28,9 @@ using UnityEngine;
 //      Id      — MonsterSpeciesData.Id 또는 SkillCardData.Id
 //      Copies  — 누적 획득 장수. 레벨은 여기서 계산한다 (CardLevelRule)
 //      Learned — **융합으로 배워 온 종족 패시브** (최대 3)
-//      HasEvolved / HasFused — 진화·융합 이력. 갈래를 잠그는 데 쓴다
+//      HasEvolved / HasFused — 진화·융합 이력.
+//        ⚠ 잠그는 것은 HasFused 뿐이다 — HasEvolved 는 2차 업그레이드가 생기며
+//          판정에서 빠졌다 (SummonDeckSlot.HasEvolved 주석 참고)
 //
 //  ■ 만렙 카드의 두 갈래 (규칙 정본은 CardEvolution)
 //      진화 → 같은 계보의 상위 종족으로 무작위 변신. Id 가 바뀐다
@@ -79,7 +81,14 @@ public struct SummonDeckSlot
     public string     Id;
     public int        Copies;
 
-    /// <summary>진화한 적이 있는가. true 면 더 진화할 수 없다.</summary>
+    /// <summary>
+    /// 진화한 적이 있는가 — 이 칸이 걸어온 이력이다.
+    ///
+    /// ⚠ 더 이상 진화를 막지 않는다 (사용자 지시, 2026-09-15 — 2차 업그레이드)
+    ///   막는 것은 <c>CardEvolution.CollectUpgrades</c> 가 비었는가 하나다.
+    ///   2차는 위가 없어 목록이 저절로 비므로 거기서 멈춘다.
+    ///   지금 이 값을 읽는 곳은 없다 — 이력·세이브 호환으로 남겨 둔다.
+    /// </summary>
     public bool HasEvolved;
 
     /// <summary>융합한 적이 있는가. true 면 진화할 수 없다.</summary>

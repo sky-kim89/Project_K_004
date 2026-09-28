@@ -77,7 +77,12 @@ public struct MonsterLevelBonus
             ? value
             : stat.Get(type) * value;
 
-        stat.Add(type, delta, "cardlevel");
+        // ⚠ 별도 레이어(Add)가 아니라 **기본 레이어에 굽는다** (2026-09-15 버그 수정)
+        //   MonsterStatComposer 는 이 뒤에 시너지·강화 카드·중첩·특성을 stat.Set(Get × 배율) 로 곱한다.
+        //   Set 은 기본 레이어만 덮고 Get 은 모든 레이어의 합이라, 여기서 레이어로 더해 두면
+        //   곱할 때마다 이 몫이 **한 번씩 더 붙었다** — Lv4 슬라임 킹이 31,000 이어야 할 체력이 58,000 이었다.
+        //   레벨 표는 합성 도중의 한 단계일 뿐이라 따로 떼어 볼 레이어가 필요 없다.
+        stat.Set(type, stat.Get(type) + delta);
     }
 
     /// <summary>

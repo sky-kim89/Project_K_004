@@ -27,6 +27,7 @@ public class MeteorRunner : MonoBehaviour
         EntityManager   em,
         TeamType        casterTeam,
         float           damageMultiplier,
+        float           maxHpRatio,
         float           aoeRadius,
         float           delay,
         float           knockbackMult,
@@ -35,7 +36,7 @@ public class MeteorRunner : MonoBehaviour
         if (_current != null) StopCoroutine(_current);
         _current = StartCoroutine(Sequence(
             impactPos, casterEntity, casterStat, em,
-            casterTeam, damageMultiplier, aoeRadius, delay, knockbackMult, fx));
+            casterTeam, damageMultiplier, maxHpRatio, aoeRadius, delay, knockbackMult, fx));
     }
 
     /// <summary>
@@ -54,6 +55,7 @@ public class MeteorRunner : MonoBehaviour
         EntityManager   em,
         TeamType        casterTeam,
         float           damageMultiplier,
+        float           maxHpRatio,
         float           aoeRadius,
         float           delay,
         float           knockbackMult,
@@ -109,7 +111,11 @@ public class MeteorRunner : MonoBehaviour
 
             if (!em.HasBuffer<HitEventBufferElement>(entities[i])) continue;
 
-            float  damage   = casterStat.Final[StatType.Attack] * damageMultiplier;
+            // 소환사 시그니처면 대상 최대 체력 비례(방어율 무시), 아니면 공격력 배율 (SignatureDamageRule)
+            bool   ratioHit = maxHpRatio > 0f;
+            float  damage   = ratioHit
+                            ? SignatureDamageRule.DamageFor(em, entities[i], maxHpRatio)
+                            : casterStat.Final[StatType.Attack] * damageMultiplier;
             float3 knockDir = dist > 0.01f
                 ? math.normalizesafe(new float3(transforms[i].Position.x, transforms[i].Position.y, 0f) - center)
                 : new float3(1f, 0f, 0f);
@@ -120,6 +126,7 @@ public class MeteorRunner : MonoBehaviour
                 HitDirection   = knockDir * knockbackMult,
                 AttackerEntity = casterEntity,
                 Type = BattleGame.Units.HitType.Skill,
+                DefensePierce  = ratioHit ? 1f : 0f,
             });
         }
 

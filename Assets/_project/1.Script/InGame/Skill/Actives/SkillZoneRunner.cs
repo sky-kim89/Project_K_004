@@ -63,10 +63,31 @@ public class SkillZoneRunner : MonoBehaviour
     public struct ZoneConfig
     {
         public float3     Center;
+
+        /// <summary>
+        /// 장판이 시전자를 <b>따라다니는가</b> (2026-09-15).
+        ///
+        /// ■ 왜 필요한가 — "깔아 두는 장판" 과 "몸에 두르는 불" 은 다른 물건이다
+        ///   독성 지대·블리자드는 자리를 **고르는 것**이 값이라 한자리에 고정된다.
+        ///   화염 오라는 그 유닛이 있는 곳이 곧 위험한 곳이다 — 고정하면 멧돼지가
+        ///   돌진한 뒤 아무도 없는 자리에서 불만 탄다.
+        ///
+        /// ⚠ 시전자 엔티티를 조회하지 않는다
+        ///   이 러너는 시전자 GameObject 에 붙는다(AddComponent). 그래서
+        ///   transform.position 이 곧 시전자 자리다 — 틱마다 엔티티를 찾을 이유가 없다.
+        ///
+        /// ⚠ 시전자가 죽으면 마지막 자리에 남는다 — 코루틴이 함께 멎으므로
+        ///   그 자리에서 불이 사그라든다. 따로 처리하지 않는다.
+        /// </summary>
+        public bool       FollowCaster;
+
         public float      Radius;
         public float      Duration;
         public float      TickInterval;  // 틱 간격 (초)
         public float      DamagePerTick; // 틱당 직접 피해 (0이면 피해 없음)
+
+        /// <summary>틱당 대상 최대 체력 비율 — 소환사 시그니처만 (SignatureDamageRule). 있으면 DamagePerTick 대신 쓴다.</summary>
+        public float      MaxHpRatioPerTick;
         public TeamType   CasterTeam;    // 적 팀 = 반대 팀
         public Entity     CasterEntity;
 
@@ -119,6 +140,18 @@ public class SkillZoneRunner : MonoBehaviour
         {
             elapsed   += Time.deltaTime;
             tickTimer += Time.deltaTime;
+
+            // ── 따라다니는 장판 — 중심을 매 프레임 시전자 자리로 옮긴다 ──
+            //   ⚠ 이펙트도 함께 옮긴다. 판정만 따라가면 불은 제자리에서 타는데
+            //     피해는 엉뚱한 곳에서 들어가 화면이 거짓말을 한다.
+            if (cfg.FollowCaster)
+            {
+                Vector3 here = transform.position;
+                cfg.Center    = new float3(here.x, here.y, 0f);
+                _activeConfig = cfg;                       // 에디터 기즈모도 따라오게
+
+                if (zoneEffect != null) zoneEffect.transform.position = here;
+            }
 
             if (tickTimer >= tickInterval)
             {
@@ -176,14 +209,21 @@ public class SkillZoneRunner : MonoBehaviour
 
             // 직접 피해
             bool hasHitBuf = em.Value.HasBuffer<HitEventBufferElement>(entities[i]);
-            if (cfg.DamagePerTick > 0f && hasHitBuf)
+            bool ratioHit = cfg.MaxHpRatioPerTick > 0f;
+            if ((cfg.DamagePerTick > 0f || ratioHit) && hasHitBuf)
             {
+                // ⚠ 버퍼를 열기 전에 잰다 — 비율 피해는 대상 스탯을 읽는다
+                float tickDamage = ratioHit
+                                 ? SignatureDamageRule.DamageFor(em.Value, entities[i], cfg.MaxHpRatioPerTick)
+                                 : cfg.DamagePerTick;
+
                 em.Value.GetBuffer<HitEventBufferElement>(entities[i]).Add(new HitEventBufferElement
                 {
-                    Damage         = cfg.DamagePerTick,
+                    Damage         = tickDamage,
                     HitDirection   = float3.zero,
                     AttackerEntity = cfg.CasterEntity,
                     Type = BattleGame.Units.HitType.Skill,
+                    DefensePierce  = ratioHit ? 1f : 0f,
                 });
                 hitCount++;
             }

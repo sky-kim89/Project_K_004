@@ -95,10 +95,14 @@ public static class HeroTierSetup
     /// <summary>
     /// 광폭화 쿨다운 (초) — 1분에 1스택.
     ///
+    /// ⚠ 아군 배출 가속(SpawnPaceRule.RushStepSeconds)이 이 값을 읽는다
+    ///   둘은 같은 시계여야 한다 — "적이 세지는 그 순간 우리도 빨라진다" 가
+    ///   화면에서 한 사건으로 읽혀야 하기 때문이다. 여기만 고치면 양쪽이 함께 움직인다.
+    ///
     /// ⚠ 난이도 쿨감(CooldownScale)을 곱하지 않는다
     ///   광폭화는 연출이 아니라 교착을 끝내는 시계다.
     /// </summary>
-    const float EnrageCooldown = 60f;
+    public const float EnrageCooldown = 60f;
 
     static bool FrenzyEnabled => DifficultyConfig.CurrentTier()?.FrenzyPatterns ?? false;
 

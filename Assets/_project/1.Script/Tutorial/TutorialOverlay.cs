@@ -294,8 +294,8 @@ public class TutorialOverlay : MonoBehaviour
         LayoutFrame(hasHole ? hole : (Rect?)null);
         LayoutBubble(step, hasHole ? hole : (Rect?)null);
 
-        _body.text = step.Message ?? "";
-        _hint.text = hint ?? "";
+        _body.text = Localized(step.Message);
+        _hint.text = Localized(hint);
         bool showBubble = !string.IsNullOrEmpty(step.Message) || !string.IsNullOrEmpty(hint);
         _bubble.gameObject.SetActive(showBubble);
         _bubbleEdge.gameObject.SetActive(showBubble);
@@ -385,7 +385,12 @@ public class TutorialOverlay : MonoBehaviour
     /// </summary>
     void LayoutBubble(TutorialStep step, Rect? hole)
     {
-        _body.text = step.Message ?? "";
+        // ⚠ 칸은 **번역된 글**로 재야 한다 (2026-09-18)
+        //   시나리오가 들고 있는 것은 한국어이고 화면에 뜨는 것은 번역문이다.
+        //   한국어 길이로 칸을 잡으면 영어·독일어에서 1.5~2배로 늘어난 글이 넘쳐
+        //   LocalizedText.ApplyFit 의 자동 축소에 걸려 글자만 잘게 쪼그라든다.
+        string message = Localized(step.Message);
+        _body.text = message;
 
         Rect  full = _root.rect;
         float maxW = Mathf.Min(BubbleMaxW, full.width - ScreenMargin * 2f);
@@ -394,7 +399,7 @@ public class TutorialOverlay : MonoBehaviour
         if (hole == null) anchor = TutorialAnchor.Center;
 
         float   w = maxW;
-        float   h = MeasureHeight(step.Message, w);
+        float   h = MeasureHeight(message, w);
         Vector2 center;
 
         if (anchor == TutorialAnchor.Center)
@@ -415,7 +420,7 @@ public class TutorialOverlay : MonoBehaviour
                 //   needH 가 남는 폭과 '정확히' 같아진다. + 와 - 를 거친 값이라
                 //   마지막 자리가 어긋나면 조건이 거짓이 되고 그대로 중앙으로 떨어진다.
                 w = Mathf.Min(w, side) - 1f;
-                h = MeasureHeight(step.Message, w);
+                h = MeasureHeight(message, w);
                 TryPlaceBeside(full, hole.Value, w, h, anchor, out center);
             }
             else
@@ -428,6 +433,17 @@ public class TutorialOverlay : MonoBehaviour
         SetRect(_bubble, rect);
         SetRect(_bubbleEdge, new Rect(rect.x - 3f, rect.y - 3f, rect.width + 6f, rect.height + 6f));
     }
+
+    /// <summary>
+    /// 말풍선에 넣을 글을 지금 언어로 옮긴다.
+    ///
+    /// ⚠ 반드시 LocalizationManager 를 지난다 (CLAUDE.md — 번역 우회 금지)
+    ///   여기서 옮겨 두면 칸 계산과 화면에 뜨는 글이 같은 문자열이 된다.
+    ///   TMP 에 자동으로 붙는 LocalizedText 가 뒤늦게 같은 번역을 한 번 더 하지만,
+    ///   번역문에는 한국어가 없어 LocalizeText 가 그대로 돌려준다 — 두 번 바뀌지 않는다.
+    /// </summary>
+    static string Localized(string source)
+        => string.IsNullOrEmpty(source) ? "" : LocalizationManager.Instance.LocalizeText(source);
 
     /// <summary>본문 높이를 먼저 재고 그만큼만 칸을 잡는다 — 고정 높이는 글자를 자른다.</summary>
     float MeasureHeight(string message, float w)

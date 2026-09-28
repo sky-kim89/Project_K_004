@@ -12,9 +12,11 @@ using UnityEngine;
 //
 //  ■ 격이 높을수록 덜 먹힌다 — 이 세 숫자가 "소환사가 다 한다" 를 막는다
 //      잡병   25%  →  4대
-//      엘리트  5%  →  20대
-//      보스    1%  →  100대
-//    공속 0.8 이니 잡병 하나에 5초, 보스 하나에 125초다. 보스는 몬스터가 잡는다.
+//      엘리트 15%  →  7대
+//      보스    5%  →  20대
+//    공속 0.8 이니 잡병 하나에 5초, 보스 하나에 25초다.
+//  ⚠ 엘리트 ×3 · 보스 ×5 로 올렸다 (사용자 지시, 2026-09-16 — 옛 5% · 1%)
+//    보스 1% 는 125초라, 아군이 무너진 보스판에서 소환사가 한 일이 화면에 안 보였다.
 //
 //  ⚠ 방어율을 지나지 않는다 (UnitHitSystem — 파쇄와 같은 자리·같은 규칙)
 //    방어율을 태우면 방패 용사 앞에서 다시 0 이 되어 만든 이유가 사라진다.
@@ -32,10 +34,10 @@ public static class SummonerStrikeRule
     public const float NormalRatio = 0.25f;
 
     /// <summary>엘리트 용사에게 무는 비율.</summary>
-    public const float EliteRatio = 0.05f;
+    public const float EliteRatio = 0.15f;
 
     /// <summary>보스 용사에게 무는 비율.</summary>
-    public const float BossRatio = 0.01f;
+    public const float BossRatio = 0.05f;
 
     /// <summary>소환사 엔티티에 박을 값. 스폰 때 한 번 굽는다.</summary>
     public static SummonerStrikeComponent Build(SummonerData summoner)
@@ -60,6 +62,7 @@ public static class SummonerStrikeRule
 
     /// <summary>소환사 선택 화면·툴팁에 적을 한 줄.</summary>
     public static string Describe()
-        => $"평타가 적 최대 체력의 {NormalRatio * 100f:0.#}% " +
-           $"(엘리트 {EliteRatio * 100f:0.#}% · 보스 {BossRatio * 100f:0.#}%) 를 깎는다";
+        => LocalizationManager.Instance.Format(
+               "평타가 적 최대 체력의 {0:0.#}% (엘리트 {1:0.#}% · 보스 {2:0.#}%) 를 깎는다",
+               NormalRatio * 100f, EliteRatio * 100f, BossRatio * 100f);
 }

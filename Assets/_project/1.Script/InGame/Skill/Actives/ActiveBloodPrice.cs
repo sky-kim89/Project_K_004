@@ -84,6 +84,10 @@ public class ActiveBloodPrice : ActiveSkillData
         float damage = cost * DamagePerHp
                      + ctx.CasterStat.Final[StatType.Attack] * AttackMultiplier * EffectValue;
 
+        // 소환사 시그니처면 태운 체력 1당 대상 최대 체력 비례 × 패기 (SignatureDamageRule)
+        float maxHpRatio = SignatureDamageRule.RatioFor(em, ctx.CasterEntity,
+                                                        cost * SignatureDamageRule.BloodPerHp) * EffectValue;
+
         var identity = em.GetComponentData<UnitIdentityComponent>(ctx.CasterEntity);
 
         var runner = ctx.CasterObject.GetComponent<BloodPriceRunner>();
@@ -98,6 +102,7 @@ public class ActiveBloodPrice : ActiveSkillData
             range       : EffectRadius > 0f ? EffectRadius : 9f,
             halfAngleDeg: ConeAngleDegrees * 0.5f,
             damage      : damage,
+            maxHpRatio  : maxHpRatio,
             knockMult   : KnockbackMult,
             chargeTime  : ChargeTime,
             fx          : new SkillEffectConfig

@@ -135,7 +135,9 @@ public class SummonerCandidateCardUI : MonoBehaviour
     {
         if (data.AppearanceSpecies != null)
         {
-            image.sprite         = MonsterPortraitProvider.Get(data.AppearanceSpecies);
+            // ⚠ 표식도 함께 — 소환사는 종족과 표식이 갈려 있다 (슬라임 + 왕관)
+            image.sprite         = MonsterPortraitProvider.Get(data.AppearanceSpecies,
+                                                               data.AppearanceMark);
             image.preserveAspect = true;
             image.enabled        = image.sprite != null;
             return;
@@ -198,7 +200,7 @@ public class SummonerCandidateCardUI : MonoBehaviour
         }
 
         _skillName.text    = SignatureSkillDisplay.NameOf(data);
-        _skillUses.text    = $"스테이지당 {data.SkillUsesPerStage}회";
+        _skillUses.text    = LocalizationManager.Instance.Format("스테이지당 {0}회", data.SkillUsesPerStage);
         _skillIcon.sprite  = SignatureSkillDisplay.IconOf(data);
         _skillIcon.enabled = _skillIcon.sprite != null;
     }

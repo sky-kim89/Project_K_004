@@ -165,7 +165,7 @@ public enum RunPerk
     /// <summary>쌍둥이 라인 — 카드를 내면 옆 라인에도 절반이 선다. 대신 비싸다.</summary>
     TwinLane = 38,
 
-    /// <summary>한 우물 — 덱 전체가 한 시너지 표식을 공유하면 그 카운트가 오른다.</summary>
+    /// <summary>한 우물 — 필드·대기열에 한 가지 몬스터(몬스터 ID 하나)만 있으면 그 몬스터의 시너지 전부 카운트가 오른다 (2026-09-16 규칙 변경). ⚠ 계보가 같아도 다른 몬스터다 — 슬라임과 힐 슬라임은 둘이다.</summary>
     SingleWell = 39,
 
     /// <summary>매복 — 판 시작 몇 초간 배출을 멈추고, 그 뒤 첫 무리가 강하게 나온다.</summary>
@@ -356,7 +356,7 @@ public static class RunPerkRule
     public const float GlassKeepPowerMult = 1.50f;
 
     /// <summary>저주받은 금화 — 런 골드 획득 비율 · 판을 넘길 때 깎이는 마왕성 체력.</summary>
-    public const float CursedGoldBonus    = 0.60f;
+    public const float CursedGoldBonus    = 1.00f;   // 0.60 → 1.00 (사용자 지시, 2026-09-16 — 효과가 거의 안 느껴졌다). 대가(−3/판)는 그대로
     public const int   CursedGoldCoreCost = 3;
 
     /// <summary>쌍둥이 라인 — 붙는 할증.</summary>
@@ -366,7 +366,7 @@ public static class RunPerkRule
     public const int SingleWellCount = 2;
 
     /// <summary>매복 — 판 시작 뒤 배출을 멈추는 시간(초) · 라인마다 강해지는 앞 마릿수 · 공/체 비율.</summary>
-    public const float AmbushHoldSeconds = 5f;
+    public const float AmbushHoldSeconds = 3f;   // 5 → 3 (사용자 지시, 2026-09-16 — 너무 길었다)
     public const int   AmbushCount       = 5;
     public const float AmbushBonus       = 0.60f;
 
@@ -518,6 +518,9 @@ public static class RunPerkRule
         mult *= Mathf.Max(0.1f,
                           1f - RelicTreeApplier.GetSystemValue(RelicSystemEffect.DrainSpeedBonus));
 
+        // 상점 '소집의 북' — 산 횟수만큼 곱한다 (0.95^n, 0 에 닿지 않는다).
+        mult *= RunShopRule.DrumIntervalMult;
+
         return mult;
     }
 
@@ -533,6 +536,10 @@ public static class RunPerkRule
             && (summoner.Perk == SummonerPerk.BoneLegion || summoner.Perk == SummonerPerk.Muster)
             && IsAffinity(summoner, species))
             count += Mathf.RoundToInt(summoner.PerkValue);
+
+        // 시너지 무리 금 — 무리 카드의 마릿수 (2026-09-15). 카드 표시와 실제 소환이 같은 값을 본다.
+        if ((species.Tags & MonsterTag.Swarm) != 0)
+            count += MonsterSynergyRule.SwarmExtraCount(MonsterSynergyRule.TierOf(MonsterTag.Swarm));
 
         RunPerkData data = Data;
         if (data == null) return count;
@@ -691,8 +698,11 @@ public static class RunPerkRule
 
     /// <summary>
     /// 판이 열린 뒤 흐른 시간. ⚠ Time.time 이라 배속·일시정지를 그대로 탄다 — 게임 속 시간이다.
+    ///
+    /// 배출 가속(SpawnPaceRule.RushMultiplierAt)도 이 시계를 읽는다 —
+    /// 적 광폭화와 같은 순간에 단계가 오르려면 잣대가 하나여야 한다.
     /// </summary>
-    static float SecondsSinceStageStart
+    public static float SecondsSinceStageStart
         => StageStartedAt < 0f ? 0f : Mathf.Max(0f, Time.time - StageStartedAt);
 
     /// <summary>
@@ -720,6 +730,9 @@ public static class RunPerkRule
         float mult = 1f;
 
         // 뒤집힌 과부하 — 도배할수록 비싸지지만 그만큼 세다. 과부하는 카드 ID 로 센다(= 종족 ID).
+        //   ⚠ 규칙 확정 (사용자 확정, 2026-09-16): "이번 판에 나오는 그 종족 전체" 가 **나오는 순간의** 단계를 받는다.
+        //     과부하를 낸 개체를 따로 기억하지 않는다 — 대기열은 종족만 저장한다.
+        //     판이 바뀌면 과부하가 0 으로 돌아가므로, 복귀한 몬스터는 그 판에 다시 내지 않으면 배율 없이 나온다.
         if (data.Has(RunPerk.OverloadFrenzy))
             mult *= 1f + OverloadFrenzyPerStack * SummonCostRule.OverloadStacks(species.Id);
 
@@ -898,7 +911,7 @@ public static class RunPerkRule
         RunPerk.CheapAffinity     => "친화 종족의 소환 비용 −2",
         RunPerk.CheapAll          => "모든 몬스터의 소환 비용 −1",
         RunPerk.DeepVessel        => "최대 마나 +25%",
-        RunPerk.Meditation        => "스테이지마다 돌아오는 마나 +20%",
+        RunPerk.Meditation        => F("스테이지마다 회복되는 마나 +{0:0}%", (RunPerkRule.MeditationMult - 1f) * 100f),
         RunPerk.Hoard             => "마나를 한 번도 쓰지 않고 스테이지를 넘기면 최대 마나 +10 (최대 +50)",
         RunPerk.Scales            => "보유 마나가 50% 이하면 소환 비용 −2, 50%를 넘으면 +1",
         RunPerk.ManaSurge         => "마나를 0까지 쓰면 그 스테이지 동안 새로 나오는 몬스터의 소환력 +30%",
@@ -924,17 +937,44 @@ public static class RunPerkRule
         RunPerk.Homecoming        => "카드로 소환한 몬스터가 죽으면 30% 확률로 제 라인 대기열에 돌아간다",
         // ⚠ 아래 아홉은 숫자를 RunPerkRule 에서 뽑는다 — 밸런스를 고치면 문장이 따라온다
         RunPerk.BloodPact         => "마나가 모자라면 모자란 만큼 마왕성 체력으로 낸다 (체력 1 은 남긴다)",
-        RunPerk.OverloadFrenzy    => $"과부하 1단계마다 그 카드로 나오는 몬스터 공/체 +{RunPerkRule.OverloadFrenzyPerStack * 100f:0}%",
-        RunPerk.SealedSlot        => $"빈 카드 칸 하나를 없앤다. 모든 몬스터 공/체 +{RunPerkRule.SealedSlotBonus * 100f:0}%",
-        RunPerk.Patience          => $"판이 열린 뒤 늦게 나올수록 1초당 공/체 +{RunPerkRule.PatiencePerSecond * 100f:0}% (최대 +{RunPerkRule.PatienceMax * 100f:0}%)",
-        RunPerk.GlassKeep         => $"얻는 순간 마왕성 최대 체력 −{RunPerkRule.GlassKeepCoreCut * 100f:0}%, 소환력 +{(RunPerkRule.GlassKeepPowerMult - 1f) * 100f:0}%",
-        RunPerk.CursedGold        => $"런 골드 획득 +{RunPerkRule.CursedGoldBonus * 100f:0}%, 스테이지를 넘길 때마다 마왕성 체력 −{RunPerkRule.CursedGoldCoreCost}",
-        RunPerk.TwinLane          => $"카드를 내면 옆 라인에도 절반(내림)이 선다. 소환 비용 +{RunPerkRule.TwinLaneSurcharge:0}",
-        RunPerk.SingleWell        => $"덱의 몬스터가 모두 같은 시너지 표식을 가지면 그 카운트 +{RunPerkRule.SingleWellCount}",
-        RunPerk.Ambush            => $"판 시작 {RunPerkRule.AmbushHoldSeconds:0}초간 배출을 멈추고, 라인마다 처음 {RunPerkRule.AmbushCount}마리 공/체 +{RunPerkRule.AmbushBonus * 100f:0}%",
-        RunPerk.Overflow          => $"몬스터가 나올 때 보유 마나 10당 그 몬스터 공/체 +{RunPerkRule.OverflowPer10Mana * 100f:0}% (나올 때 정해짐)",
-        RunPerk.Crystallize       => $"스테이지를 넘길 때 남은 마나의 {RunPerkRule.CrystallizeRatio * 100f:0}%가 최대 마나로 쌓인다 (최대 +{RunPerkRule.CrystallizeCeiling:0})",
-        RunPerk.TrophyMana        => $"엘리트·보스를 쓰러뜨릴 때마다 마나 +{RunPerkRule.TrophyManaAmount}",
+        RunPerk.OverloadFrenzy    => F("이번 판 과부하 1단계마다 해당 몬스터 전부 공/체 +{0:0}% (대기열에서 나올 때 정해짐)",
+                                       RunPerkRule.OverloadFrenzyPerStack * 100f),
+        RunPerk.SealedSlot        => F("빈 카드 칸 하나를 없앤다. 모든 몬스터 공/체 +{0:0}%",
+                                       RunPerkRule.SealedSlotBonus * 100f),
+        RunPerk.Patience          => F("판이 열린 뒤 늦게 나올수록 1초당 공/체 +{0:0}% (최대 +{1:0}%)",
+                                       RunPerkRule.PatiencePerSecond * 100f, RunPerkRule.PatienceMax * 100f),
+        RunPerk.GlassKeep         => F("얻는 순간 마왕성 최대 체력 −{0:0}%, 소환력 +{1:0}%",
+                                       RunPerkRule.GlassKeepCoreCut * 100f, (RunPerkRule.GlassKeepPowerMult - 1f) * 100f),
+        RunPerk.CursedGold        => F("런 골드 획득 +{0:0}%, 스테이지를 넘길 때마다 마왕성 체력 −{1}",
+                                       RunPerkRule.CursedGoldBonus * 100f, RunPerkRule.CursedGoldCoreCost),
+        RunPerk.TwinLane          => F("카드를 내면 옆 라인에도 절반(내림)이 선다. 소환 비용 +{0:0}",
+                                       RunPerkRule.TwinLaneSurcharge),
+        RunPerk.SingleWell        => F("필드·대기열에 한 가지 몬스터만 있으면 그 몬스터의 시너지 전부 카운트 +{0} (스킬 소환 제외)",
+                                       RunPerkRule.SingleWellCount),
+        RunPerk.Ambush            => F("판 시작 {0:0}초간 배출을 멈추고, 라인마다 처음 {1}마리 공/체 +{2:0}%",
+                                       RunPerkRule.AmbushHoldSeconds, RunPerkRule.AmbushCount, RunPerkRule.AmbushBonus * 100f),
+        RunPerk.Overflow          => F("몬스터가 나올 때 보유 마나 10당 그 몬스터 공/체 +{0:0}% (나올 때 정해짐)",
+                                       RunPerkRule.OverflowPer10Mana * 100f),
+        RunPerk.Crystallize       => F("스테이지를 넘길 때 남은 마나의 {0:0}%가 최대 마나로 쌓인다 (최대 +{1:0})",
+                                       RunPerkRule.CrystallizeRatio * 100f, RunPerkRule.CrystallizeCeiling),
+        RunPerk.TrophyMana        => F("엘리트·보스를 쓰러뜨릴 때마다 마나 +{0}",
+                                       RunPerkRule.TrophyManaAmount),
         _                         => "",
     };
+
+    /// <summary>
+    /// 표에서 문장을 찾아 숫자를 끼워 넣는다 — 원본 표가 쓰는 <c>{0}</c> 방식.
+    ///
+    /// ⚠ <b>수치가 든 설명은 반드시 이걸 쓴다. 보간 문자열($"…{값}…")을 쓰지 말 것</b>
+    ///   (2026-09-16). 보간은 실행 시점에 이미 숫자로 바뀌어 있어서, 번역표의
+    ///   키(코드에 적힌 그대로의 문자열)와 **영원히 일치하지 않는다.** 그렇게 넣은
+    ///   119줄이 통째로 죽은 줄이었다 — 표에는 있는데 화면에는 한국어로 남았다.
+    ///   <see cref="LocalizationManager.Format"/> 는 키로 줄을 찾아 **번역문에**
+    ///   인자를 끼워 넣으므로 언어가 바뀌어도 자리와 숫자가 함께 따라온다.
+    ///
+    /// ⚠ 키를 고치면 LocalizationTable.txt 의 같은 문장도 함께 고칠 것.
+    ///   표에 없으면 Format 이 키를 그대로 서식해 돌려주므로 한국어로만 보인다.
+    /// </summary>
+    static string F(string key, params object[] args)
+        => LocalizationManager.Instance.Format(key, args);
 }

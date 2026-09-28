@@ -55,6 +55,8 @@ public class GeneralPortraitProvider : MonoBehaviour
     struct PortraitJob
     {
         public string         Name;
+        public UnitGrade      Grade;
+        public string         Key;     // 캐시 열쇠 = 이름 + 등급 (KeyOf)
         public Func<bool>     StillWanted;
         public Action<Sprite> OnReady;
     }
@@ -85,23 +87,33 @@ public class GeneralPortraitProvider : MonoBehaviour
     // ── 공개 API ─────────────────────────────────────────────
 
     /// <summary>이미 만들어 둔 초상화. 없으면 null (합성하지 않는다).</summary>
-    public static Sprite GetCached(string unitName)
-        => !string.IsNullOrEmpty(unitName) && Inst._cache.TryGetValue(unitName, out var s) ? s : null;
+    public static Sprite GetCached(string unitName, UnitGrade grade)
+        => !string.IsNullOrEmpty(unitName) && Inst._cache.TryGetValue(KeyOf(unitName, grade), out var s) ? s : null;
+
+    /// <summary>
+    /// 캐시 열쇠 — <b>등급이 들어간다</b> (2026-09-16).
+    /// 외형이 (이름, 직업, 등급) 으로 굴러 나온다(AllyAppearanceRoller). 이름만 열쇠로 쓰면서
+    /// 이름 시드의 태생 등급으로 합성했더니, 필드와 등급이 다른 용사가 다른 모습으로 떴다 —
+    /// 초반 등급 상한(UnitJobRoller.GetBirthGrade(이름, 레벨))이 걸린 장수, 장수 등급 −1 로 서는 병사.
+    /// </summary>
+    static string KeyOf(string unitName, UnitGrade grade) => unitName + "#" + (int)grade;
 
     /// <summary>
     /// 초상화를 요청한다. 캐시에 있으면 그 자리에서 콜백이 온다.
     /// 없으면 큐에 쌓였다가 몇 프레임 뒤에 온다.
     /// </summary>
     /// <param name="stillWanted">합성 직전에 물어본다. false 면 조용히 버린다.</param>
-    public static void Request(string unitName, Func<bool> stillWanted, Action<Sprite> onReady)
+    /// <param name="grade">필드에 서는 그 개체의 등급 — 외형이 등급으로 갈린다 (KeyOf 주석).</param>
+    public static void Request(string unitName, UnitGrade grade, Func<bool> stillWanted, Action<Sprite> onReady)
     {
         if (string.IsNullOrEmpty(unitName) || onReady == null) return;
 
-        var inst = Inst;
+        var    inst = Inst;
+        string key  = KeyOf(unitName, grade);
 
-        if (inst._cache.TryGetValue(unitName, out var cached))
+        if (inst._cache.TryGetValue(key, out var cached))
         {
-            inst.Touch(unitName);
+            inst.Touch(key);
             onReady(cached);
             return;
         }
@@ -111,6 +123,8 @@ public class GeneralPortraitProvider : MonoBehaviour
         inst._queue.Enqueue(new PortraitJob
         {
             Name        = unitName,
+            Grade       = grade,
+            Key         = key,
             StillWanted = stillWanted,
             OnReady     = onReady,
         });
@@ -149,9 +163,9 @@ public class GeneralPortraitProvider : MonoBehaviour
                 var req = _queue.Dequeue();
 
                 // 그 사이 다른 요청이 만들어 놨을 수 있다
-                if (_cache.TryGetValue(req.Name, out var done))
+                if (_cache.TryGetValue(req.Key, out var done))
                 {
-                    Touch(req.Name);
+                    Touch(req.Key);
                     req.OnReady?.Invoke(done);
                     continue;
                 }
@@ -159,10 +173,10 @@ public class GeneralPortraitProvider : MonoBehaviour
                 // 화면 밖으로 나간 칸의 요청은 버린다
                 if (req.StillWanted != null && !req.StillWanted()) continue;
 
-                var sprite = Build(req.Name);
+                var sprite = Build(req.Name, req.Grade);
                 if (sprite == null) continue;
 
-                Store(req.Name, sprite);
+                Store(req.Key, sprite);
                 req.OnReady?.Invoke(sprite);
             }
             while (_queue.Count > 0 && watch.Elapsed.TotalMilliseconds < FrameBudgetMs);
@@ -175,12 +189,12 @@ public class GeneralPortraitProvider : MonoBehaviour
         _running = false;
     }
 
-    Sprite Build(string unitName)
+    Sprite Build(string unitName, UnitGrade grade)
     {
         if (!EnsureBuilder()) return null;
 
-        UnitJob   job   = UnitJobRoller.GetJob(unitName);
-        UnitGrade grade = UnitJobRoller.GetBirthGrade(unitName);
+        // ⚠ 등급은 부르는 쪽이 준다 — 이름 시드로 다시 굴리면 필드와 달라진다 (KeyOf 주석)
+        UnitJob job = UnitJobRoller.GetJob(unitName);
 
         var data = AllyAppearanceRoller.Roll(unitName, job, grade);
         _builder.Body    = data.Body;

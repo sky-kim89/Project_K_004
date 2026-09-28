@@ -78,6 +78,10 @@ public abstract class PopupBase : MonoBehaviour
     {
         _canvasGroup   = GetComponent<CanvasGroup>();
         _rectTransform = GetComponent<RectTransform>();
+
+        // 현지화 — 옛 프리팹까지 포함해 하위 TMP 를 전부 번역 대상으로 만든다.
+        //   ⚠ Creator 가 붙인 것은 그대로 두고 빠진 것만 보완한다 (반복 호출 안전).
+        LocalizedText.EnsureIn(gameObject);
     }
 
     // ── 공개 API ─────────────────────────────────────────────────

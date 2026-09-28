@@ -234,9 +234,71 @@ public class MonsterSpeciesData : ScriptableObject
              "⚠ 뿌리의 종족 패시브는 자동으로 상속된다 — 아래에 다시 적지 말 것.")]
     public MonsterSpeciesData UpgradeOf;
 
+    [Tooltip("이 종족으로 진화할 수 있는 **다른** 하위 종족들 (UpgradeOf 말고도).\n" +
+             "비워 두는 것이 보통이다 — 2차 업그레이드처럼 여러 1차에서 올라오는 종족만 쓴다.")]
+    public MonsterSpeciesData[] AlsoUpgradeOf = new MonsterSpeciesData[0];
+
+    /// <summary>
+    /// 그 종족(id)에서 이 종족으로 진화할 수 있는가.
+    ///
+    /// ■ ⚠ 부모가 여럿일 수 있다 (사용자 확정, 2026-09-15)
+    ///   슬라임 킹은 힐·독·강철 슬라임 <b>어느 것</b>에서도 올라온다 — "슬라임의 왕" 이
+    ///   한 갈래에만 붙으면 나머지 두 갈래를 키운 런에서는 영영 못 본다.
+    ///
+    /// ⚠ 진화 판정을 하는 곳은 전부 이 함수를 지난다
+    ///   (CardEvolution.CollectUpgrades · CanEvolveTo · MonsterCodexCreator 검산).
+    ///   <c>UpgradeOf.Id</c> 를 직접 비교하지 말 것 — 대표 부모 하나만 통과한다.
+    ///
+    /// ⚠ UpgradeOf 는 여전히 <b>대표 부모</b>다 — 계보 패시브 상속(CollectSpeciesPassives)과
+    ///   RootSpecies 는 그 한 줄만 탄다. 여러 줄을 타면 같은 패시브가 두 번 붙는다.
+    /// </summary>
+    public bool IsUpgradeFrom(string speciesId)
+    {
+        if (string.IsNullOrEmpty(speciesId)) return false;
+
+        if (UpgradeOf != null && UpgradeOf.Id == speciesId) return true;
+
+        for (int i = 0; i < AlsoUpgradeOf.Length; i++)
+            if (AlsoUpgradeOf[i] != null && AlsoUpgradeOf[i].Id == speciesId) return true;
+
+        return false;
+    }
+
+
     [Tooltip("이 종족만의 고유 패시브. 계보를 타고 아래로 상속된다.\n" +
              "\"슬라임은 죽으면 분열한다\" 처럼 종족을 종족답게 만드는 것 하나.")]
     public SpeciesPassive SpeciesTrait = SpeciesPassive.None;
+
+    [Tooltip("SpeciesTrait 말고 **더** 갖는 고유 패시브. 비워 두는 것이 보통이다.\n" +
+             "2차 업그레이드처럼 '뿌리 각성판 + 제 특성' 둘이 필요한 종족만 쓴다.")]
+    public SpeciesPassive[] ExtraTraits = new SpeciesPassive[0];
+
+    [Tooltip("계보에서 **물려받지 않을** 패시브. 비워 두는 것이 보통이다.\n" +
+             "윗단계와 성격이 갈리는 종족만 쓴다 (느린 2차가 빠른 1차의 '신속' 을 끊는 식).")]
+    public SpeciesPassive[] BlockedInherit = new SpeciesPassive[0];
+
+    /// <summary>
+    /// 이 종족이 계보에서 물려받기를 <b>거부하는</b> 패시브인가.
+    ///
+    /// ■ 왜 필요한가 — 계보가 갈래를 틀 수 있다 (사용자 지시, 2026-09-15)
+    ///   트롤 계보가 그렇다. 뿌리 트롤은 '느리고 두껍다' 인데 1차 숲의 트롤이
+    ///   <b>작고 빠른</b> 갈래로 틀었고(신속), 2차 고대 트롤은 다시 <b>느리고 무거운</b>
+    ///   쪽으로 돌아온다. 그런데 상속은 한 줄로만 내려오므로, 막지 않으면
+    ///   "느려지는 대가로 범위를 사는" 종족이 '신속' 을 함께 들고 선다 —
+    ///   그 둘은 서로를 지운다.
+    ///
+    /// ⚠ 제 것(SpeciesTrait·ExtraTraits)은 막지 않는다 — 물려받는 것만 본다.
+    ///   자기가 적어 놓고 자기가 막는 조합은 실수이지 규칙이 아니다.
+    /// ⚠ 각성판으로 덮는 것과 다르다 — 그쪽(PassiveResolver)은 상위 호환으로
+    ///   <b>바꾸는</b> 것이고, 이건 아예 <b>없애는</b> 것이다.
+    /// </summary>
+    bool IsBlocked(SpeciesPassive p)
+    {
+        for (int i = 0; i < BlockedInherit.Length; i++)
+            if (BlockedInherit[i] == p) return true;
+
+        return false;
+    }
 
     /// <summary>계보의 뿌리. 업그레이드가 아니면 자기 자신이다.</summary>
     public MonsterSpeciesData RootSpecies
@@ -264,10 +326,16 @@ public class MonsterSpeciesData : ScriptableObject
         // 계보를 위로 훑어 담은 뒤 뒤집는다 — 재귀 없이 순서를 맞추는 가장 짧은 길.
         int start = into.Count;
 
+        // ⚠ 제 것부터 담는다 — ExtraTraits 도 여기서 함께 (같은 단계의 것들이다)
+        for (int i = ExtraTraits.Length - 1; i >= 0; i--)
+            if (ExtraTraits[i] != SpeciesPassive.None)
+                into.Add(ExtraTraits[i]);
+
         MonsterSpeciesData cursor = this;
         for (int guard = 0; guard < 8 && cursor != null; guard++)
         {
-            if (cursor.SpeciesTrait != SpeciesPassive.None)
+            if (cursor.SpeciesTrait != SpeciesPassive.None
+                && !IsBlocked(cursor.SpeciesTrait))
                 into.Add(cursor.SpeciesTrait);
 
             cursor = cursor.UpgradeOf;
@@ -283,6 +351,43 @@ public class MonsterSpeciesData : ScriptableObject
     [Tooltip("고유 패시브. 카드 레벨과 무관하게 항상 붙는다.\n" +
              "발동은 PassiveSkillRuntimeSystem 이 그대로 처리한다.")]
     public PassiveSkillType[] Passives = new PassiveSkillType[0];
+
+    // ── 권속 (2차 업그레이드 전용, 사용자 지시 2026-09-15) ─────
+    //
+    //  ■ 두 자리가 이 셋을 함께 읽는다
+    //    ① 권속 소환 스킬 (ActiveSkillId.SummonBrood) — 주기적으로 BroodCount 마리
+    //    ② 왕의 분열 (SpeciesPassive.KingSplit)       — 죽을 때 KingSplitCount 마리
+    //    둘 다 **같은 종족**을 낸다. 갈라 두면 "부를 때와 터질 때 나오는 것이 다른" 왕이 된다.
+    //
+    //  ⚠ 부르는 것은 언제나 **아래 단계**여야 한다
+    //    자기 자신을 부르면 부른 개체가 또 부른다. 세대 제한(MaxReproduceGeneration)이
+    //    분열은 막지만 스킬은 안 막는다 — 스킬은 세대를 보지 않는다.
+    //    MonsterCodexCreator 의 검산이 이 조건을 본다.
+
+    [Header("권속 (2차 업그레이드)")]
+    [Tooltip("이 종족이 불러내는 하위 종족. 비우면 권속 소환도 왕의 분열도 아무것도 안 낸다.")]
+    public MonsterSpeciesData BroodSpecies;
+
+    [Tooltip("권속 소환 스킬이 한 번에 부르는 마릿수. 0 이면 스킬을 달지 않는다.")]
+    public int BroodCount = 0;
+
+    [Tooltip("권속 소환 스킬의 쿨다운(초). 0 이면 기본값을 쓴다.")]
+    public float BroodCooldown = 0f;
+
+    /// <summary>
+    /// 권속 소환의 기준 쿨다운 — 종족 값이 없으면 SO 기본값. 전투(MonsterRuntimeBridge)와
+    /// 몬스터 상세의 '권속 소환' 줄이 같은 값을 읽는다. ⚠ 술법 쿨감은 안 들어간 원본이다.
+    /// </summary>
+    public float BroodBaseCooldown
+    {
+        get
+        {
+            if (BroodCooldown > 0f) return BroodCooldown;
+            ActiveSkillData data = ActiveSkillDatabase.Current?.Get(ActiveSkillId.SummonBrood);
+            return data != null ? data.Cooldown : 14f;
+        }
+    }
+
 
     // ──────────────────────────────────────────────────────────
     // ■ 카드 레벨로 열리는 능력

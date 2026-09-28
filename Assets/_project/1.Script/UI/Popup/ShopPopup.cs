@@ -83,7 +83,7 @@ public class ShopPopup : PopupBase
     [SerializeField] StallView[] _cardStalls;
     [SerializeField] StallView[] _perkStalls;
 
-    [Tooltip("상시 판매 칸. 순서는 BoonEssence / BoonWarFund — Creator 가 같은 순서로 굽는다.")]
+    [Tooltip("상시 판매 칸. 순서는 BoonEssence / BoonWarFund / BoonDrum — Creator 가 같은 순서로 굽는다.")]
     [SerializeField] StallView[] _boonStalls;
 
     [Tooltip("카드 아이콘을 못 찾았을 때 대신 쓸 그림.")]
@@ -128,9 +128,11 @@ public class ShopPopup : PopupBase
 
     public const int BoonEssence = 0;
     public const int BoonWarFund = 1;
+    public const int BoonDrum    = 2;
+    public const int BoonPotion  = 3;   // 마나 회복 포션 (2026-09-16)
 
     /// <summary>상시 판매 칸 수. Creator 가 이 수만큼 굽는다.</summary>
-    public const int BoonStalls = 2;
+    public const int BoonStalls = 4;
 
     // ── 상태 ─────────────────────────────────────────────────
 
@@ -151,6 +153,9 @@ public class ShopPopup : PopupBase
     /// </summary>
     int _rerolls;
 
+    /// <summary>이번 방문에 산 포션 수 — **방문당 한 병**이라 1 이면 품절이다. 저장하지 않는다 (재고 교체와 같은 규칙).</summary>
+    int _potionsBought;
+
     // ── 열기 ─────────────────────────────────────────────────
 
     public ShopPopup Setup(int stageNumber, Action onDone)
@@ -159,7 +164,8 @@ public class ShopPopup : PopupBase
         _onDone      = onDone;
 
         // ⚠ 재고는 열 때 한 번 굴린다 (파일 머리 주석). 그 뒤로는 리롤만 다시 굴린다.
-        _rerolls = 0;
+        _rerolls       = 0;
+        _potionsBought = 0;
         RollStock();
 
         _titleText.text  = "상점";
@@ -315,7 +321,7 @@ public class ShopPopup : PopupBase
         Bind(_boonStalls[BoonEssence],
              SpriteManager.Instance?.Get(RunShopRule.EssenceIconKey),
              Stacked("마력의 정수", boon.MaxManaBonus),
-             $"최대 마나 +{RunShopRule.EssenceManaAmount}",
+             LocalizationManager.Instance.Format("최대 마나 +{0}", RunShopRule.EssenceManaAmount),
              RunShopRule.EssencePrice(_stageNumber, boon.MaxManaBonus),
              gold, false, BuyEssence);
 
@@ -324,9 +330,34 @@ public class ShopPopup : PopupBase
         Bind(_boonStalls[BoonWarFund],
              SpriteManager.Instance?.Get(RunShopRule.WarFundIconKey),
              Stacked("전쟁 자금", boon.WarFundStacks),
-             $"전 몬스터 공·체 +{RunShopRule.WarFundStatBonus * 100f:0.#}%",
+             LocalizationManager.Instance.Format("전 몬스터 공·체 +{0:0.#}%", RunShopRule.WarFundStatBonus * 100f),
              RunShopRule.WarFundPrice(boon.WarFundStacks),
              gold, false, BuyWarFund);
+
+        // 소집의 북 — 전쟁 자금과 같은 틀 (산 횟수만 본다). 곱하는 곳은 RunPerkRule.DrainMultiplierFor.
+        // ⚠ 빼기 기호는 ASCII '-' 다 — '−'(U+2212)는 기본 폰트에 없다 (UI 규칙 2).
+        Bind(_boonStalls[BoonDrum],
+             SpriteManager.Instance?.Get(RunShopRule.DrumIconKey),
+             Stacked("소집의 북", boon.DrumStacks),
+             LocalizationManager.Instance.Format("소환 간격 -{0:0.#}%", (1f - RunShopRule.DrumIntervalStep) * 100f),
+             RunShopRule.DrumPrice(boon.DrumStacks),
+             gold, false, BuyDrum);
+
+        // 마나 회복 포션 — 방문당 한 병. 사면 "품절" 로 덮는다 (사용자 지시, 2026-09-16).
+        //   가득 차 있으면 잠근다 (돈만 사라지는 구매 금지).
+        var  mana     = UserDataManager.Instance.Get<SummonManaData>();
+        bool full     = mana.Current >= mana.Max;
+        bool soldOut  = _potionsBought > 0;
+        Bind(_boonStalls[BoonPotion],
+             SpriteManager.Instance?.Get(RunShopRule.PotionIconKey),
+             "마나 회복 포션",
+             full && !soldOut ? "마나가 가득 찼다" : LocalizationManager.Instance.Format("마나 즉시 +{0}", RunShopRule.PotionAmount(mana.Max)),
+             RunShopRule.PotionPrice(_stageNumber),
+             gold, soldOut, BuyPotion, blocked: full);
+
+        // ⚠ 덮개 글자는 칸 공용("구입함")으로 구워져 있다 — 포션만 "품절" 이라 여기서 갈아 끼운다.
+        //   Creator 를 고치면 카드·특성 칸까지 같은 글자가 되므로 굽기는 건드리지 않는다.
+        _boonStalls[BoonPotion].SoldOverlay.GetComponentInChildren<TextMeshProUGUI>(true).text = "품절";
 
         RefreshReroll(gold);
     }
@@ -363,8 +394,9 @@ public class ShopPopup : PopupBase
     ///     모자람     — 붉은 값 + "골드 부족", 버튼이 잠긴다
     ///     이미 삼    — 칸 전체에 덮개 + "구입함"
     /// </summary>
+    /// <param name="blocked">돈과 무관하게 지금은 살 수 없다 (포션 — 마나가 가득). 덮개는 안 씌운다.</param>
     void Bind(StallView v, Sprite icon, string name, string desc,
-              int price, int gold, bool sold, Action onBuy)
+              int price, int gold, bool sold, Action onBuy, bool blocked = false)
     {
         v.Root.SetActive(true);
 
@@ -384,7 +416,7 @@ public class ShopPopup : PopupBase
         v.PriceText.text  = $"{price:N0}";
         v.PriceText.color = afford ? FacilityColors.Gold : FacilityColors.Short;
 
-        v.Button.interactable = afford && !sold;
+        v.Button.interactable = afford && !sold && !blocked;
         v.Button.onClick.RemoveAllListeners();
         v.Button.onClick.AddListener(() => onBuy());
 
@@ -458,6 +490,42 @@ public class ShopPopup : PopupBase
         if (!RunGoldRule.TrySpend(RunShopRule.WarFundPrice(boon.WarFundStacks))) return;
 
         boon.AddWarFund();
+        UserDataManager.Instance.RequestSave();
+
+        Refresh();
+    }
+
+    /// <summary>
+    /// 소집의 북 — 배출 간격이 (런 안에서) 줄어든다.
+    /// ⚠ 스택만 쌓는다. 간격에 곱하는 곳은 RunPerkRule.DrainMultiplierFor 하나다.
+    /// </summary>
+    void BuyDrum()
+    {
+        var boon = UserDataManager.Instance.Get<RunBoonData>();
+
+        if (!RunGoldRule.TrySpend(RunShopRule.DrumPrice(boon.DrumStacks))) return;
+
+        boon.AddDrum();
+        UserDataManager.Instance.RequestSave();
+
+        Refresh();
+    }
+
+    /// <summary>
+    /// 마나 회복 포션 — 지금 마나를 최대 마나의 일정 몫만큼 채운다.
+    /// ⚠ 채우는 곳은 RunPerkRule.RestoreMana 하나다 (정수 내림 · 그릇 상한).
+    /// </summary>
+    void BuyPotion()
+    {
+        if (_potionsBought > 0) return;   // 방문당 한 병
+
+        var mana = UserDataManager.Instance.Get<SummonManaData>();
+        if (mana.Current >= mana.Max) return;
+
+        if (!RunGoldRule.TrySpend(RunShopRule.PotionPrice(_stageNumber))) return;
+
+        RunPerkRule.RestoreMana(RunShopRule.PotionAmount(mana.Max));
+        _potionsBought++;
         UserDataManager.Instance.RequestSave();
 
         Refresh();

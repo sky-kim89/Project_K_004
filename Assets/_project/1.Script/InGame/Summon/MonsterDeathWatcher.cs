@@ -149,8 +149,7 @@ public class MonsterDeathWatcher : MonoBehaviour
             //     마나를 내지 않은 물량이 판을 거듭할수록 불어난다.
             if (RunPerkRule.Has(RunPerk.Homecoming) &&
                 Random.value < RunPerkRule.HomecomingChance)
-                SummonController.Instance?.Reservation
-                                ?.EnqueueOne(_species, returner.Lane);
+                SummonController.Instance.ReturnToLine(_species, returner.Lane);   // 배출까지 켠다
         }
 
         // ── 소환사 개성 (강령술사의 부활 등) ──

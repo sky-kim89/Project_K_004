@@ -117,13 +117,15 @@ public static class RunNodeFlow
             new("수리   무료",
                 !canHeal
                     ? "이미 온전하다"
-                    : $"마왕성 체력 +{CampHeal} · 마나 {RunNodeRule.CampManaRatio * 100f:0}% 회복   " +
-                      $"(현재 {core.Current}/{core.Max})",
+                    : LocalizationManager.Instance.Format(
+                          "마왕성 체력 +{0} · 마나 {1:0}% 회복   (현재 {2}/{3})",
+                          CampHeal, RunNodeRule.CampManaRatio * 100f, core.Current, core.Max),
                 canHeal),
 
-            new($"증축   {maxCost} G",
-                $"마왕성 최대 체력 +{RunNodeRule.CampMaxAmount} · 최대 마나 +{RunNodeRule.CampMaxManaAmount}" +
-                "   — 늘어난 만큼 곧바로 채워진다",
+            new(LocalizationManager.Instance.Format("증축   {0} G", maxCost),
+                LocalizationManager.Instance.Format(
+                    "마왕성 최대 체력 +{0} · 최대 마나 +{1}   — 늘어난 만큼 곧바로 채워진다",
+                    RunNodeRule.CampMaxAmount, RunNodeRule.CampMaxManaAmount),
                 canMax),
         };
 
@@ -415,9 +417,11 @@ public static class RunNodeFlow
             float mana  = sp != null ? Mathf.Max(1f, sp.ManaCost - slot.ManaDiscount) : 0f;
             int   count = sp != null ? sp.SummonCount + slot.ExtraSummons : 0;
 
-            string desc = $"마나 {mana:0.#}   {count}마리" +
+            // ⚠ 뒤 조각은 조건부라 합치지 않는다 — 제 키를 갖는다 (CLAUDE.md 로컬라이징)
+            string desc = LocalizationManager.Instance.Format("마나 {0:0.#}   {1}마리", mana, count) +
                           (slot.ManaDiscount > 0 || slot.ExtraSummons > 0
-                               ? $"   (강화 −{slot.ManaDiscount} / +{slot.ExtraSummons})"
+                               ? LocalizationManager.Instance.Format("   (강화 −{0} / +{1})",
+                                                                    slot.ManaDiscount, slot.ExtraSummons)
                                : "");
 
             entries.Add(new ChoicePopup.Entry(
@@ -446,7 +450,7 @@ public static class RunNodeFlow
 
             entries.Add(new ChoicePopup.Entry(
                 $"{name}  Lv.{slot.Level}",
-                tags.Length > 0 ? $"이 카드가 사라지고 [{tags}] 중 하나가 +1" : "남길 표식이 없다",
+                tags.Length > 0 ? LocalizationManager.Instance.Format("이 카드가 사라지고 [{0}] 중 하나가 +1", tags) : "남길 표식이 없다",
                 enabled && tags.Length > 0,
                 sp != null ? MonsterPortraitProvider.Get(sp) : null));
         }

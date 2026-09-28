@@ -66,6 +66,9 @@ public static class ProjectKBuildAll
         fail.Run("난이도 아이콘",       DifficultyIconGenerator.Generate);
         fail.Run("이펙트 텍스처·머티리얼", EffectTextureGenerator.GenerateAll);
         fail.Run("데미지 숫자 폰트",     DamageFontCreator.Create);
+        // ⚠ 언어 선택 드롭다운의 가나·한자. 굽고 나서 LiberationSans SDF 폴백표에 스스로 등록한다 —
+        //   언어를 추가하고 이걸 안 돌리면 그 줄만 □ 로 뜬다.
+        fail.Run("언어 선택 폰트",      LanguagePickerFontCreator.Create);
 
         fail.Report();
     }

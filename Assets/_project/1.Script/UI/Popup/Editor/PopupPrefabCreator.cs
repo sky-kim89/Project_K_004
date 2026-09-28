@@ -47,7 +47,9 @@ public static class PopupPrefabCreator
         float yResume = HeaderH + 43f;
         float ySfx    = yResume + btnH + BtnGap;
         float yBgm    = ySfx    + togH + BtnGap;
-        float yReinc  = yBgm    + togH + BtnGap;
+        // 언어 — 사운드와 같은 '설정' 묶음이라 두 토글 바로 아래다 (2026-09-16 로컬라이징)
+        float yLang   = yBgm    + togH + BtnGap;
+        float yReinc  = yLang   + togH + BtnGap;
 
         float surrenderRowH = BtnGap + btnH;                  // 로비에서 접는 높이
         float popupH        = yReinc + btnH + 48f;
@@ -120,6 +122,9 @@ public static class PopupPrefabCreator
                                      yBgm, togH, SidePad,
                                      out var bgmPill, out var bgmState);
 
+        var languageDropdown = EditorUIBuilder.LabeledDropdown(
+            panel, "LanguageDropdown", "언 어", yLang, togH, SidePad);
+
         var reincBtn  = MakePauseChoice(panel, "ReincarnateButton", "즉시 환생하기",
                                         "이번 런을 포기하고 환생한다",
                                         new Color(0.50f, 0.16f, 0.18f, 1f),
@@ -135,6 +140,7 @@ public static class PopupPrefabCreator
         SetObj (so, "_bgmButton",          bgmBtn);
         SetObj (so, "_bgmPill",            bgmPill);
         SetObj (so, "_bgmState",           bgmState);
+        SetObj (so, "_languageDropdown",   languageDropdown);
         SetObj (so, "_panelRect",          panel.GetComponent<RectTransform>());
         SetObj (so, "_borderRect",         border.GetComponent<RectTransform>());
         so.FindProperty("_panelFullH").floatValue    = popupH;

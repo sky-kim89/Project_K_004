@@ -37,7 +37,18 @@ public class BattleInfoPopup : PopupBase
 {
     // ── 머리 ─────────────────────────────────────────────────
 
+    [Tooltip("\"전황\" — 고정 글자. 런타임이 건드리지 않는다.")]
     [SerializeField] TextMeshProUGUI _titleText;
+
+    [Tooltip("머리 옆 칩 — \"스테이지 8\". 제목과 한 줄에 이어 붙이지 않는다 (겹쳐 그려졌다).")]
+    [SerializeField] TextMeshProUGUI _stageText;
+
+    [Tooltip("아군 패널 머리 오른쪽 — \"카드 4장\".")]
+    [SerializeField] TextMeshProUGUI _allySummary;
+
+    [Tooltip("적군 패널 머리 오른쪽 — \"부대 4 · 병사 39\".")]
+    [SerializeField] TextMeshProUGUI _enemySummary;
+
     [SerializeField] Button          _closeBtn;
 
     // ── 초상화 칸 ────────────────────────────────────────────
@@ -94,7 +105,7 @@ public class BattleInfoPopup : PopupBase
     {
         _stageNumber = stageNumber;
 
-        _titleText.text = $"전황   —   스테이지 {stageNumber}";
+        _stageText.text = LocalizationManager.Instance.Format("스테이지 {0}", stageNumber);
 
         BuildEnemies(stageNumber, kind);
         BuildAllies();
@@ -113,6 +124,9 @@ public class BattleInfoPopup : PopupBase
         //   목록이 곧 이 판에 설 적이다. 흉내 내면 규칙을 고칠 때마다 갈린다.
         _enemies.AddRange(HeroDeployment.Build(stageNumber, kind, stageBias: 0f));
 
+        int squads   = 0;
+        int soldiers = 0;
+
         for (int i = 0; i < _enemySlots.Length; i++)
         {
             // ⚠ 편성 순서가 아니라 **줄 번호**로 놓는다 (HeroSpawner.LaneFor)
@@ -124,9 +138,14 @@ public class BattleInfoPopup : PopupBase
             _enemySlots[i].Root.SetActive(has);
             if (!has) continue;
 
-            SpawnEntry e = _enemies[at];
-            UnitStat   s = GeneralStatRoller.Roll(e.Name, e.Level,
-                                                  UnitJobRoller.GetBirthGrade(e.Name));
+            SpawnEntry e     = _enemies[at];
+            UnitGrade  grade = UnitJobRoller.GetBirthGrade(e.Name, e.Level);
+            UnitStat   s     = GeneralStatRoller.Roll(e.Name, e.Level, grade);
+
+            // ⚠ 초상화는 **필드에 실제로 서는 모습**이다 (2026-09-16)
+            //   장수는 초반 상한이 걸린 등급, 병사만 오는 부대는 병사 등급(장수 −1)으로 외형이 굴러 나온다.
+            //   이름만 넘겨 태생 등급으로 합성하던 때는 둘 다 실제와 다른 옷을 입었다.
+            UnitGrade portraitGrade = e.SoldiersOnly ? SoldierRuntimeBridge.SoldierGradeOf(grade) : grade;
 
             // ⚠ GetCached 는 **이미 합성된 것만** 돌려준다 (사용자 지적, 2026-09-07)
             //   용사 초상화는 원작 방식대로 몇 프레임에 걸쳐 합성되므로,
@@ -142,7 +161,7 @@ public class BattleInfoPopup : PopupBase
             portrait.enabled = _fallbackPortrait != null;
 
             GeneralPortraitProvider.Request(
-                seed,
+                seed, portraitGrade,
                 () => slotRoot != null && slotRoot.activeInHierarchy,
                 sp =>
                 {
@@ -156,15 +175,20 @@ public class BattleInfoPopup : PopupBase
             // ⚠ 여기에는 **Lv 과 병사 수만** 둔다 (사용자 확정)
             //   초상화 밑에 스탯을 늘어놓으면 다섯 줄이 글자로 덮여
             //   "어느 줄이 무거운가" 가 오히려 안 읽힌다. 나머지는 눌러서 본다.
+            int soldierCount = Mathf.RoundToInt(s.Get(StatType.SoldierCount));
+
             _enemySlots[i].LeftBadge .text = $"Lv {e.Level}";
-            _enemySlots[i].RightBadge.text = e.SoldiersOnly
-                ? $"병사 {Mathf.RoundToInt(s.Get(StatType.SoldierCount))}"
-                : $"병사 {Mathf.RoundToInt(s.Get(StatType.SoldierCount))}";
+            _enemySlots[i].RightBadge.text = LocalizationManager.Instance.Format("병사 {0}", soldierCount);
+
+            squads++;
+            soldiers += soldierCount;
 
             int captured = at;
             _enemySlots[i].Button.onClick.RemoveAllListeners();
             _enemySlots[i].Button.onClick.AddListener(() => ShowEnemyDetail(captured));
         }
+
+        _enemySummary.text = LocalizationManager.Instance.Format("부대 {0}   ·   병사 {1}", squads, soldiers);
     }
 
     /// <summary>이 줄에 서는 편성 번호. 없으면 -1.</summary>
@@ -258,13 +282,16 @@ public class BattleInfoPopup : PopupBase
 
             UnitGrade g = codex.IsUnlocked(sp.Id) ? codex.GetGrade(sp.Id) : UnitGrade.Normal;
 
-            _allySlots[i].LeftBadge .text = $"Lv {slot.Level}";
-            _allySlots[i].RightBadge.text = LocalizationManager.Instance.Get(g.ToString());
+            _allySlots[i].LeftBadge .text  = $"Lv {slot.Level}";
+            _allySlots[i].RightBadge.text  = LocalizationManager.Instance.Get(g.ToString());
+            _allySlots[i].RightBadge.color = GradeStyle.GetColor(g);   // 품질은 등급색 — 도감과 같은 색이다
 
             int captured = i;
             _allySlots[i].Button.onClick.RemoveAllListeners();
             _allySlots[i].Button.onClick.AddListener(() => ShowAllyDetail(captured));
         }
+
+        _allySummary.text = LocalizationManager.Instance.Format("카드 {0}장", _allies.Count);
     }
 
     /// <summary>

@@ -1,0 +1,89 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3293ffc88440014396a89c49aab65b7, type: 3}
+  m_Name: Monster_alpha_wolf
+  m_EditorClassIdentifier: 
+  Id: alpha_wolf
+  DisplayName: "\uC54C\uD30C \uC6B8\uD504"
+  BodyType: 1
+  Race: 0
+  NonHumanoidLibrary: {fileID: 11400000, guid: 4ff37e87ce0c55548b084223e26a4f77, type: 2}
+  BodyTint: {r: 1, g: 1, b: 1, a: 1}
+  BodyScale: 1.35
+  BodyStretch: {x: 1, y: 1}
+  Mark: 0
+  PoolKey: Monster
+  LineageIcon: {fileID: 21300000, guid: 1cd71c3b3d81e444fb8c7a311a7a3d64, type: 3}
+  ManaCost: 12
+  SummonCount: 1
+  AttackKind: 0
+  Projectile: 0
+  ProjectileSpeed: 0
+  Traits: 74
+  Tags: 4356
+  Description: "\uBB34\uB9AC\uC758 \uC6B0\uB450\uBA38\uB9AC. \uAE43\uBC1C\uC744 \uC138\uC6CC
+    \uC8FC\uBCC0 \uC544\uAD70\uC744 \uD1B5\uC9F8\uB85C \uB04C\uC5B4\uC62C\uB9B0\uB2E4.\n\uD63C\uC790
+    \uC2F8\uC6B0\uC9C0 \uC54A\uB294\uB2E4 \u2014 \uBD80\uB97C \uB291\uB300\uAC00
+    \uB298 \uACC1\uC5D0 \uC788\uB2E4."
+  MaxHp: 936
+  Attack: 191
+  AttackRange: 1.4
+  AttackSpeed: 1.15
+  MoveSpeed: 3.6
+  Defense: 0.07
+  CritChance: 0.05
+  CritDamage: 1.5
+  SummonPowerToHp: 1.8
+  SummonPowerToAttack: 3.45
+  UpgradeOf: {fileID: 11400000, guid: 1dde7e5042b93a543823c79d8b60514d, type: 2}
+  AlsoUpgradeOf:
+  - {fileID: 11400000, guid: 7f051d068d0047f45b90ab20d585dbd2, type: 2}
+  SpeciesTrait: 105
+  ExtraTraits: 
+  BlockedInherit: 
+  ActiveSkill: 29
+  Passives: 
+  BroodSpecies: {fileID: 11400000, guid: 02e69958661d2fb43a93e248cb71c7c9, type: 2}
+  BroodCount: 3
+  BroodCooldown: 12
+  LevelBonuses:
+  - Label: "\uC6B0\uB450\uBA38\uB9AC\uC758 \uC1A1\uACF3\uB2C8"
+    Stat1: 2
+    Value1: 0.18
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 0
+  - Label: "\uC0AC\uB0E5 \uBCF8\uB2A5"
+    Stat1: 4
+    Value1: 0.12
+    HasStat2: 1
+    Stat2: 5
+    Value2: 0.1
+    Passive: 0
+  - Label: "\uBB34\uB9AC\uC758 \uC2EC\uC7A5"
+    Stat1: 0
+    Value1: 0.15
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 34
+  - Label: "\uCD08\uC6D0\uC758 \uC655"
+    Stat1: 2
+    Value1: 0.2
+    HasStat2: 1
+    Stat2: 4
+    Value2: 0.12
+    Passive: 0
+  SignaturePassive: 34
+  SummonDelay: 0.1
+  SummonCircleEffectKey: FX_Summon_Circle

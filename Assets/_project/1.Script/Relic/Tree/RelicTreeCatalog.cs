@@ -128,7 +128,9 @@ public static class RelicTreeCatalog
         //   짝과 같은 모양이다. 둘을 다 찍으면 +2.
         Sys(RelicNodeId.N_SwarmCall, RelicNodeId.N_UndyingFlesh, "무리의 부름", 4,
             2, 10, 1, RelicSystemEffect.SummonCountBonus, 1f, RelicBranch.Brood, cost: 100);
-        Sys(RelicNodeId.N_FeralMemory, RelicNodeId.N_Carapace, "야성의 기억", 2,
+        // 치유의 기억 (옛 '야성의 기억' — 2026-09-16 사용자 지시로 힐 슬라임 회복까지 넓히며 이름을 바꿨다).
+        //   ⚠ enum ID(N_FeralMemory)는 그대로 둔다 — 세이브와 아이콘 파일명(node_feral_memory)이 ID 에서 나온다.
+        Sys(RelicNodeId.N_FeralMemory, RelicNodeId.N_Carapace, "치유의 기억", 2,
             -2, 4, 5, RelicSystemEffect.SpeciesPassivePower, 0.10f, RelicBranch.Brood);
         // 상태이상(중독·화상·역병) 피해 — 종족 패시브 줄기 아래가 제 자리다.
         // ⚠ 좌표 (2026-09-12 재배치) — 짝수 격자 · 갈래마다 제 구역 (소환수 위 · 마왕성 아래 ·

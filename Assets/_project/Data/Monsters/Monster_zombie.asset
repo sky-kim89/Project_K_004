@@ -23,13 +23,13 @@ MonoBehaviour:
   Mark: 0
   PoolKey: Monster
   LineageIcon: {fileID: 21300000, guid: c27eb661a2ec44d43b7b91de10dabc49, type: 3}
-  ManaCost: 7
+  ManaCost: 6
   SummonCount: 6
   AttackKind: 0
   Projectile: 0
   ProjectileSpeed: 0
   Traits: 37
-  Tags: 65
+  Tags: 1088
   Description: "\uB290\uB9AC\uC9C0\uB9CC \uC798 \uC548 \uC8FD\uACE0, \uC8FD\uC73C\uBA74
     \uC8FC\uBCC0\uC5D0 \uC5ED\uBCD1\uC744 \uD37C\uB728\uB9B0\uB2E4."
   MaxHp: 105
@@ -43,9 +43,15 @@ MonoBehaviour:
   SummonPowerToHp: 1.3
   SummonPowerToAttack: 0.6
   UpgradeOf: {fileID: 0}
+  AlsoUpgradeOf: []
   SpeciesTrait: 4
+  ExtraTraits: 
+  BlockedInherit: 
   ActiveSkill: 0
   Passives: 
+  BroodSpecies: {fileID: 0}
+  BroodCount: 0
+  BroodCooldown: 0
   LevelBonuses:
   - Label: "\uC369\uC9C0 \uC54A\uB294 \uC0B4"
     Stat1: 0

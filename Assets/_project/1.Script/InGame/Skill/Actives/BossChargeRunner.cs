@@ -77,6 +77,18 @@ public class BossChargeRunner : MonoBehaviour
 
         Vector3 destination = target + dir * d.OvershootDistance;
 
+        // ── 마왕성 안으로는 돌진하지 않는다 (사용자 지시, 2026-09-16) ──
+        //   관통(Overshoot)까지 더한 착지점이 성벽선을 넘으면, 경로를 성벽 앞에서 끊는다.
+        //   예전엔 빈 전장을 가로질러 성벽을 뚫고 들어가 그 자리에서 함락 판정이 났다
+        //   (CoreBreachSystem) — 막을 기회가 없었다. 마지막 몇 칸은 걸어서 와야 한다.
+        //   이미 멈춤선 안쪽에서 성 쪽으로 돌진하려 하면 제자리에서 끝난다.
+        float stopX = SummonFieldLayout.WallX + WallStopMargin;
+        if (destination.x < stopX && dir.x < 0f)
+        {
+            float along = (stopX - start.x) / dir.x;   // dir.x < 0 → 성벽 쪽으로 갈 수 있는 거리
+            destination = along > 0f ? start + dir * along : start;
+        }
+
         // ECS 위치 덮어쓰기를 잠시 끈다 — 이걸 안 하면 transform 이 안 움직인다
         _held = t.GetComponent<EntityLink>();
         if (_held != null) _held.SyncPosition = false;
@@ -182,8 +194,16 @@ public class BossChargeRunner : MonoBehaviour
         ids.Dispose();
     }
 
+    /// <summary>
+    /// 돌진이 멈추는 선 = 성벽선에서 이만큼 바깥.
+    /// ⚠ 성벽 통과 판정선(WallX + 0.15)보다 바깥이어야 한다 — 안쪽이면 돌진 착지만으로 함락된다.
+    /// </summary>
+    const float WallStopMargin = 1f;
+
     void OnDestroy()
     {
-        if (_queryReady) _sweepQuery.Dispose();
+        // ⚠ 플레이를 끌 때는 월드가 먼저 사라진다 — 그 뒤에 쿼리를 정리하면 예외가 난다 (2026-09-16 로그)
+        var world = World.DefaultGameObjectInjectionWorld;
+        if (_queryReady && world != null && world.IsCreated) _sweepQuery.Dispose();
     }
 }

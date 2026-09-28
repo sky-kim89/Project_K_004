@@ -180,6 +180,10 @@ public static class RunPopupCreator
         //   카드 아래에 두면 이미 고른 뒤에나 눈에 들어온다.
         Button statsBtn = MakeStatsButton(panel);
 
+        // 도움말 — 전투 통계(280) 왼쪽, 같은 세로 자리
+        EditorUIBuilder.InfoBtn(panel, TutorialId.HelpCardSelect, 280f, -24f,
+                                size: UIScale.BtnSm, anchorY: 1f, y: -(HeaderH - UIScale.BtnSm) * 0.5f);
+
         // 카드 3장 — 가운데 정렬
         // ⚠ 3 이 아니라 MaxChoiceCount(4) 로 굽는다
         //   특성 '감식안' 이 4택으로 만든다. 3칸만 구우면 네 번째 카드가

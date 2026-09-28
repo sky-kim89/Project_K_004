@@ -26,6 +26,20 @@ public abstract class ActiveSkillZoneBase : ActiveSkillData
     /// <summary>디버프 설정. 기본값은 디버프 없음.</summary>
     protected virtual void ConfigureDebuffs(ref SkillZoneRunner.ZoneConfig config) { }
 
+    /// <summary>
+    /// 장판이 시전자를 따라다니는가. 기본은 <b>고정</b>이다.
+    ///
+    /// ⚠ 따라다니면 '어디에 까느냐' 라는 선택이 사라진다 — 그게 이 축의 값이므로
+    ///   기본값은 고정이어야 한다. 몸에 두르는 불(화염 오라)만 예외다.
+    /// </summary>
+    protected virtual bool FollowsCaster => false;
+
+    /// <summary>
+    /// 소환사가 시그니처로 깔 때의 틱당 대상 최대 체력 비율 (패기 곱하기 전). 0 이면 비율 피해가 없다.
+    /// ⚠ 소환사 시그니처로 쓰는 장판만 채운다 — 용사·몬스터가 깔면 무시된다 (SignatureDamageRule.RatioFor).
+    /// </summary>
+    protected virtual float SignatureTickRatio => 0f;
+
     public override void Execute(ActiveSkillContext ctx)
     {
         var em = ctx.EntityManager;
@@ -48,13 +62,23 @@ public abstract class ActiveSkillZoneBase : ActiveSkillData
         var identity = em.GetComponentData<UnitIdentityComponent>(ctx.CasterEntity);
         var runner   = ctx.CasterObject.AddComponent<SkillZoneRunner>();
 
+        // 따라다니는 장판은 시전자 발밑에서 시작한다 — 타겟 자리에 깔면
+        // 첫 프레임에 제 몸으로 순간이동한 것처럼 보인다.
+        if (FollowsCaster)
+        {
+            UnityEngine.Vector3 here = ctx.CasterTransform.position;
+            center = new float3(here.x, here.y, 0f);
+        }
+
         var config = new SkillZoneRunner.ZoneConfig
         {
             Center             = center,
+            FollowCaster       = FollowsCaster,
             Radius             = EffectRadius   > 0f ? EffectRadius   : DefaultRadius,
             Duration           = EffectDuration > 0f ? EffectDuration : DefaultDuration,
             TickInterval       = TickInterval,
             DamagePerTick      = ctx.CasterStat.Final[StatType.Attack] * EffectValue,
+            MaxHpRatioPerTick  = SignatureDamageRule.RatioFor(em, ctx.CasterEntity, SignatureTickRatio),
             CasterTeam         = identity.Team,
             CasterEntity       = ctx.CasterEntity,
             SourceSkill        = SkillId,       // 디버프 자리를 잡는 열쇠

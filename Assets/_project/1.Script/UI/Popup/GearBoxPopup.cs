@@ -86,6 +86,19 @@ public class GearBoxPopup : PopupBase
     [SerializeField] TextMeshProUGUI _gearDesc;
 
     [Header("닫기")]
+    // ── 여러 상자 (2개 이상일 때만 쓴다, 2026-09-15) ──────────
+    [SerializeField] GameObject        _multiRoot;
+    [SerializeField] Button            _multiButton;
+    [SerializeField] TextMeshProUGUI   _multiHint;
+    [SerializeField] RectTransform[]   _multiSlots;
+    [SerializeField] Image[]           _multiBoxes;
+    [SerializeField] RectTransform[]   _multiLids;
+    [SerializeField] Image[]           _multiLidImages;
+    [SerializeField] GameObject[]      _multiGearRoots;
+    [SerializeField] Image[]           _multiFrames;
+    [SerializeField] Image[]           _multiIcons;
+    [SerializeField] TextMeshProUGUI[] _multiNames;
+
     [SerializeField] Button          _closeBtn;
     [SerializeField] TextMeshProUGUI _closeLabel;
 
@@ -136,6 +149,9 @@ public class GearBoxPopup : PopupBase
 
         _closeBtn.onClick.AddListener(OnConfirm);
         _boxButton.onClick.AddListener(OpenBox);
+
+        // ⚠ 프리팹을 아직 다시 굽지 않았을 수 있다 — 없으면 단일 모드로만 돈다
+        if (_multiButton != null) _multiButton.onClick.AddListener(OpenAllBoxes);
     }
 
     // ── 여러 상자 — 한 창이 차례로 연다 (난이도가 높으면 최대 5개 + 유물) ──
@@ -154,18 +170,32 @@ public class GearBoxPopup : PopupBase
         _queue.Clear();
         _total = 1;
         _stage = stage;
+        if (_multiRoot != null) _multiRoot.SetActive(false);
         Show(gear);
         return this;
     }
 
-    /// <summary>상자 여럿 — 첫 상자부터 [다음 상자] 로 넘긴다. 전부 이미 지급돼 있다.</summary>
+    /// <summary>
+    /// 상자 여럿. 전부 이미 지급돼 있다.
+    ///
+    /// ■ 개수가 방식을 고른다 (사용자 지시, 2026-09-15)
+    ///   하나면 지금까지의 큰 상자 하나, 둘 이상이면 나란히 놓고 **한 번에** 연다.
+    ///   전에는 둘 이상도 [다음 상자] 로 차례로 넘겼다 — 다섯 개를 받으면 같은 연출을
+    ///   다섯 번 보고 다섯 번 눌러야 해서, 보상이 아니라 절차가 됐다.
+    ///
+    /// ⚠ 하나일 때 굳이 격자를 쓰지 않는다
+    ///   큰 상자 하나가 빛살·불꽃·섬광까지 다 쓰는 연출이고, 그게 이 창의 무게다.
+    ///   한 칸짜리 격자로 대신하면 상자 하나를 받은 런이 초라해진다.
+    /// </summary>
     public GearBoxPopup SetupMany(IReadOnlyList<MonsterGearData> gears, int stage)
     {
+        if (gears == null || gears.Count == 0) { Close(); return this; }
+        if (gears.Count == 1 || _multiRoot == null) return Setup(gears[0], stage);
+
         _queue.Clear();
-        for (int i = 1; i < gears.Count; i++) _queue.Add(gears[i]);
         _total = gears.Count;
         _stage = stage;
-        Show(gears[0]);
+        ShowMany(gears);
         return this;
     }
 
@@ -179,19 +209,261 @@ public class GearBoxPopup : PopupBase
         Show(next);
     }
 
+    // ══════════════════════════════════════════════════════════
+    //  여러 상자 — 나란히 놓고 한 번에 연다
+    // ══════════════════════════════════════════════════════════
+
+    /// <summary>격자 한 칸의 크기·간격 — 정본은 GearBoxPopupCreator 다. 여기는 읽기만 한다.</summary>
+    const int MultiCols = 3;
+
+    readonly List<MonsterGearData> _many = new();
+    bool _multiOpening;
+
+    void ShowMany(IReadOnlyList<MonsterGearData> gears)
+    {
+        _many.Clear();
+        for (int i = 0; i < gears.Count && i < _multiSlots.Length; i++) _many.Add(gears[i]);
+
+        _multiOpening = false;
+
+        // 단일 모드 물건은 전부 끈다 — 같은 무대를 쓴다.
+        _boxRoot.SetActive(false);
+        _gearRoot.SetActive(false);
+        _rays.gameObject.SetActive(false);
+        SetGlow(Color.white, 0f, 1f);
+        SetAlpha(_flash, 0f);
+        for (int i = 0; i < _sparks.Length; i++) _sparks[i].gameObject.SetActive(false);
+
+        _multiRoot.SetActive(true);
+        _multiButton.interactable = true;
+        _multiHint.text = "눌러서 모두 열기";
+        _multiHint.gameObject.SetActive(true);
+
+        _titleText.text = LocalizationManager.Instance.Format("스테이지 {0} 보상  ({1}개)", _stage, _many.Count);
+
+        // 등급 줄은 **가장 좋은 상자**를 말한다 — 여럿이라 하나로 줄여야 한다.
+        MonsterGearData best = _many[0];
+        for (int i = 1; i < _many.Count; i++)
+            if ((int)_many[i].Grade > (int)best.Grade) best = _many[i];
+
+        _gradeLine.text  = LocalizationManager.Instance.Format("최고 {0} 상자", GradeStyle.GetLabel(best.Grade));
+        _gradeLine.color = GradeStyle.GetColor(best.Grade);
+
+        LayoutMulti(_many.Count);
+
+        for (int i = 0; i < _multiSlots.Length; i++)
+        {
+            bool used = i < _many.Count;
+            _multiSlots[i].gameObject.SetActive(used);
+            if (!used) continue;
+
+            Color grade = GradeStyle.GetColor(_many[i].Grade);
+
+            // ⚠ 매번 되돌린다 — 팝업은 재사용된다 (단일 모드와 같은 이유)
+            _multiBoxes[i].gameObject.SetActive(true);
+            _multiBoxes[i].color = grade;
+            _multiBoxes[i].rectTransform.anchoredPosition = Vector2.zero;
+            _multiBoxes[i].rectTransform.localScale       = Vector3.one;
+
+            _multiLids[i].gameObject.SetActive(true);
+            _multiLids[i].anchoredPosition = Vector2.zero;
+            _multiLids[i].localRotation    = Quaternion.identity;
+            _multiLidImages[i].color       = grade;
+
+            _multiGearRoots[i].SetActive(false);
+            _multiGearRoots[i].transform.localScale = Vector3.one;
+
+            _multiFrames[i].color = grade;
+
+            _multiIcons[i].sprite  = _many[i].Icon;
+            _multiIcons[i].enabled = _many[i].Icon != null;
+
+            _multiNames[i].text    = _many[i].DisplayName;
+            _multiNames[i].color   = grade;
+            _multiNames[i].enabled = false;          // 열린 뒤에 나온다
+        }
+
+        _closeBtn.gameObject.SetActive(false);
+        _closeLabel.text = "확인";
+
+        if (_idle != null) StopCoroutine(_idle);
+        _idle = StartCoroutine(MultiIdleRoutine());
+    }
+
+    /// <summary>
+    /// 개수만큼 칸을 가운데로 모은다.
+    ///
+    /// ⚠ 굽는 시점에는 개수를 모른다 — 난이도·유물이 정한다.
+    ///   그래서 Creator 는 6칸을 만들어 두고 자리는 여기서 잡는다
+    ///   (ChoicePopup.Recenter 와 같은 문법).
+    /// </summary>
+    void LayoutMulti(int count)
+    {
+        int rows = Mathf.CeilToInt(count / (float)MultiCols);
+
+        float slotW = _multiSlots[0].sizeDelta.x;
+        float slotH = _multiSlots[0].sizeDelta.y;
+        float gapY  = 14f;
+
+        float totalH = rows * slotH + (rows - 1) * gapY;
+        float topY   = totalH * 0.5f - slotH * 0.5f;
+
+        for (int i = 0; i < count; i++)
+        {
+            int row = i / MultiCols;
+            int col = i % MultiCols;
+
+            // 마지막 줄은 남은 개수만큼만 — 4개면 [3][1] 이 아니라 [3] 아래 [1]이 가운데다.
+            int inRow = Mathf.Min(MultiCols, count - row * MultiCols);
+
+            float x = (col - (inRow - 1) * 0.5f) * slotW;
+            float y = topY - row * (slotH + gapY);
+
+            _multiSlots[i].anchoredPosition = new Vector2(x, y);
+        }
+    }
+
+    /// <summary>누르기 전 — 상자 전부가 같이 숨을 쉰다.</summary>
+    IEnumerator MultiIdleRoutine()
+    {
+        float t = 0f;
+
+        while (!_multiOpening)
+        {
+            t += Time.unscaledDeltaTime;
+
+            for (int i = 0; i < _many.Count; i++)
+            {
+                // ⚠ 위상을 칸마다 어긋낸다 — 같이 뛰면 한 덩어리로 보인다
+                float breathe = Mathf.Sin(t * 2.2f + i * 0.5f);
+                _multiSlots[i].localScale = Vector3.one * (1f + breathe * 0.025f);
+            }
+
+            yield return null;
+        }
+    }
+
+    /// <summary>[눌러서 모두 열기] — 전부 한 번에 터진다.</summary>
+    void OpenAllBoxes()
+    {
+        if (_multiOpening) return;
+
+        _multiOpening = true;
+        _multiButton.interactable = false;
+        _multiHint.gameObject.SetActive(false);
+
+        if (_idle != null) { StopCoroutine(_idle); _idle = null; }
+
+        StartCoroutine(OpenAllRoutine());
+    }
+
+    IEnumerator OpenAllRoutine()
+    {
+        // ── ① 전부 함께 흔들린다 ──
+        //
+        //  ⚠ 흔드는 것은 **상자**지 칸이 아니다 — 칸을 흔들면 이름표까지 같이 떨려
+        //    무엇을 받았는지 읽는 줄이 흔들린다.
+        //  ⚠ 단일 상자는 등급마다 세기가 다르다(BoxLook). 여기는 한 창에 등급이
+        //    섞여 있어 하나로 잡는다 — 칸마다 다르게 흔들면 그냥 어수선해 보인다.
+        const float MultiShakeTime = 0.45f;
+
+        float t = 0f;
+        while (t < MultiShakeTime)
+        {
+            t += Time.unscaledDeltaTime;
+            float amp = Mathf.Lerp(3f, 12f, t / MultiShakeTime);
+
+            for (int i = 0; i < _many.Count; i++)
+            {
+                var rt = _multiBoxes[i].rectTransform;
+                rt.anchoredPosition = new Vector2(Random.Range(-amp, amp), Random.Range(-amp, amp));
+            }
+
+            yield return null;
+        }
+
+        // ── ② 뚜껑이 날아가고 장비가 선다 ──
+        //
+        //  ⚠ 칸마다 아주 작은 시차를 준다 (StaggerStep)
+        //    완전히 동시에 터지면 여섯 개가 한 번 번쩍이고 끝이라 무엇이 나왔는지
+        //    눈이 못 따라간다. 0.05초면 "한 번에 열렸다" 는 느낌은 그대로면서
+        //    시선이 왼쪽에서 오른쪽으로 흐른다.
+        const float StaggerStep = 0.05f;
+
+        SetAlpha(_flash, 0.5f);
+
+        for (int i = 0; i < _many.Count; i++)
+        {
+            StartCoroutine(BurstOne(i));
+            yield return new WaitForSecondsRealtime(StaggerStep);
+        }
+
+        // 섬광이 사라진다
+        float f = 0.5f;
+        while (f > 0f)
+        {
+            f -= Time.unscaledDeltaTime * 1.6f;
+            SetAlpha(_flash, Mathf.Max(0f, f));
+            yield return null;
+        }
+
+        yield return new WaitForSecondsRealtime(PopTime);
+
+        _closeBtn.gameObject.SetActive(true);
+    }
+
+    /// <summary>한 칸이 터진다 — 뚜껑이 날고 장비가 튀어나온다.</summary>
+    IEnumerator BurstOne(int i)
+    {
+        var box = _multiBoxes[i].rectTransform;
+        var lid = _multiLids[i];
+
+        box.anchoredPosition = Vector2.zero;
+
+        float dir = Random.value < 0.5f ? -1f : 1f;
+        float t   = 0f;
+
+        _multiGearRoots[i].SetActive(true);
+        _multiNames[i].enabled = true;
+
+        while (t < PopTime)
+        {
+            t += Time.unscaledDeltaTime;
+            float k = t / PopTime;
+
+            // 뚜껑 — 위로 날며 돈다
+            lid.anchoredPosition = new Vector2(dir * 40f * k, 70f * k);
+            lid.localRotation    = Quaternion.Euler(0f, 0f, dir * 90f * k);
+
+            // 상자 — 쪼그라들며 사라진다
+            box.localScale = Vector3.one * Mathf.Max(0f, 1f - k * 1.4f);
+
+            // 장비 — 작게 튀어나온다 (살짝 넘겼다가 제자리)
+            float pop = k < 0.7f ? Mathf.Lerp(0.4f, 1.12f, k / 0.7f)
+                                 : Mathf.Lerp(1.12f, 1f, (k - 0.7f) / 0.3f);
+            _multiGearRoots[i].transform.localScale = Vector3.one * pop;
+
+            yield return null;
+        }
+
+        box.gameObject.SetActive(false);
+        lid.gameObject.SetActive(false);
+        _multiGearRoots[i].transform.localScale = Vector3.one;
+    }
+
     void Show(MonsterGearData gear)
     {
         _gear    = gear;
         _opening = false;
 
         int index = _total - _queue.Count;   // 1부터
-        _titleText.text = _total > 1 ? $"스테이지 {_stage} 보상  ({index}/{_total})"
-                                     : $"스테이지 {_stage} 보상";
+        _titleText.text = _total > 1 ? LocalizationManager.Instance.Format("스테이지 {0} 보상  ({1}/{2})", _stage, index, _total)
+                                     : LocalizationManager.Instance.Format("스테이지 {0} 보상", _stage);
 
         Color   grade = GradeStyle.GetColor(gear.Grade);
         BoxLook look  = LookOf((int)gear.Grade);
 
-        _gradeLine.text  = $"{GradeStyle.GetLabel(gear.Grade)} 상자";
+        _gradeLine.text  = LocalizationManager.Instance.Format("{0} 상자", GradeStyle.GetLabel(gear.Grade));
         _gradeLine.color = grade;
 
         // 상자 자체가 등급색이다 — 열기 전에도 "좋은 것인가" 는 알 수 있다.

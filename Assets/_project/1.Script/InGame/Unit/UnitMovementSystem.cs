@@ -17,6 +17,8 @@ using Unity.Collections;
 //    ③ MoveToDestinationJob    — 목적지로 이동 (병렬)
 //    ④ KnockbackJob            — 넉백 처리 (병렬)
 //
+//  분리 범위: 원이 아니라 **발밑 타원**이다 (SeparationJob.FootSquash)
+//
 //  분리 성능:
 //    셀 크기 1.0f, 3×3 인접 셀 탐색 → 유닛당 평균 비교 4~8회
 //    Burst 병렬 처리 → 200유닛 기준 무시 가능한 오버헤드
@@ -40,7 +42,7 @@ namespace BattleGame.Units
         NativeParallelMultiHashMap<int2, SeparationEntry> _sepGrid;
 
         const float SepCellSize     = 1.0f;  // 그리드 셀 크기
-        const float SepStrength     = 3.0f;  // 밀어내는 힘
+        const float SepStrength     = 3.3f;  // 밀어내는 힘 (2026-09-19 사용자 지시: 3.0 → +10%)
 
         public void OnCreate(ref SystemState state)
         {
@@ -147,6 +149,29 @@ namespace BattleGame.Units
         // 공격 중 밀림 감쇠 — 대규모 전투에서 어택 무빙 방지
         const float AttackingSepScale = 0.1f;
 
+        /// <summary>
+        /// 발밑 타원의 납작 — 세로(깊이) 반지름 ÷ 가로 반지름.
+        ///
+        /// ⚠ 분리 범위는 몸통이 아니라 **발밑 그림자** 다 (사용자 지시, 2026-09-19).
+        ///   원이면 뒤에 설 유닛의 **발**이 앞 유닛의 **머리** 자리에 들어오면서
+        ///   빈 자리가 있는데도 서로를 밀어낸다 — 그림과 판정이 어긋난다.
+        ///   유닛 원점이 이미 발밑이므로(UnitSortingSetup 참고) 자리는 그대로 두고
+        ///   세로만 눌러 타원으로 만든다.
+        ///
+        /// ⚠ 가로는 건드리지 않는다 — 좌우로 겹치면 그림이 그대로 포개진다.
+        /// ⚠ 공격 사거리와 무관하다 — 사거리는 중심 사이 거리를 본다(UnitAttackSystem).
+        ///   이 값을 내리면 유닛이 세로로 더 빽빽하게 서므로 라인 밀도만 올라간다.
+        /// </summary>
+        const float FootSquash = 0.4f;
+
+        /// <summary>
+        /// 밀어내는 범위 배율 — 반지름 합에 곱한다 (사용자 지시, 2026-09-19: +10%).
+        ///
+        /// ⚠ 두 축에 함께 걸린다 — 타원의 모양(FootSquash)은 그대로고 크기만 커진다.
+        /// ⚠ UnitSizeComponent.Radius 를 키우지 않는다 — 그 값은 보스 AoE·광폭화도 읽는다.
+        /// </summary>
+        const float SepRangeMult = 1.1f;
+
         public void Execute(Entity entity, ref LocalTransform transform,
                             in UnitSizeComponent size, in UnitStateComponent unitState)
         {
@@ -166,9 +191,13 @@ namespace BattleGame.Units
                 {
                     if (entry.Entity == entity) continue;
 
-                    float  pushDist = myRadius + entry.Radius;
+                    float  pushDist = (myRadius + entry.Radius) * SepRangeMult;
+
+                    // 발밑 타원 — 세로를 FootSquash 로 나눠 **원 문제로 환산**하여 푸는 것이다.
+                    //   뒤에서 밀어낼 때는 그만큼 더 가까워져야 겹친다.
                     float3 diff     = transform.Position - entry.Position;
-                    float  distSq   = math.lengthsq(diff);
+                    float2 s        = new float2(diff.x, diff.y / FootSquash);
+                    float  distSq   = math.lengthsq(s);
 
                     if (distSq > 0.0001f && distSq < pushDist * pushDist)
                     {
@@ -179,7 +208,12 @@ namespace BattleGame.Units
                         // push 비율 = otherMass / (myMass + otherMass)
                         float otherMass  = math.max(entry.Mass, 0.01f);
                         float massRatio  = otherMass / (myMass + otherMass);
-                        push += diff / dist * overlap * Strength * massRatio;
+
+                        // 환산한 공간에서 밀고 세로를 다시 곱해 원래 공간으로 돌린다 —
+                        // 안 돌리면 위아래로 겹쳤을 때 타원 높이의 1/FootSquash 배만큼 튀어나간다.
+                        float2 dir = s / dist;
+                        push += new float3(dir.x, dir.y * FootSquash, 0f)
+                                * (overlap * Strength * massRatio);
                     }
                 }
                 while (Grid.TryGetNextValue(out entry, ref it));
@@ -484,7 +518,7 @@ namespace BattleGame.Units
     /// <summary>
     /// 이동·분리·넉백이 모두 끝난 뒤 실행.
     /// 유닛이 화면에 한 번이라도 진입하면 이후로는 화면 밖으로 밀리지 않는다.
-    /// 미진입 상태에서 화면 외곽 4칸 이상 벗어나면 즉시 사망 처리한다.
+    /// 미진입 상태로 화면 외곽 밖에 일정 시간 머물면 사망 처리한다 (걸어 들어오는 중은 봐준다).
     /// Camera.main 이 없거나 Perspective 카메라면 동작하지 않는다.
     /// </summary>
     [UpdateInGroup(typeof(SimulationSystemGroup))]
@@ -549,6 +583,10 @@ namespace BattleGame.Units
                 //   이 규칙의 목적은 '전투 중 넉백으로 화면 밖에 영구 방치되는 유닛 정리' 다.
                 KillOutOfBounds = BattleManager.Instance != null
                                && BattleManager.Instance.IsWaveRunning,
+
+                // 유예 시간을 재는 잣대. 배속을 그대로 탄다 — 2배속이면 유예도 2배 빨리 흐르고,
+                // 걸어 들어오는 속도도 2배라 결과가 같다.
+                DeltaTime = SystemAPI.Time.DeltaTime,
             }.ScheduleParallel();
         }
     }
@@ -563,6 +601,9 @@ namespace BattleGame.Units
 
         /// <summary>화면 밖 사망 판정 사용 여부. 웨이브 진행 중에만 true.</summary>
         public bool KillOutOfBounds;
+
+        /// <summary>이번 프레임 경과 시간. 유예 시간을 쌓는 데 쓴다.</summary>
+        public float DeltaTime;
 
         /// <summary>
         /// 화면에 한 번도 안 들어온 유닛이 이만큼 벗어나 있으면 즉시 사망 처리한다.
@@ -579,7 +620,29 @@ namespace BattleGame.Units
         ///
         ///   ⚠ 셋 중 하나라도 손대면 나머지를 다시 계산할 것 —
         ///     카메라 orthographicSize · HeroX · 이 값.
+        ///
+        ///   ⚠ 거리만으로는 못 막는다 — 부대가 스테이지를 따라 **커진다**
+        ///     (사용자 지적, 2026-09-15 — "25스테이지쯤부터 적이 생기자마자 죽는다")
+        ///     병사는 스폰 자리에서 오른쪽으로 격자를 이루며 선다
+        ///     (HeroSpawner.SoldierRowSpacing 0.7 · GeneralRuntimeBridge.RowSpacing 0.7).
+        ///     병사 수는 스테이지마다 부대당 +1 이라(LevelFlatSoldierCountPerLevel)
+        ///     25스테이지에는 한 부대가 30기 남짓, 격자가 6열 6행이 된다 —
+        ///     뒷줄이 x = 24 + 6×0.7 = 28.2 로 허용(27.33)을 넘어 **세워지자마자 즉사**했다.
+        ///     거리를 넓혀도 다음 스테이지에 다시 넘는다. 그래서 유예 시간으로 바꿨다.
         const float OutOfBoundsKillDist = 6f;
+
+        /// <summary>
+        /// 허용 범위 밖에 <b>연속으로</b> 이만큼 머물면 그때 사망 처리한다.
+        ///
+        /// ■ 왜 시간인가 — 이 규칙이 잡으려는 것은 거리가 아니라 '방치' 다
+        ///   목적은 "대형 넉백으로 화면 밖에 영구히 남은 유닛 정리" 다. 걸어 들어오는
+        ///   중인 유닛과 영영 안 돌아오는 유닛은 **거리로는 같고 시간으로는 다르다.**
+        ///   스폰 자리가 화면 밖인 한 거리 기준은 부대가 커질 때마다 다시 터진다.
+        ///
+        /// ⚠ 4초면 넉넉하다 — 유예가 끝나는 조건은 '화면 진입' 이 아니라
+        ///   '허용 범위 복귀' 다. 뒷줄 병사가 되돌아와야 하는 거리는 1~2 남짓이라
+        ///   보통 1초 안에 풀린다. 진짜로 방치된 유닛만 4초를 채운다.
+        const float OutOfBoundsGraceSeconds = 4f;
 
         public void Execute(
             [ChunkIndexInQuery] int    chunkIndex,
@@ -614,13 +677,25 @@ namespace BattleGame.Units
             }
             else if (KillOutOfBounds)
             {
-                // 미진입 상태에서 허용 범위 초과 시 즉시 사망 처리 (웨이브 중에만)
+                // 미진입 상태에서 허용 범위를 벗어나 있으면 시간을 쌓는다 (웨이브 중에만).
                 bool outX = x < Min.x - OutOfBoundsKillDist || x > Max.x + OutOfBoundsKillDist;
                 bool outY = y < Min.y - OutOfBoundsKillDist || y > Max.y + OutOfBoundsKillDist;
+
                 if (outX || outY)
                 {
-                    health.CurrentHp = 0f;
-                    Ecb.AddComponent<DeadTag>(chunkIndex, entity);
+                    screen.OutOfBoundsSeconds += DeltaTime;
+
+                    // 유예를 다 쓴 것 — 스스로 돌아올 생각이 없는 개체다.
+                    if (screen.OutOfBoundsSeconds >= OutOfBoundsGraceSeconds)
+                    {
+                        health.CurrentHp = 0f;
+                        Ecb.AddComponent<DeadTag>(chunkIndex, entity);
+                    }
+                }
+                else
+                {
+                    // 범위 안으로 돌아왔다 — 처음부터 다시 잰다 (누적이 아니다).
+                    screen.OutOfBoundsSeconds = 0f;
                 }
             }
         }

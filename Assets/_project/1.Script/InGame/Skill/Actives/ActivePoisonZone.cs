@@ -18,6 +18,9 @@ public class ActivePoisonZone : ActiveSkillZoneBase
     protected override float DefaultRadius   => 2.5f;
     protected override float DefaultDuration => 6f;
 
+    // 역병 술사 시그니처 — 0.5초마다 대상 최대 체력 비례 × 패기 (SignatureDamageRule)
+    protected override float SignatureTickRatio => SignatureDamageRule.PoisonTickRatio;
+
     protected override void ConfigureDebuffs(ref SkillZoneRunner.ZoneConfig config)
     {
         config.HasDebuff1    = true;

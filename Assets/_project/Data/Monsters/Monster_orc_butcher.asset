@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3293ffc88440014396a89c49aab65b7, type: 3}
+  m_Name: Monster_orc_butcher
+  m_EditorClassIdentifier: 
+  Id: orc_butcher
+  DisplayName: "\uC624\uD06C \uB3C4\uC0B4\uC790"
+  BodyType: 0
+  Race: 0
+  NonHumanoidLibrary: {fileID: 0}
+  BodyTint: {r: 0.89411765, g: 0.8156863, b: 0.7137255, a: 1}
+  BodyScale: 1.25
+  BodyStretch: {x: 1, y: 1}
+  Mark: 0
+  PoolKey: Monster
+  LineageIcon: {fileID: 0}
+  ManaCost: 10
+  SummonCount: 3
+  AttackKind: 0
+  Projectile: 0
+  ProjectileSpeed: 0
+  Traits: 10
+  Tags: 272
+  Description: "\uCEE4\uB2E4\uB780 \uC2DD\uCE7C\uC744 \uD718\uB450\uB978\uB2E4. \uCCB4\uB825\uC774
+    \uB0AE\uC740 \uC801\uC740 \uBC18\uB4DC\uC2DC \uAE09\uC18C\uB97C \uB9DE\uB294\uB2E4."
+  MaxHp: 230
+  Attack: 48
+  AttackRange: 1.4
+  AttackSpeed: 0.75
+  MoveSpeed: 2.2
+  Defense: 0.1
+  CritChance: 0.05
+  CritDamage: 1.5
+  SummonPowerToHp: 1
+  SummonPowerToAttack: 1.4
+  UpgradeOf: {fileID: 11400000, guid: b7ed4536c2c31bd4cba91a06df7843b0, type: 2}
+  AlsoUpgradeOf: []
+  SpeciesTrait: 45
+  ExtraTraits: 
+  BlockedInherit: 
+  ActiveSkill: 0
+  Passives: 
+  BroodSpecies: {fileID: 0}
+  BroodCount: 0
+  BroodCooldown: 0
+  LevelBonuses:
+  - Label: "\uBB35\uC9C1\uD55C \uCE7C"
+    Stat1: 2
+    Value1: 0.15
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 0
+  - Label: "\uD53C\uBC94\uBC85 \uC55E\uCE58\uB9C8"
+    Stat1: 0
+    Value1: 0.12
+    HasStat2: 1
+    Stat2: 7
+    Value2: 0.15
+    Passive: 0
+  - Label: "\uB3C4\uCD95"
+    Stat1: 2
+    Value1: 0.12
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 26
+  - Label: "\uD559\uC0B4\uC790"
+    Stat1: 2
+    Value1: 0.2
+    HasStat2: 1
+    Stat2: 6
+    Value2: 0.06
+    Passive: 0
+  SignaturePassive: 26
+  SummonDelay: 0.1
+  SummonCircleEffectKey: FX_Summon_Circle

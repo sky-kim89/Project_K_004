@@ -15,7 +15,7 @@ using UnityEngine.UI;
 //    구 RelicPopup.prefab 은 반드시 지울 것.
 //
 //  ■ 화면
-//    Header  H=136   ◆ 유물 전승도    [찍은 노드 · 투자]    [보유 pt]  [닫기]
+//    Header  H=136   ◆ 유물 전승도    [찍은 노드 · 투자]    [보유 pt] [i] [닫기]
 //    Body            트리 캔버스 (드래그 이동 · 휠/핀치 확대)
 //      └ Tooltip     좌하단 — 노드를 누르면 뜬다
 //    Footer  H=100   트리 초기화 (좌)                        환생 (우, 조건 미달이면 숨김)
@@ -37,6 +37,16 @@ public static class RelicTreePopupCreator
     const float HeaderH = 136f;
     const float FooterH = 100f;
     const float SidePad =  32f;
+
+    // 헤더 한 줄 나누기 — [◆ 제목][ 요약 ][포인트][✕]
+    //   포인트 칸 왼쪽 끝 = 1920 − PointRight − 320 (PointGroup 자리와 같은 값)
+    const float TitleLeft   = SidePad + 36f;
+    const float TitleW      = 470f;
+    // 포인트 칸의 오른쪽 끝 — 닫기(76) · 간격 · 도움말 i(76) 뒤에 선다
+    const float PointRight  = SidePad + 196f;
+    const float PointLeftX  = 1920f - PointRight - 320f;
+    const float SummaryLeft = TitleLeft + TitleW + 24f;
+    const float SummaryW    = PointLeftX - 24f - SummaryLeft;
 
     // 노드 카드 — 가로는 RelicTreePopup.Spacing(280) 미만이어야 한다
     //
@@ -150,18 +160,24 @@ public static class RelicTreePopupCreator
         var tRt = title.rectTransform;
         tRt.anchorMin = tRt.anchorMax = new Vector2(0f, 0.5f);
         tRt.pivot     = new Vector2(0f, 0.5f);
-        tRt.anchoredPosition = new Vector2(SidePad + 36f, 0f);
-        tRt.sizeDelta        = new Vector2(560f, UIScale.RowLg);
+        tRt.anchoredPosition = new Vector2(TitleLeft, 0f);
+        tRt.sizeDelta        = new Vector2(TitleW, UIScale.RowLg);
+        title.textWrappingMode = TextWrappingModes.NoWrap;
 
-        // 진행 요약 — 헤더 한가운데. 포인트 옆에 붙이면 두 수치가 한 덩어리로 읽힌다.
+        // 진행 요약 — 제목 칸 끝과 포인트 칸 앞 **사이**에 선다.
+        //  ⚠ 칸끼리 좌표가 겹치지 않게 잡는다 (사용자 지적, 2026-09-17)
+        //    예전엔 제목(560)과 가운데 정렬 요약(760)이 x 580~596 에서 이미 겹쳐 있었다.
+        //    한국어는 글이 짧아 안 드러났고, 스페인어 "Legado de reliquias" 가 요약 위에 그려졌다.
+        //    이제 셋(제목·요약·포인트)이 한 줄을 나눠 쓰고, 긴 번역은 각 칸 안에서 줄어든다.
         var summary = EditorUIBuilder.TMP(header, "SummaryText", "찍은 노드 0 / 0", UIScale.FontMd,
                                           FontStyles.Normal);
         summary.color = SubColor;
+        summary.textWrappingMode = TextWrappingModes.NoWrap;
         var sRt = summary.rectTransform;
-        sRt.anchorMin = sRt.anchorMax = new Vector2(0.5f, 0.5f);
-        sRt.pivot     = new Vector2(0.5f, 0.5f);
-        sRt.anchoredPosition = Vector2.zero;
-        sRt.sizeDelta        = new Vector2(760f, UIScale.RowMd);
+        sRt.anchorMin = sRt.anchorMax = new Vector2(0f, 0.5f);
+        sRt.pivot     = new Vector2(0f, 0.5f);
+        sRt.anchoredPosition = new Vector2(SummaryLeft, 0f);
+        sRt.sizeDelta        = new Vector2(SummaryW, UIScale.RowMd);
         EditorUIBuilder.SetObj(so, "_summaryText", summary, "RelicTreePopupCreator");
 
         // 보유 포인트 — 아이콘 + 숫자
@@ -170,7 +186,7 @@ public static class RelicTreePopupCreator
         var pRt = purse.GetComponent<RectTransform>();
         pRt.anchorMin = pRt.anchorMax = new Vector2(1f, 0.5f);
         pRt.pivot     = new Vector2(1f, 0.5f);
-        pRt.anchoredPosition = new Vector2(-(SidePad + 120f), 0f);
+        pRt.anchoredPosition = new Vector2(-PointRight, 0f);
         pRt.sizeDelta        = new Vector2(320f, 64f);
 
         var icon = EditorUIBuilder.Img(purse, "PtIcon", Color.white);
@@ -201,6 +217,9 @@ public static class RelicTreePopupCreator
         cRt.sizeDelta        = new Vector2(76f, 76f);
         EditorUIBuilder.XMark(closeBody, "X", 30f, Color.white);
         EditorUIBuilder.SetObj(so, "_closeBtn", close, "RelicTreePopupCreator");
+
+        // 도움말 — 닫기 버튼 왼쪽
+        EditorUIBuilder.InfoBtn(header, TutorialId.HelpRelic, 76f, -SidePad);
     }
 
     // ── 트리 캔버스 ──────────────────────────────────────────

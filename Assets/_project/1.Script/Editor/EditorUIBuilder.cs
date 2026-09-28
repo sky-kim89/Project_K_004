@@ -62,6 +62,8 @@ public static class EditorUIBuilder
         tmp.fontSize  = size;
         tmp.fontStyle = style;
         tmp.color     = Color.white;
+        // 현지화 — 구운 문구를 런타임에 번역한다 (원작 로컬라이징 패치 이식, 2026-09-16)
+        go.AddComponent<LocalizedText>();
         if (center) tmp.alignment = TextAlignmentOptions.Center;
         return tmp;
     }
@@ -84,6 +86,7 @@ public static class EditorUIBuilder
         tmp.fontStyle = boldLabel ? FontStyles.Bold : FontStyles.Normal;
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.color     = Color.white;
+        labelGo.AddComponent<LocalizedText>();   // 현지화 (TMP 와 같은 이유)
         return go;
     }
 
@@ -270,6 +273,162 @@ public static class EditorUIBuilder
         cb.fadeDuration     = 0.08f;
         btn.colors = cb;
         return btn;
+    }
+
+    /// <summary>
+    /// [라벨] ──── [드롭다운] 한 줄. 언어 선택처럼 목록에서 고르는 설정 행에 쓴다.
+    ///
+    /// ⚠ 원작 로컬라이징 패치에서 가져왔다 (2026-09-16) — 그쪽 RaisedSurface 대신
+    ///   이 프로젝트의 입체 구성(그림자 + Body + 모서리 두 줄)을 인라인으로 만든다.
+    /// ⚠ 드롭다운 루트에 RaisedBtn 을 쓰지 않는다 — Button 과 TMP_Dropdown 이 겹쳐
+    ///   같은 자리에 선택 요소가 둘이 된다.
+    /// </summary>
+    public static TMP_Dropdown LabeledDropdown(
+        GameObject parent, string name, string label, float yFromTop, float height,
+        float sidePad, float dropdownWidth = 480f)
+    {
+        var row = Panel(parent, name, Pop.SlotBg);
+        AnchorTop(row.GetComponent<RectTransform>(), yFromTop, height, sidePad * 2f);
+
+        var rowLabel = TMP(row, "Label", label, UIScale.FontSm, FontStyles.Bold);
+        rowLabel.color            = Color.white;
+        rowLabel.alignment        = TextAlignmentOptions.MidlineLeft;
+        rowLabel.raycastTarget    = false;
+        rowLabel.textWrappingMode = TextWrappingModes.NoWrap;
+        rowLabel.overflowMode     = TextOverflowModes.Ellipsis;
+        var labelRt = rowLabel.rectTransform;
+        labelRt.anchorMin = Vector2.zero;
+        labelRt.anchorMax = Vector2.one;
+        labelRt.offsetMin = new Vector2(28f, 0f);
+        labelRt.offsetMax = new Vector2(-(dropdownWidth + 40f), 0f);
+
+        var resources = new TMP_DefaultControls.Resources
+        {
+            standard   = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd"),
+            background = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Background.psd"),
+            inputField = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/InputFieldBackground.psd"),
+            knob       = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd"),
+            checkmark  = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Checkmark.psd"),
+            dropdown   = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/DropdownArrow.psd"),
+            mask       = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UIMask.psd"),
+        };
+
+        GameObject dropdownGo = TMP_DefaultControls.CreateDropdown(resources);
+        dropdownGo.name = "Dropdown";
+        dropdownGo.transform.SetParent(row.transform, false);
+        var dropdownRt = dropdownGo.GetComponent<RectTransform>();
+        dropdownRt.anchorMin = dropdownRt.anchorMax = new Vector2(1f, 0.5f);
+        dropdownRt.pivot = new Vector2(1f, 0.5f);
+        dropdownRt.anchoredPosition = Vector2.zero;
+        dropdownRt.sizeDelta = new Vector2(dropdownWidth, height);
+
+        var dropdown  = dropdownGo.GetComponent<TMP_Dropdown>();
+        var rootImage = dropdownGo.GetComponent<Image>();
+        rootImage.color         = Color.clear;
+        rootImage.raycastTarget = false;
+
+        // 입체 면 — RaisedBtnOn 과 같은 모양이되 Button 은 붙이지 않는다 (UI 규칙 1)
+        Color face   = new(0.18f, 0.34f, 0.58f, 1f);
+        var   shadow = Go("Shadow", dropdownGo);
+        var   shImg  = shadow.AddComponent<Image>();
+        shImg.color         = Color.Lerp(face, Color.black, 0.82f);
+        shImg.raycastTarget = false;
+        Stretch(shadow);
+        shadow.transform.SetSiblingIndex(0);
+
+        var body = Go("Body", dropdownGo);
+        body.AddComponent<Image>().color = face;
+        var bodyRt = body.GetComponent<RectTransform>();
+        bodyRt.anchorMin = Vector2.zero;                 bodyRt.anchorMax = Vector2.one;
+        bodyRt.offsetMin = new Vector2(0f, BtnLift);     bodyRt.offsetMax = Vector2.zero;
+        body.transform.SetSiblingIndex(1);
+
+        BtnEdge(body, "TopEdge",    Color.Lerp(face, Color.white, 0.30f), true,  2f);
+        BtnEdge(body, "BottomEdge", Color.Lerp(face, Color.black, 0.45f), false, 4f);
+
+        dropdown.targetGraphic = body.GetComponent<Image>();
+        var colors = dropdown.colors;
+        colors.normalColor      = Color.white;
+        colors.highlightedColor = TintFor(Color.Lerp(face, Color.white, 0.14f), face);
+        colors.pressedColor     = TintFor(Color.Lerp(face, Color.black, 0.28f), face);
+        colors.selectedColor    = Color.white;
+        colors.disabledColor    = TintFor(Color.Lerp(face, Color.black, 0.45f), face);
+        colors.fadeDuration     = 0.08f;
+        dropdown.colors = colors;
+
+        dropdown.captionText.fontSize          = UIScale.FontSm;
+        dropdown.captionText.fontStyle         = FontStyles.Bold;
+        dropdown.captionText.color             = Color.white;
+        dropdown.captionText.alignment         = TextAlignmentOptions.MidlineLeft;
+        dropdown.captionText.raycastTarget     = false;
+        dropdown.captionText.textWrappingMode  = TextWrappingModes.NoWrap;
+        dropdown.captionText.overflowMode      = TextOverflowModes.Ellipsis;
+        var captionRt = dropdown.captionText.rectTransform;
+        captionRt.offsetMin = new Vector2(20f, 0f);
+        captionRt.offsetMax = new Vector2(-58f, 0f);
+
+        var arrow = dropdownGo.transform.Find("Arrow").GetComponent<Image>();
+        arrow.color         = Color.white;
+        arrow.raycastTarget = false;
+        arrow.rectTransform.sizeDelta        = new Vector2(28f, 18f);
+        arrow.rectTransform.anchoredPosition = new Vector2(-22f, 0f);
+
+        // ⚠ 목록 칸은 RowMd 다 — RowSm 으로는 **한자·가나가 통째로 사라진다**
+        //   (사용자 지적, 2026-09-16 — "높이 사이즈가 안 맞아서 안 나오는 거였어")
+        //
+        //   UIScale.Line 의 "폰트 × 1.25" 는 라틴·한글 기준이다. 한자·가나는 글자 상자를
+        //   꽉 채워 그보다 높다 — FontSm(34) 에 RowSm(43) 을 주면 그 줄만 잘린다.
+        //
+        //   ⚠ 증상이 지독하다 — 잘린 줄이 **빈칸**으로 보여 "폰트에 그 글자가 없다" 로 읽힌다.
+        //     캡션 줄은 칸(togH)이 넉넉해 멀쩡히 나오므로 더 헷갈린다. 실제로 이 자리를
+        //     폰트 문제로 오진해 폴백 폰트를 두 번 갈아엎었다.
+        //
+        //   ⚠ 라벨만 위아래로 넓혀서 때우지 말 것 — 칸 밖으로 넘쳐 위아래 줄과 겹친다.
+        //     넓혀야 하는 것은 **칸**이다.
+        //
+        //   ⚠ 글자를 FontMd 이상으로 올리면 이 값도 함께 올릴 것 (RowLg).
+        float itemH = UIScale.RowMd;
+
+        var template = dropdown.template;
+        template.sizeDelta = new Vector2(0f, itemH * 6f);
+        template.GetComponent<Image>().color = Pop.PanelBg;
+
+        var item    = template.Find("Viewport/Content/Item").GetComponent<RectTransform>();
+        item.sizeDelta = new Vector2(0f, itemH);
+        var content = item.parent.GetComponent<RectTransform>();
+        content.sizeDelta = new Vector2(0f, itemH);
+
+        dropdown.itemText.fontSize         = UIScale.FontSm;
+        dropdown.itemText.fontStyle        = FontStyles.Normal;
+        dropdown.itemText.color            = Color.white;
+        dropdown.itemText.alignment        = TextAlignmentOptions.MidlineLeft;
+        dropdown.itemText.raycastTarget    = false;
+        dropdown.itemText.textWrappingMode = TextWrappingModes.NoWrap;
+        dropdown.itemText.overflowMode     = TextOverflowModes.Ellipsis;
+        dropdown.itemText.rectTransform.offsetMin = new Vector2(44f, 0f);
+        dropdown.itemText.rectTransform.offsetMax = new Vector2(-10f, 0f);
+
+        var toggle         = item.GetComponent<Toggle>();
+        var itemBackground = toggle.targetGraphic.GetComponent<Image>();
+        itemBackground.color = Color.white;
+        var itemColors = toggle.colors;
+        itemColors.normalColor      = Pop.SlotBg;
+        itemColors.highlightedColor = new Color(0.20f, 0.30f, 0.50f, 1f);
+        itemColors.pressedColor     = new Color(0.12f, 0.20f, 0.36f, 1f);
+        itemColors.selectedColor    = new Color(0.18f, 0.34f, 0.58f, 1f);
+        toggle.colors = itemColors;
+        toggle.graphic.GetComponent<Image>().color = new Color(0.50f, 0.82f, 1f, 1f);
+
+        var checkmarkRt = toggle.graphic.rectTransform;
+        checkmarkRt.sizeDelta        = new Vector2(26f, 26f);
+        checkmarkRt.anchoredPosition = new Vector2(18f, 0f);
+
+        var scrollbar = template.Find("Scrollbar").GetComponent<Scrollbar>();
+        scrollbar.GetComponent<Image>().color = new Color(0.08f, 0.10f, 0.18f, 1f);
+        scrollbar.targetGraphic.color         = new Color(0.32f, 0.52f, 0.80f, 1f);
+
+        dropdown.ClearOptions();
+        return dropdown;
     }
 
     /// <summary>가운데 라벨이 있는 입체 버튼.</summary>

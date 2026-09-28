@@ -321,6 +321,13 @@ public class CardSelectPopup : PopupBase
     /// <summary>증가분 색 — "얻는 것" 줄과 같은 금색이다.</summary>
     const string GainHex = "FFD34A";
 
+    /// <summary>
+    /// "체력 31,000 › 35,000" — 지금 값과 고른 뒤의 값 (둘 다 런 합성 값).
+    /// 몬스터 상세의 "99 › 109" 와 같은 모양이다 — 뒤 숫자만 금색이라 무엇이 오르는지 먼저 읽힌다.
+    /// </summary>
+    static string StatGrowing(string label, float now, float after)
+        => Stat(label, now) + $" <color=#{GainHex}>› {after:0}</color>";
+
     void Bind(OptionView view, in CardRewardOption option, CardCatalog catalog, int index)
     {
         Sprite icon = null;
@@ -410,7 +417,7 @@ public class CardSelectPopup : PopupBase
         icon = (_synergyIcons != null && index >= 0 && index < _synergyIcons.Length)
              ? _synergyIcons[index] : null;
 
-        name = $"{MonsterSynergyRule.NameOf(tag)} 강화";
+        name = LocalizationManager.Instance.Format("{0} 강화", MonsterSynergyRule.NameOf(tag));
 
         int    after = MonsterSynergyRule.CountOf(tag) + MonsterSynergyRule.BoostCount;
         int    step  = MonsterSynergyRule.NextStepAt(tag);
@@ -452,11 +459,25 @@ public class CardSelectPopup : PopupBase
         name = species.DisplayName;
         desc = DescribeSpecies(species);
 
-        view.ManaText.text  = species.ManaCost.ToString("0.#");
-        view.CountText.text = species.SummonCount.ToString();
+        // ⚠ 마나·마릿수·스탯은 **지금 이 런의 값**이다 (사용자 지시, 2026-09-15)
+        //   종족 원본(마나 14 · 체력 6000)을 적었더니 도감·전황의 몬스터 상세와 숫자가 달랐다 —
+        //   시너지·특성·장비·레벨 표가 하나도 안 들어간 값이었다. 상세 창(런 모드)과 같은 함수를 지난다.
+        SummonerData   summoner = SummonerRuntimeBridge.Current != null ? SummonerRuntimeBridge.Current.Data : null;
+        var            deck     = UserDataManager.Instance.Get<SummonDeckData>();
+        int            deckAt   = deck.IndexOf(species.Id);
+        SummonDeckSlot deckSlot = deckAt >= 0 ? deck.GetSlot(deckAt) : SummonDeckSlot.Empty;
+
+        int count = summoner != null
+                  ? RunPerkRule.SummonCountFor(summoner, species) + deckSlot.ExtraSummons
+                  : species.SummonCount;
+
+        view.ManaText.text  = summoner != null
+                            ? $"{SummonCostRule.CostFor(species.Id, SummonerPerkRuntime.ManaCostFor(summoner, species, deckSlot))}"
+                            : species.ManaCost.ToString("0.#");
+        view.CountText.text = count.ToString();
 
         // 한 마리짜리에 "1" 을 띄우면 정보가 아니라 잡음이다 (하단 카드와 같은 규칙).
-        view.CountRoot.SetActive(species.SummonCount > 1);
+        view.CountRoot.SetActive(count > 1);
 
         bool ranged = species.AttackKind == MonsterAttackKind.Ranged;
         view.KindText.text  = ranged ? "원거리" : "근접";
@@ -471,8 +492,34 @@ public class CardSelectPopup : PopupBase
         //   갈림길이 열릴 뿐인데, 그 줄이 "+38" 을 달고 있으면 "진화를 누르면
         //   공·체가 오른다" 로 읽힌다 — 실제로는 오르지 않는다.
         //   그래서 레벨 몫까지 더한 **지금 값** 하나만 적는다.
-        if (option.IsMaxed)
+        if (summoner != null)
         {
+            // ⚠ 몬스터 상세(런 모드 · MonsterDetailPopup.ComposeNow)와 **같은 합성**이다 — 숫자가 갈리지 않는다
+            var       codex = UserDataManager.Instance.Get<MonsterCodexData>();
+            UnitGrade grade = codex.IsUnlocked(species.Id) ? codex.GetGrade(species.Id) : UnitGrade.Normal;
+
+            UnitStat after = MonsterStatComposer.Compose(species, summoner, grade, option.ResultLevel,
+                                                         lane: -1, inherit: deckSlot.InheritBonus);
+
+            if (option.LevelsUp)
+            {
+                // 레벨이 오르는 카드 — "지금 › 고른 뒤"
+                UnitStat now = MonsterStatComposer.Compose(species, summoner, grade, option.CurrentLevel,
+                                                           lane: -1, inherit: deckSlot.InheritBonus);
+
+                view.StatText .text = StatGrowing("공격력", now.Get(StatType.Attack), after.Get(StatType.Attack));
+                view.StatText2.text = StatGrowing("체력",   now.Get(StatType.MaxHp),  after.Get(StatType.MaxHp));
+            }
+            else
+            {
+                // 새 카드 · 만렙 — 고른 뒤의 값 하나 (만렙은 레벨이 안 오르므로 "+N" 을 적지 않는다)
+                view.StatText .text = Stat("공격력", after.Get(StatType.Attack));
+                view.StatText2.text = Stat("체력",   after.Get(StatType.MaxHp));
+            }
+        }
+        else if (option.IsMaxed)
+        {
+            // 소환사가 아직 없다(런 밖) — 종족 값으로 떨어진다
             float ratio = 1f + CardLevelRule.StatBonusRatio(option.ResultLevel);
 
             view.StatText .text = Stat("공격력", species.Attack * ratio);
@@ -673,7 +720,7 @@ public class CardSelectPopup : PopupBase
             //   함께 적어야 "지금 고르면 무엇이 되는가" 가 정확해진다.
             int left = CardLevelRule.CopiesToNextLevel(option.CopiesAfter);
 
-            view.StateText.text  = $"Lv.{option.CurrentLevel}  ({left}장 더)";
+            view.StateText.text  = LocalizationManager.Instance.Format("Lv.{0}  ({1}장 더)", option.CurrentLevel, left);
             view.StateText.color = ProgressColor;
             return;
         }
@@ -716,8 +763,8 @@ public class CardSelectPopup : PopupBase
         //    둘 다 화면이 이미 말하는 것을 대신 계산해 준 것이다 — 현재 개수와
         //    문턱은 상단 시너지 줄에 늘 떠 있다. **판단은 플레이어가 한다.**
         if (option.IsSynergyBoost)
-            return $"{MonsterSynergyRule.NameOf(option.BoostTag)} 카운트 " +
-                   $"+{MonsterSynergyRule.BoostCount}";
+            return LocalizationManager.Instance.Format("{0} 카운트 +{1}",
+                   MonsterSynergyRule.NameOf(option.BoostTag), MonsterSynergyRule.BoostCount);
 
         // ⚠ 만렙 카드는 빈 칸으로 두지 않는다
         //   아래 구역에 바탕이 깔려 있어서(RunPopupCreator.BuildGainBackdrop),
@@ -732,7 +779,7 @@ public class CardSelectPopup : PopupBase
             MonsterSpeciesData from = catalog.GetMonster(option.EvolveFromId);
             string fromName = from != null ? from.DisplayName : option.EvolveFromId;
 
-            return $"{fromName} › 진화 (Lv.1 부터 다시)";
+            return LocalizationManager.Instance.Format("{0} › 진화 (Lv.1 부터 다시)", fromName);
         }
 
         if (option.IsMaxed) return "고르면 진화·융합 갈림길이 열린다";
@@ -749,7 +796,7 @@ public class CardSelectPopup : PopupBase
 
         if (string.IsNullOrEmpty(body)) return string.Empty;
 
-        return option.LevelsUp ? body : $"다음: {body}";
+        return option.LevelsUp ? body : LocalizationManager.Instance.Format("다음: {0}", body);
     }
 
     /// <summary>그 레벨 칸이 여는 스탯·패시브. 표가 비어 있으면 빈 문자열.</summary>
@@ -781,7 +828,7 @@ public class CardSelectPopup : PopupBase
 
         if (Mathf.Approximately(before, after)) return string.Empty;
 
-        return $"위력 ×{before:0.##} → ×{after:0.##}";
+        return LocalizationManager.Instance.Format("위력 ×{0:0.##} → ×{1:0.##}", before, after);
     }
 
     /// <summary>

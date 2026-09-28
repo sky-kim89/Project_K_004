@@ -42,15 +42,16 @@ MonoBehaviour:
   SkillUsesPerStage: 1
   SignatureSummonSpecies: {fileID: 11400000, guid: b7ed4536c2c31bd4cba91a06df7843b0, type: 2}
   SignatureSummonCount: 2
-  ListOrder: 7
+  ListOrder: 2
   Unlocks:
-  - Kind: 0
-    Value: 10
-    SpeciesIds: []
+  - Kind: 1
+    Value: 0
+    SpeciesIds:
+    - war_orc
     Traits: 0
   StarterMonsters:
   - {fileID: 11400000, guid: b7ed4536c2c31bd4cba91a06df7843b0, type: 2}
-  - {fileID: 11400000, guid: d1e650dc06e1f5c4b953d488f9763b4b, type: 2}
+  - {fileID: 11400000, guid: 9ac8feb343716f9448e7a1b6a8bb3ea5, type: 2}
   StarterSkills: []
   Affinities:
   - SpeciesId: orc

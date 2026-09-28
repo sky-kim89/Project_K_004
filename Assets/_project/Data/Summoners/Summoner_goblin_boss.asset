@@ -15,8 +15,8 @@ MonoBehaviour:
   Id: goblin_boss
   DisplayName: "\uACE0\uBE14\uB9B0 \uB450\uBAA9"
   Description: "\uACE0\uBE14\uB9B0 \uBB34\uB9AC\uAC00 \uC804\uB9AC\uD488\uC744 \uCC59\uACA8
-    \uC2A4\uD14C\uC774\uC9C0\uB9C8\uB2E4 \uB9C8\uB098\uAC00 \uB354 \uB9CE\uC774 \uB3CC\uC544\uC628\uB2E4.\n\uC624\uB798
-    \uBC84\uD2F8\uC218\uB85D \uC774\uB4DD\uC774 \uCEE4\uC9C4\uB2E4."
+    \uB7F0 \uACE8\uB4DC\uB97C \uB354 \uB9CE\uC774 \uBC88\uB2E4.\n\uC0C1\uC810\xB7\uAC15\uD654\uC18C\uB97C
+    \uC790\uC8FC \uB4E4\uB974\uB294 \uC6B4\uC6A9\uC5D0 \uC5B4\uC6B8\uB9B0\uB2E4."
   PoolKey: Summoner
   Portrait: {fileID: 0}
   AppearanceSeed: summoner_goblinboss
@@ -42,17 +42,18 @@ MonoBehaviour:
   SkillUsesPerStage: 2
   SignatureSummonSpecies: {fileID: 11400000, guid: 23a07e7c40c8f7347b213eceac0a8f4a, type: 2}
   SignatureSummonCount: 4
-  ListOrder: 5
+  ListOrder: 7
   Unlocks:
   - Kind: 1
     Value: 0
     SpeciesIds:
-    - goblin
     - goblin_archer
+    - goblin_chief
     Traits: 0
   StarterMonsters:
   - {fileID: 11400000, guid: 23a07e7c40c8f7347b213eceac0a8f4a, type: 2}
-  - {fileID: 11400000, guid: 02e69958661d2fb43a93e248cb71c7c9, type: 2}
+  - {fileID: 11400000, guid: 2aae7a4a6f47389439459fdc9d25bc3d, type: 2}
+  - {fileID: 11400000, guid: bf9a7b4bd2edc2042bed6110f0a6e230, type: 2}
   StarterSkills: []
   Affinities:
   - SpeciesId: goblin
@@ -60,7 +61,7 @@ MonoBehaviour:
   - SpeciesId: goblin_archer
     Traits: 0
   Perk: 8
-  PerkValue: 1.6
+  PerkValue: 1.5
   AttackPerVigor: 2
   HpPerVitality: 50
   SummonPowerPerIntelligence: 1

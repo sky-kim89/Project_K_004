@@ -139,7 +139,8 @@ public static class SummonerVigorRule
     /// ⚠ 숫자를 손으로 적지 말 것 — 위 상수가 정본이다.
     /// </summary>
     public static string DescribeFor(SummonerData summoner)
-        => $"밀어내기 ×{KnockbackMultFor(summoner):0.0#}"
-         + $"  ·  평타 ×{StrikeMultFor(summoner):0.0#}"
-         + $"  ·  과부하 {OverloadStepFor(summoner) * 100f:0.#}%";
+        => LocalizationManager.Instance.Format(
+               "밀어내기 ×{0:0.0#}  ·  평타 ×{1:0.0#}  ·  과부하 {2:0.#}%",
+               KnockbackMultFor(summoner), StrikeMultFor(summoner),
+               OverloadStepFor(summoner) * 100f);
 }

@@ -127,8 +127,15 @@ public static class CardEvolution
         if (slot.IsEmpty)                     return false;
         if (slot.Kind != SummonKind.Monster)  return false;
         if (!slot.IsMaxLevel)                 return false;
-        if (slot.HasEvolved || slot.HasFused) return false;
+        if (slot.HasFused)                    return false;
 
+        // ■ ⚠ HasEvolved 는 더 이상 막지 않는다 (사용자 지시, 2026-09-15)
+        //   2차 업그레이드가 생기면서 **1차 카드가 한 번 더 진화해야** 한다.
+        //   막는 것은 이제 아래 한 줄이다 — "갈 곳이 있는가".
+        //   2차는 위가 없어 목록이 비므로 저절로 멈춘다. 단계를 따로 세지 않는 이유다.
+        //
+        //   ⚠ 공짜로 열린 것이 아니다 — 진화하면 Lv1 로 되돌아간다.
+        //     2차로 가려면 그 1차를 **만렙까지 다시 키워야** 한다. 그 되감기가 값이다.
         return CollectUpgrades(slot.Id).Count > 0;
     }
 
@@ -195,7 +202,9 @@ public static class CardEvolution
     ///   와 조건이 다르다 — 둘은 서로 다른 문이다.
     ///
     /// ■ 그래도 나머지 규칙은 그대로다
-    ///   한 번 진화한 칸은 다시 진화하지 못하고(HasEvolved), 융합한 칸도 막힌다.
+    ///   융합한 칸은 막히고, 같은 종족이 두 칸이 되지도 않는다.
+    ///   ⚠ 진화 이력(HasEvolved)은 더 이상 막지 않는다 — 2차 업그레이드가 그 길로 간다
+    ///     (CanEvolve 주석 참고). 막는 것은 "갈 곳이 있는가" 하나다.
     ///   같은 종족이 두 칸이 되지도 않는다 — 그러면 IndexOf 가 앞 칸만 찾아
     ///   레벨·강화·시너지가 한쪽에만 걸린다 (CollectUpgrades 주석과 같은 이유).
     ///
@@ -210,12 +219,16 @@ public static class CardEvolution
 
         SummonDeckSlot slot = deck.GetSlot(slotIndex);
 
-        if (slot.IsEmpty)                     return false;
-        if (slot.Kind != SummonKind.Monster)  return false;
-        if (slot.HasEvolved || slot.HasFused) return false;
+        if (slot.IsEmpty)                    return false;
+        if (slot.Kind != SummonKind.Monster) return false;
+        if (slot.HasFused)                   return false;
 
-        // 그 칸이 정확히 이 진화체의 **바로 아래 단계**여야 한다.
-        if (slot.Id != target.UpgradeOf.Id) return false;
+        // ⚠ HasEvolved 를 보지 않는다 — 2차 업그레이드 (CanEvolve 주석과 같은 이유)
+
+        // 그 칸이 이 진화체의 **바로 아래 단계**여야 한다.
+        // ⚠ UpgradeOf.Id 를 직접 비교하지 말 것 — 부모가 여럿일 수 있다
+        //   (슬라임 킹은 힐·독·강철 어느 것에서도 올라온다). IsUpgradeFrom 이 정본이다.
+        if (!target.IsUpgradeFrom(slot.Id)) return false;
 
         // 이미 덱에 있는 종족으로는 진화하지 않는다.
         return !deck.Contains(target.Id);
@@ -311,7 +324,9 @@ public static class CardEvolution
         {
             if (candidate == null)               continue;
             if (candidate == self)               continue;
-            if (candidate.UpgradeOf != self)     continue;   // 바로 아래 단계만
+            // 바로 아래 단계만. ⚠ UpgradeOf 참조 비교가 아니다 —
+            //   부모가 여럿인 종족이 있다 (슬라임 킹: 힐·독·강철 슬라임 어느 것에서나).
+            if (!candidate.IsUpgradeFrom(self.Id)) continue;
             if (deck != null && deck.Contains(candidate.Id)) continue;
             if (codex != null && codex.IsUnlocked(candidate.Id)) continue;
 

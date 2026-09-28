@@ -148,28 +148,45 @@ public static class SummonerPerkNames
     /// </summary>
     public static string Describe(this SummonerPerk perk, float value) => perk switch
     {
-        SummonerPerk.CheapAffinity => $"친화 종족의 소환 마나 −{value:0.#}",
+        SummonerPerk.CheapAffinity => F("친화 종족의 소환 마나 −{0:0.#}", value),
         SummonerPerk.SwellOnRepeat => "친화 종족을 연달아 부르면 점점 커진다",
         SummonerPerk.RaiseOnDeath  => "몬스터가 죽은 자리에 스켈레톤이 공짜로 일어난다",
-        SummonerPerk.AffinityGrade => $"친화 종족의 품질이 {Mathf.RoundToInt(value)}단계 높게 나온다",
-        SummonerPerk.PlagueRise    => $"친화 종족이 적을 쓰러뜨리면 {value * 100f:0}% 확률로 그 자리에 좀비가 일어난다",
-        SummonerPerk.WildSprint    => $"친화 종족의 이동속도 ×{value:0.##}",
+        SummonerPerk.AffinityGrade => F("친화 종족의 품질이 {0}단계 높게 나온다", Mathf.RoundToInt(value)),
+        SummonerPerk.PlagueRise    => F("친화 종족이 적을 쓰러뜨리면 {0}% 확률로 그 자리에 좀비가 일어난다",
+                                        value * 100f),
+        SummonerPerk.WildSprint    => F("친화 종족의 이동속도 ×{0:0.##}", value),
         SummonerPerk.WarCry        => "친화 종족이 싸울수록 공격력이 누적된다",
-        SummonerPerk.Plunder       => $"스테이지마다 회복하는 마나 ×{value:0.##}",
+        SummonerPerk.Plunder       => F("런 골드를 ×{0:0.##} 번다", value),
         SummonerPerk.Regenerate    => "친화 종족이 맞으면서 체력을 회복한다",
-        SummonerPerk.DeepChannel   => $"친화 종족에게 소환력이 ×{value:0.##} 로 더 실린다",
+        SummonerPerk.DeepChannel   => F("친화 종족에게 소환력이 ×{0:0.##} 로 더 실린다", value),
         SummonerPerk.PackBond      => "친화 종족이 사냥할수록 강해진다",
         SummonerPerk.FleshGolem    => "아군 시체가 쌓이면 거인이 일어난다",
-        SummonerPerk.SlimeSpit     => $"부른 친화 종족 {Mathf.RoundToInt(value)}마리 중 1마리는 점액을 뱉는 원거리로 선다",
-        SummonerPerk.BoneLegion    => $"친화 종족 카드가 부르는 마릿수 +{Mathf.RoundToInt(value)}",
-        SummonerPerk.ArcaneMight   => $"최대 마나 10당 모든 몬스터 공/체 +{value * 100f:0}% (소환될 때 정해짐)",
-        SummonerPerk.Crystallize   => $"스테이지를 넘길 때 남은 마나의 {value * 100f:0}%가 최대 마나로 쌓인다 " +
-                                      $"(최대 +{SummonerPerkRuntime.CrystalCeiling:0})",
-        SummonerPerk.Muster        => $"친화 종족 카드가 부르는 마릿수 +{Mathf.RoundToInt(value)}",
-        SummonerPerk.NatureRestore => $"스테이지를 넘길 때 최대 마나의 {value * 100f:0}%를 더 회복한다",
-        SummonerPerk.TwinCall      => $"카드를 낼 때 옆 라인에도 {Mathf.RoundToInt(value)}마리가 공짜로 선다",
+        SummonerPerk.SlimeSpit     => F("부른 친화 종족 {0}마리 중 1마리는 점액을 뱉는 원거리로 선다",
+                                        Mathf.RoundToInt(value)),
+        SummonerPerk.BoneLegion    => F("친화 종족 카드가 부르는 마릿수 +{0}", Mathf.RoundToInt(value)),
+        SummonerPerk.ArcaneMight   => F("최대 마나 10당 모든 몬스터 공/체 +{0}% (소환될 때 정해짐)", value * 100f),
+
+        // ⚠ 두 조각을 한 문장으로 합쳤다 — 조각은 언어마다 어순이 달라 옮길 수가 없다
+        SummonerPerk.Crystallize   => F("스테이지를 넘길 때 남은 마나의 {0}%가 최대 마나로 쌓인다 (최대 +{1:0})",
+                                        value * 100f, SummonerPerkRuntime.CrystalCeiling),
+
+        SummonerPerk.Muster        => F("친화 종족 카드가 부르는 마릿수 +{0}", Mathf.RoundToInt(value)),
+        SummonerPerk.NatureRestore => F("스테이지를 넘길 때 최대 마나의 {0}%를 더 회복한다", value * 100f),
+        SummonerPerk.TwinCall      => F("카드를 낼 때 옆 라인에도 {0}마리가 공짜로 선다", Mathf.RoundToInt(value)),
         _                          => "",
     };
+
+    /// <summary>
+    /// 표에서 문장을 찾아 숫자를 끼워 넣는다 — 원본 표가 쓰는 <c>{0}</c> 방식.
+    ///
+    /// ⚠ <b>수치가 든 설명에 보간 문자열($"…{값}…")을 쓰지 말 것</b> (2026-09-16).
+    ///   보간은 실행 시점에 이미 숫자로 바뀌어 있어서 번역표의 키와 **영원히 일치하지
+    ///   않는다** — 표에는 줄이 있는데 화면에는 한국어로 남고, 에러도 경고도 안 난다.
+    ///
+    /// ⚠ 한 문장을 <c>+</c> 로 쪼개지 말 것. 줄바꿈이 필요하면 인자 쪽에서 한다.
+    /// </summary>
+    static string F(string key, params object[] args)
+        => LocalizationManager.Instance.Format(key, args);
 }
 
 // ============================================================

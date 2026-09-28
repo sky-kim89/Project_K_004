@@ -26,7 +26,8 @@ public class PassiveQuickRecovery : PassiveSkillData
         if (!em.HasBuffer<HealEventBufferElement>(ctx.GeneralEntity))  return;
 
         float maxHp = em.GetComponentData<StatComponent>(ctx.GeneralEntity).Final[StatType.MaxHp];
-        float heal  = maxHp * HealRatio;
+        // 유물 '치유의 기억' — 몬스터만 받는다 (용사도 이 패시브를 쓴다)
+        float heal  = maxHp * HealRatio * SpeciesPassiveRuntime.HealPowerFor(em, ctx.GeneralEntity);
         em.GetBuffer<HealEventBufferElement>(ctx.GeneralEntity).Add(
             new HealEventBufferElement { Amount = heal, SourceEntity = ctx.GeneralEntity });
     }

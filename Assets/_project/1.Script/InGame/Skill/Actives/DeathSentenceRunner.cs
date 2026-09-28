@@ -38,7 +38,7 @@ public class DeathSentenceRunner : MonoBehaviour
 
     public void Run(EntityManager em, Entity casterEntity, TeamType casterTeam,
                     float3 center, float radius, float executeRatio,
-                    float damage, float attackPerKill, bool executeBosses, float knockMult,
+                    float damage, float maxHpRatio, float attackPerKill, bool executeBosses, float knockMult,
                     string skullEffectKey, float sealLifetime,
                     SkillEffectConfig fx)
     {
@@ -85,7 +85,7 @@ public class DeathSentenceRunner : MonoBehaviour
             }
             else
             {
-                SkillCrowdControl.DealDamage(em, t, damage, dir, knockMult, casterEntity);
+                SignatureDamageRule.Hit(em, t, damage, maxHpRatio, dir, knockMult, casterEntity);
                 SkillEffectHelper.Spawn(fx.TargetEffectKey, body, fx.DespawnDelay);
             }
         }

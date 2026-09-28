@@ -2176,9 +2176,12 @@ public static class InGameUIPrefabCreator
     ///     (WallX −12 → 성벽 420px) — 51px 여유
     /// </summary>
     const float SynergyChipW    = 176f;
-    const float SynergyChipH    = 68f;
-    const float SynergyChipGap  = 8f;
-    const float SynergyIconSize = 48f;
+    // ⚠ 68 → 45 · 간격 8 → 3 · 아이콘 48 → 40 (2026-09-15) — 시너지가 13종이 되어
+    //   중첩 1 + 13 = 14칸이 178 + 45×14 + 3×13 = 847 ≤ 전장 끝(908) 에 들어가야 한다.
+    //   글자도 FontMd → FontSm (한 줄 43 ≤ 칸 45, UI 규칙 5).
+    const float SynergyChipH    = 45f;
+    const float SynergyChipGap  = 3f;
+    const float SynergyIconSize = 40f;
     const float SynergyChipPad  = 6f;
     // ⚠ 보유 칸(SynergyCountW)·문턱 폭(SynergyStepsW)은 없앴다 —
     //   문턱 줄이 아이콘 오른쪽 남은 자리를 통째로 쓴다.
@@ -2213,7 +2216,7 @@ public static class InGameUIPrefabCreator
         rootRt.pivot     = new Vector2(0f, 1f);
         // ⚠ 위에서부터 쌓는다 — 체력 막대 끝에 이어 붙인다 (SynergyBarTop 주석 참고)
         rootRt.anchoredPosition = new Vector2(HudMargin, -SynergyBarTop);
-        // 칸 = 중첩 1 + 시너지 8. 9칸이 다 떠도 178 + 68×9 + 8×8 = 854 ≤ 전장 끝(908)
+        // 칸 = 중첩 1 + 시너지 13. 14칸이 다 떠도 178 + 45×14 + 3×13 = 847 ≤ 전장 끝(908)
         int rows = MonsterSynergySlots + 1;
         rootRt.sizeDelta        = new Vector2(
             SynergyChipW,
@@ -2324,7 +2327,7 @@ public static class InGameUIPrefabCreator
         //   ⚠ 보유 숫자를 따로 두지 않는다 (사용자 지적, 2026-09-07)
         //     문턱 줄이 이미 그 말을 한다 — 도달한 칸이 굵고 단계 색이다.
         //     정확한 수는 올리면 뜨는 툴팁 제목("숲 3/5")이 말해 준다.
-        label = EditorUIBuilder.TMP(chip, "Label", "", UIScale.FontMd, FontStyles.Bold);
+        label = EditorUIBuilder.TMP(chip, "Label", "", UIScale.FontSm, FontStyles.Bold);
         var labelRt = label.rectTransform;
         labelRt.anchorMin = new Vector2(0f, 0f); labelRt.anchorMax = new Vector2(1f, 1f);
         labelRt.offsetMin = new Vector2(SynergyChipPad * 2f + SynergyIconSize, 0f);

@@ -132,13 +132,15 @@ public class CardEvolveUI : PopupBase
 
         if (canEvolve)
             _evolveDesc.text =
-                $"같은 계보의 상위 종족으로 변한다 (무작위 {CardEvolution.CollectUpgrades(target.Id).Count}종)";
+                LocalizationManager.Instance.Format("같은 계보의 상위 종족으로 변한다 (무작위 {0}종)",
+                                                CardEvolution.CollectUpgrades(target.Id).Count);
 
         if (canFuse)
             _fuseDesc.text = "다른 카드를 먹고 그 종족 패시브를 배운다 (재료 소멸)";
 
         // ⚠ 값은 CardEvolution 이 정본이다 — 숫자를 손으로 적지 말 것.
-        _powerDesc.text = $"이 카드의 공격력·체력이 영구히 +{CardEvolution.EmpowerBonus * 100f:0}% (잃는 것 없음)";
+        _powerDesc.text = LocalizationManager.Instance.Format(
+            "이 카드의 공격력·체력이 영구히 +{0:0}% (잃는 것 없음)", CardEvolution.EmpowerBonus * 100f);
 
         StackBranches();
 
@@ -320,7 +322,7 @@ public class CardEvolveUI : PopupBase
             //   한 줄로 이으면 "→ 해골 방패병 · 공·체 +5%" 가 190px 칸의 두 배가 되어
             //   NoWrap 인 채로 옆 칸까지 흘러넘치고 패시브 아이콘까지 덮었다.
             //   칸을 넓힐 수 없으니(4열 격자) 줄을 나눈다 — Creator 가 두 줄을 잡아 둔다.
-            string gain = carry > 0f ? $"공·체 +{carry * 100f:0}%" : "";
+            string gain = carry > 0f ? LocalizationManager.Instance.Format("공·체 +{0:0}%", carry * 100f) : "";
 
             string head = hasGift ? $"→ {gift.ToKorean()}" : "→ 넘길 패시브 없음";
 

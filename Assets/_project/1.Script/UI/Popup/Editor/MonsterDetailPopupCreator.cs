@@ -185,7 +185,7 @@ public static class MonsterDetailPopupCreator
 
         BuildLeft(root, manaIcon, countIcon, goldIcon, out var left);
         BuildMid(root, out var statValues, out var midGear);
-        BuildRight(root, out var right);
+        BuildRight(root, countIcon, out var right);
 
         // ⚠ 마지막에 만든다 — 가운데·오른쪽 칸을 덮어야 한다
         //   Unity UI 는 형제 순서대로 그린다. 먼저 만들면 칸들 밑에 깔린다.
@@ -248,6 +248,8 @@ public static class MonsterDetailPopupCreator
         EditorUIBuilder.SetObjArray(so, "_passiveIcons", right.Icons, Tag);
         EditorUIBuilder.SetObjArray(so, "_passiveNames", right.Names, Tag);
         EditorUIBuilder.SetObjArray(so, "_passiveDescs", right.Descs, Tag);
+        EditorUIBuilder.SetObjArray(so, "_passiveCountRoots", right.CountRoots, Tag);
+        EditorUIBuilder.SetObjArray(so, "_passiveCountTexts", right.CountTexts, Tag);
 
         EditorUIBuilder.SetObj(so, "_passiveGridRoot", right.GridRoot, Tag);
         EditorUIBuilder.SetObj(so, "_passiveGrid",     right.Grid,     Tag);
@@ -335,7 +337,7 @@ public static class MonsterDetailPopupCreator
             var rt = wallet.GetComponent<RectTransform>();
             rt.anchorMin = rt.anchorMax = new Vector2(1f, 0.5f);
             rt.pivot     = new Vector2(1f, 0.5f);
-            rt.anchoredPosition = new Vector2(-(Pad + 84f + 24f), 0f);
+            rt.anchoredPosition = new Vector2(-(Pad + 84f + 12f + 84f + 24f), 0f);
             rt.sizeDelta        = new Vector2(280f, 56f);
         }
 
@@ -371,6 +373,9 @@ public static class MonsterDetailPopupCreator
             rt.sizeDelta        = new Vector2(84f, 84f);
         }
         EditorUIBuilder.XMark(body, "X", 34f, new Color(0.92f, 0.94f, 0.98f));
+
+        // 도움말 — 닫기(84) 왼쪽. 지갑은 그만큼 더 왼쪽에 선다 (위 Wallet 자리)
+        EditorUIBuilder.InfoBtn(header, TutorialId.HelpMonsterDetail, 84f, -Pad);
     }
 
     // ── 왼쪽 — 초상화 · 소환 비용 · 표식 · 품질 개선 ─────────
@@ -898,6 +903,7 @@ public static class MonsterDetailPopupCreator
 
         public TextMeshProUGUI Desc;
         public Object[]        Roots, Icons, Names, Descs;
+        public Object[]        CountRoots, CountTexts;
 
         public GameObject      GridRoot;
         public GridLayoutGroup Grid;
@@ -906,7 +912,7 @@ public static class MonsterDetailPopupCreator
         public Object[]        Shines, GridShines;
     }
 
-    static void BuildRight(GameObject root, out RightRefs refs)
+    static void BuildRight(GameObject root, Sprite countIcon, out RightRefs refs)
     {
         GameObject col = Column(root, "Right", LeftW + ColGap + MidW + ColGap, 0f);
 
@@ -937,6 +943,8 @@ public static class MonsterDetailPopupCreator
         var icons = new Object[PassiveSlots];
         var names = new Object[PassiveSlots];
         var descs = new Object[PassiveSlots];
+        var countRoots = new Object[PassiveSlots];
+        var countTexts = new Object[PassiveSlots];
 
         // ⚠ 여러 칸이 들어가야 해서 140 → 88 로 줄였다 (PassiveSlots 주석 참고)
         //   설명은 이제 한 줄이다. 자동 축소(아래 fontSizeMin)가 긴 문장을 받는다 —
@@ -988,6 +996,14 @@ public static class MonsterDetailPopupCreator
                 rt.anchoredPosition = new Vector2(92f, -12f - UIScale.RowSm);
                 rt.sizeDelta        = new Vector2(-108f, PassiveDescH);
             }
+
+            // 마릿수 배지 — 이름 줄 오른쪽 끝. 권속 소환 줄만 런타임이 켠다 (UI 규칙 7)
+            var badge = EditorUIBuilder.IconValueBadge(row, "Count", countIcon, rightSide: true,
+                                                       40f, UIScale.FontSm, 10f, CountC,
+                                                       out TextMeshProUGUI countText);
+            badge.SetActive(false);
+            countRoots[i] = badge;
+            countTexts[i] = countText;
 
             // 각성 반짝임 — ⚠ 마지막 자식이다 (위에 그려져야 빛이 글 위를 지나간다)
             shines[i] = BuildShine(row);
@@ -1087,6 +1103,8 @@ public static class MonsterDetailPopupCreator
             Icons     = icons,
             Names     = names,
             Descs     = descs,
+            CountRoots = countRoots,
+            CountTexts = countTexts,
             GridRoot  = gridRoot,
             Grid      = grid,
             GridIcons = gridIcons,

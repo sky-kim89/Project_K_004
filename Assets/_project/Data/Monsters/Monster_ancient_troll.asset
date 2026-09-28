@@ -1,0 +1,89 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3293ffc88440014396a89c49aab65b7, type: 3}
+  m_Name: Monster_ancient_troll
+  m_EditorClassIdentifier: 
+  Id: ancient_troll
+  DisplayName: "\uACE0\uB300 \uD2B8\uB864"
+  BodyType: 1
+  Race: 0
+  NonHumanoidLibrary: {fileID: 11400000, guid: 16d45b8c513e63142a961f94bc8190b1, type: 2}
+  BodyTint: {r: 1, g: 1, b: 1, a: 1}
+  BodyScale: 1.75
+  BodyStretch: {x: 1, y: 1}
+  Mark: 0
+  PoolKey: Monster
+  LineageIcon: {fileID: 21300000, guid: 8e3d31bc968797c42b3e489c29606346, type: 3}
+  ManaCost: 15
+  SummonCount: 1
+  AttackKind: 0
+  Projectile: 0
+  ProjectileSpeed: 0
+  Traits: 70
+  Tags: 4228
+  Description: "\uBC14\uC704\uCC98\uB7FC \uB299\uC740 \uD2B8\uB864. \uB290\uB9AC\uAC8C
+    \uD718\uB450\uB974\uB294 \uB300\uC2E0 \uD55C \uBC88\uC5D0 \uC5EC\uB7FF\uC744
+    \uC4F8\uC5B4 \uB0B8\uB2E4.\n\uC81C \uD53C\uB97C \uD0DC\uC6CC \uC55E\uC744 \uBE44\uC6B0\uACE0,
+    \uACE7 \uB2E4\uC2DC \uCC44\uC6B4\uB2E4."
+  MaxHp: 4080
+  Attack: 124
+  AttackRange: 2.4
+  AttackSpeed: 0.7
+  MoveSpeed: 1.7
+  Defense: 0.16
+  CritChance: 0.05
+  CritDamage: 1.5
+  SummonPowerToHp: 5.28
+  SummonPowerToAttack: 2.1
+  UpgradeOf: {fileID: 11400000, guid: 40bcfe19d65c5ab4aabe43f5a9b8e668, type: 2}
+  AlsoUpgradeOf:
+  - {fileID: 11400000, guid: ec6d4521217662f4f93fefe5bbf469a7, type: 2}
+  SpeciesTrait: 108
+  ExtraTraits: 85000000
+  BlockedInherit: 1d000000
+  ActiveSkill: 27
+  Passives: 
+  BroodSpecies: {fileID: 11400000, guid: d1e650dc06e1f5c4b953d488f9763b4b, type: 2}
+  BroodCount: 2
+  BroodCooldown: 16
+  LevelBonuses:
+  - Label: "\uBC14\uC704 \uD53C\uBD80"
+    Stat1: 0
+    Value1: 0.18
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 0
+  - Label: "\uACE0\uB300\uC758 \uD798"
+    Stat1: 2
+    Value1: 0.15
+    HasStat2: 1
+    Stat2: 1
+    Value2: 0.05
+    Passive: 0
+  - Label: "\uB053\uB294 \uD53C"
+    Stat1: 0
+    Value1: 0.15
+    HasStat2: 0
+    Stat2: 0
+    Value2: 0
+    Passive: 23
+  - Label: "\uC0B0\uC758 \uC8FC\uC778"
+    Stat1: 0
+    Value1: 0.2
+    HasStat2: 1
+    Stat2: 2
+    Value2: 0.15
+    Passive: 0
+  SignaturePassive: 23
+  SummonDelay: 0.1
+  SummonCircleEffectKey: FX_Summon_Circle

@@ -28,4 +28,4 @@ MonoBehaviour:
   BaseEffectKey: 
   ShowRangeIndicator: 1
   RangeIndicatorDuration: 0
-  EffectDespawnDelay: 2
+  EffectDespawnDelay: 1.5

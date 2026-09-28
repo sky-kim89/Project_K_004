@@ -49,7 +49,8 @@ public class SynergyChipUI : MonoBehaviour,
     /// </summary>
     void OnDisable() => TooltipLayer.Close();
 
-    public void OnPointerEnter(PointerEventData _) => Open();
+    // PC 는 올려서, 모바일은 눌러서 연다 (TooltipInput)
+    public void OnPointerEnter(PointerEventData _) { if (TooltipInput.HoverMode) Open(); }
 
     /// <summary>
     /// 벗어나면 닫는다. **되돌아갈 곳은 없다** — 고정을 없앴다.
@@ -58,10 +59,10 @@ public class SynergyChipUI : MonoBehaviour,
     ///   그쪽 OnPointerEnter 가 곧바로 다시 열므로 깜빡이지 않는다.
     ///   순서가 뒤집혀 있어도(EventSystem 은 Exit 를 먼저 보낸다) 결과는 같다.
     /// </summary>
-    public void OnPointerExit(PointerEventData _) => TooltipLayer.Close();
+    public void OnPointerExit(PointerEventData _) { if (TooltipInput.HoverMode) TooltipLayer.Close(); }
 
     /// <summary>터치를 위한 문. 올리는 것과 결과가 같다 — 고정하지 않는다.</summary>
-    public void OnPointerClick(PointerEventData _) => Open();
+    public void OnPointerClick(PointerEventData _) { if (!TooltipInput.HoverMode) Open(); }
 
     void Open()
     {

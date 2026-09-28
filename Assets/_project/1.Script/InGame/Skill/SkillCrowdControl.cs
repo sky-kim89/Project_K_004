@@ -224,8 +224,10 @@ public static class SkillCrowdControl
 
     // ── 타격 / 치유 ──────────────────────────────────────────
 
+    /// <param name="defensePierce">1 이면 방어율을 통째로 무시한다 — 최대 체력 비례 피해가 쓴다.</param>
     public static void DealDamage(EntityManager em, Entity target, float damage,
-                                  float3 knockDir, float knockForce, Entity attacker)
+                                  float3 knockDir, float knockForce, Entity attacker,
+                                  float defensePierce = 0f)
     {
         if (!em.Exists(target) || !em.HasBuffer<HitEventBufferElement>(target)) return;
 
@@ -235,6 +237,7 @@ public static class SkillCrowdControl
             HitDirection   = math.normalizesafe(knockDir, new float3(1f, 0f, 0f)) * knockForce,
             AttackerEntity = attacker,
             Type           = HitType.Skill,
+            DefensePierce  = defensePierce,
         });
     }
 

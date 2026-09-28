@@ -182,6 +182,13 @@ public static class RunGoldRule
         // 특성 '저주받은 금화' — 대가(판마다 성 −3)는 RunBootstrap.AdvanceStage 가 받는다.
         if (RunPerkRule.Has(RunPerk.CursedGold)) mult += RunPerkRule.CursedGoldBonus;
 
+        // 소환사 개성 '약탈'(고블린 두목) — 런 골드 × PerkValue (사용자 지시, 2026-09-15)
+        //   옛 효과(스테이지 마나 회복 ×)는 이름과 무관해 걷었다. 곱이 아니라 더한다 — 다른 보너스와 같은 줄에 선다.
+        //   ⚠ 소환사가 아직 없을 수 있다 (로비·치트) — 그때는 개성이 없는 것과 같다.
+        SummonerRuntimeBridge summoner = SummonerRuntimeBridge.Current;
+        if (summoner != null && summoner.Data.Perk == SummonerPerk.Plunder)
+            mult += summoner.Data.PerkValue - 1f;
+
         int granted = Mathf.RoundToInt(amount * mult);
         UserDataManager.Instance?.Get<RunGoldData>()?.Add(granted);
 
